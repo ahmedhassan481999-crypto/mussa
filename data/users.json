@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "name": "المالك",
+    "username": "mussa",
+    "password": "824892",
+    "role": "مالك",
+    "active": true
+  },
+  {
+    "id": 1787317636056,
+    "name": "خلود",
+    "username": "khloud",
+    "password": "824892",
+    "role": "مدير",
+    "active": true
+  },
+  {
+    "id": 1787318978831,
+    "name": "احمد حسن",
+    "username": "ahmed",
+    "password": "123456",
+    "role": "موظف",
+    "active": true
+  }
+]

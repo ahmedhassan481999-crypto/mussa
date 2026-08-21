@@ -1,0 +1,68 @@
+[
+  {
+    "id": 1,
+    "customerId": 1,
+    "plateNumber": "أ ب ج 1234",
+    "brand": "Toyota",
+    "model": "Corolla",
+    "color": "أبيض",
+    "year": 2022,
+    "notes": "غسيل أسبوعي",
+    "active": true
+  },
+  {
+    "id": 2,
+    "customerId": 2,
+    "plateNumber": "د هـ و 5678",
+    "brand": "Hyundai",
+    "model": "Elantra",
+    "color": "أسود",
+    "year": 2021,
+    "notes": "",
+    "active": true
+  },
+  {
+    "id": 3,
+    "customerId": 2,
+    "plateNumber": "س ص ع 9012",
+    "brand": "Kia",
+    "model": "Sportage",
+    "color": "رمادي",
+    "year": 2023,
+    "notes": "تنظيف داخلي فقط",
+    "active": true
+  },
+  {
+    "id": 1786836693410,
+    "customerId": 1,
+    "plateNumber": "مصر 111",
+    "brand": "مرسيدس",
+    "model": "جي كلاس",
+    "color": "ابيض",
+    "year": 2025,
+    "notes": "غسيل فاخر",
+    "active": true
+  },
+  {
+    "id": 1786891766095,
+    "customerId": 1786878072506,
+    "plateNumber": "92خ ا م",
+    "brand": "بورش",
+    "model": "بورش",
+    "color": "اخضر",
+    "year": 2026,
+    "notes": "تنضيف كامل متكامل",
+    "active": true
+  },
+  {
+    "id": 1786985643210,
+    "customerId": 1786985583824,
+    "plateNumber": "123 م م ع",
+    "brand": "هيونداي",
+    "model": "النترا",
+    "color": "اوراق",
+    "year": 2025,
+    "notes": "غسيل كل 10 ايام",
+    "active": true
+  }
+]

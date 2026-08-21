@@ -1,0 +1,52 @@
+[
+  {
+    "id": 1,
+    "name": "غسيل خارجي",
+    "type": "سيارات",
+    "price": 80,
+    "unit": "ثابت",
+    "count": 15,
+    "description": "غسيل وتنظيف الهيكل الخارجي للسيارة",
+    "active": true
+  },
+  {
+    "id": 2,
+    "name": "غسيل داخلي وخارجي",
+    "type": "سيارات",
+    "price": 120,
+    "unit": "ثابت",
+    "count": 9,
+    "description": "تنظيف كامل للسيارة من الداخل والخارج",
+    "active": true
+  },
+  {
+    "id": 3,
+    "name": "تلميع كامل",
+    "type": "سيارات",
+    "price": 250,
+    "unit": "ثابت",
+    "count": 6,
+    "description": "تلميع كامل للسيارة",
+    "active": true
+  },
+  {
+    "id": 4,
+    "name": "غسيل سجاد",
+    "type": "سجاد",
+    "price": 30,
+    "unit": "متر",
+    "count": 0,
+    "description": "غسيل وتنظيف السجاد",
+    "active": true
+  },
+  {
+    "id": 5,
+    "name": "تنظيف سجاد بالبخار",
+    "type": "سجاد",
+    "price": 50,
+    "unit": "متر",
+    "count": 0,
+    "description": "تنظيف عميق للسجاد الفاخر",
+    "active": true
+  }
+]

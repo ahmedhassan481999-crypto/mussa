@@ -1,0 +1,58 @@
+[
+  {
+    "id": 1787059746427,
+    "customerId": 1786896110664,
+    "name": "طرقه",
+    "type": "مشاية",
+    "length": 1,
+    "width": 4.5,
+    "area": 4.5,
+    "serviceName": "غسيل سجاد",
+    "servicePrice": 25,
+    "status": "تم الاستلام",
+    "notes": "",
+    "createdAt": "2026-08-18T13:29:06.427Z"
+  },
+  {
+    "id": 1786967558704,
+    "customerId": 1,
+    "name": "ركنه",
+    "type": "سجاد فاخر",
+    "length": 2.4,
+    "width": 3.25,
+    "area": 7.8,
+    "serviceName": "غسيل سجاد",
+    "servicePrice": 120,
+    "status": "جاهزة",
+    "notes": "تنظيف جاف",
+    "createdAt": "2026-08-17T11:52:38.704Z"
+  },
+  {
+    "id": 1786896149501,
+    "customerId": 1786896110664,
+    "name": "نوم",
+    "type": "سجاد عادي",
+    "length": 2,
+    "width": 3,
+    "area": 6,
+    "serviceName": "غسيل سجاد",
+    "servicePrice": 200,
+    "status": "تم الاستلام",
+    "notes": "",
+    "createdAt": "2026-08-16T16:02:29.501Z"
+  },
+  {
+    "id": 1786894825319,
+    "customerId": 1786878072506,
+    "name": "صاله",
+    "type": "سجاد عادي",
+    "length": 1.6,
+    "width": 2.2,
+    "area": 3.52,
+    "serviceName": "غسيل سجاد",
+    "servicePrice": 220,
+    "status": "جاهزة",
+    "notes": "",
+    "createdAt": "2026-08-16T15:40:25.319Z"
+  }
+]

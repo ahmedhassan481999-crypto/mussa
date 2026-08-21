@@ -1,0 +1,10 @@
+{
+  "businessName": "Mussa Wash & Clean",
+  "phone": "01000115581",
+  "address": "لا يوجد حاليا فرع",
+  "invoiceFooter": "شكرًا لزيارتكم",
+  "defaultPaymentMethod": "نقدي",
+  "showPhoneOnInvoice": true,
+  "showAddressOnInvoice": false,
+  "showFooterOnInvoice": true
+}

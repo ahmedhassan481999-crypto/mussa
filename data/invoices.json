@@ -1,0 +1,475 @@
+[
+  {
+    "id": 1787142371699,
+    "invoiceNumber": "INV-0016",
+    "date": "١٩‏/٨‏/٢٠٢٦",
+    "customerId": 1786985583824,
+    "customerName": "أحمد خالد",
+    "customerPhone": "01155929880",
+    "assetType": "سيارة",
+    "carId": 1786985643210,
+    "carpetId": null,
+    "carInfo": "هيونداي النترا - 123 م م ع",
+    "assetInfo": "هيونداي النترا - 123 م م ع",
+    "coveredByMembership": true,
+    "membershipId": 1787059815505,
+    "membershipPlanName": "اشتراك شهري",
+    "items": [
+      {
+        "serviceId": 1,
+        "serviceName": "غسيل خارجي",
+        "quantity": 1,
+        "price": 80,
+        "unit": "ثابت",
+        "total": 80
+      }
+    ],
+    "total": 80,
+    "paymentMethod": "عضوية",
+    "paymentStatus": "مغطاة بالعضوية",
+    "paidAmount": 0,
+    "remainingAmount": 0,
+    "notes": ""
+  },
+  {
+    "id": 1787079185003,
+    "invoiceNumber": "INV-0015",
+    "date": "١٨‏/٨‏/٢٠٢٦",
+    "customerId": 1786878072506,
+    "customerName": "خلود خالد",
+    "customerPhone": "01126565615",
+    "assetType": "سيارة",
+    "carId": 1786891766095,
+    "carpetId": null,
+    "carInfo": "بورش بورش - 92خ ا م",
+    "assetInfo": "بورش بورش - 92خ ا م",
+    "coveredByMembership": true,
+    "membershipId": 1786985965694,
+    "membershipPlanName": "اشتراك شهري",
+    "items": [
+      {
+        "serviceId": 1,
+        "serviceName": "غسيل خارجي",
+        "quantity": 1,
+        "price": 80,
+        "unit": "ثابت",
+        "total": 80
+      }
+    ],
+    "total": 80,
+    "paymentMethod": "عضوية",
+    "paymentStatus": "مغطاة بالعضوية",
+    "paidAmount": 0,
+    "remainingAmount": 0,
+    "notes": ""
+  },
+  {
+    "id": 1787078185412,
+    "invoiceNumber": "INV-0014",
+    "date": "١٨‏/٨‏/٢٠٢٦",
+    "customerId": 1786985583824,
+    "customerName": "أحمد خالد",
+    "customerPhone": "01155929880",
+    "assetType": "سيارة",
+    "carId": 1786985643210,
+    "carpetId": null,
+    "carInfo": "هيونداي النترا - 123 م م ع",
+    "assetInfo": "هيونداي النترا - 123 م م ع",
+    "coveredByMembership": true,
+    "membershipId": 1787059815505,
+    "membershipPlanName": "اشتراك شهري",
+    "items": [
+      {
+        "serviceId": 1,
+        "serviceName": "غسيل خارجي",
+        "quantity": 1,
+        "price": 80,
+        "unit": "ثابت",
+        "total": 80
+      }
+    ],
+    "total": 80,
+    "paymentMethod": "عضوية",
+    "paymentStatus": "مغطاة بالعضوية",
+    "paidAmount": 0,
+    "remainingAmount": 0,
+    "notes": ""
+  },
+  {
+    "id": 1787067584385,
+    "invoiceNumber": "INV-0013",
+    "date": "١٨‏/٨‏/٢٠٢٦",
+    "customerId": 1786985583824,
+    "customerName": "أحمد خالد",
+    "customerPhone": "01155929880",
+    "assetType": "سيارة",
+    "carId": 1786985643210,
+    "carpetId": null,
+    "carInfo": "هيونداي النترا - 123 م م ع",
+    "assetInfo": "هيونداي النترا - 123 م م ع",
+    "coveredByMembership": true,
+    "membershipId": 1787059815505,
+    "membershipPlanName": "اشتراك شهري",
+    "items": [
+      {
+        "serviceId": 1,
+        "serviceName": "غسيل خارجي",
+        "quantity": 1,
+        "price": 80,
+        "unit": "ثابت",
+        "total": 80
+      }
+    ],
+    "total": 80,
+    "paymentMethod": "عضوية",
+    "paymentStatus": "مغطاة بالعضوية",
+    "paidAmount": 0,
+    "remainingAmount": 0,
+    "notes": ""
+  },
+  {
+    "id": 1787067560544,
+    "invoiceNumber": "INV-0012",
+    "date": "١٨‏/٨‏/٢٠٢٦",
+    "customerId": 1786985583824,
+    "customerName": "أحمد خالد",
+    "customerPhone": "01155929880",
+    "assetType": "سيارة",
+    "carId": 1786985643210,
+    "carpetId": null,
+    "carInfo": "هيونداي النترا - 123 م م ع",
+    "assetInfo": "هيونداي النترا - 123 م م ع",
+    "coveredByMembership": true,
+    "membershipId": 1787059815505,
+    "membershipPlanName": "اشتراك شهري",
+    "items": [
+      {
+        "serviceId": 1,
+        "serviceName": "غسيل خارجي",
+        "quantity": 1,
+        "price": 80,
+        "unit": "ثابت",
+        "total": 80
+      }
+    ],
+    "total": 80,
+    "paymentMethod": "عضوية",
+    "paymentStatus": "مغطاة بالعضوية",
+    "paidAmount": 0,
+    "remainingAmount": 0,
+    "notes": ""
+  },
+  {
+    "id": 1786990020072,
+    "invoiceNumber": "INV-0011",
+    "date": "١٧‏/٨‏/٢٠٢٦",
+    "customerId": 2,
+    "customerName": "محمد علي",
+    "customerPhone": "01111111111",
+    "assetType": "سيارة",
+    "carId": 2,
+    "carpetId": null,
+    "carInfo": "Hyundai Elantra - د هـ و 5678",
+    "assetInfo": "Hyundai Elantra - د هـ و 5678",
+    "items": [
+      {
+        "serviceId": 1,
+        "serviceName": "غسيل خارجي",
+        "quantity": 1,
+        "price": 80,
+        "unit": "ثابت",
+        "total": 80
+      }
+    ],
+    "total": 80,
+    "paymentMethod": "نقدي",
+    "paymentStatus": "مدفوعة",
+    "paidAmount": 80,
+    "remainingAmount": 0,
+    "notes": ""
+  },
+  {
+    "id": 1786989858809,
+    "invoiceNumber": "INV-0010",
+    "date": "١٧‏/٨‏/٢٠٢٦",
+    "customerId": 1786985583824,
+    "customerName": "أحمد خالد",
+    "customerPhone": "01155929880",
+    "assetType": "سيارة",
+    "carId": 1786985643210,
+    "carpetId": null,
+    "carInfo": "هيونداي النترا - 123 م م ع",
+    "assetInfo": "هيونداي النترا - 123 م م ع",
+    "items": [
+      {
+        "serviceId": 2,
+        "serviceName": "غسيل داخلي وخارجي",
+        "quantity": 1,
+        "price": 120,
+        "unit": "ثابت",
+        "total": 120
+      }
+    ],
+    "total": 120,
+    "paymentMethod": "نقدي",
+    "paymentStatus": "مدفوعة",
+    "paidAmount": 120,
+    "remainingAmount": 0,
+    "notes": ""
+  },
+  {
+    "id": 1786988042264,
+    "invoiceNumber": "INV-0009",
+    "date": "١٧‏/٨‏/٢٠٢٦",
+    "customerId": 1,
+    "customerName": "أحمد حسن",
+    "customerPhone": "01000115581",
+    "assetType": "سجادة",
+    "carId": null,
+    "carpetId": 1786967558704,
+    "carInfo": "ركنه - سجاد فاخر - 7.80 م²",
+    "assetInfo": "ركنه - سجاد فاخر - 7.80 م²",
+    "items": [
+      {
+        "serviceId": 1,
+        "serviceName": "غسيل خارجي",
+        "quantity": 8,
+        "price": 80,
+        "unit": "ثابت",
+        "total": 640
+      }
+    ],
+    "total": 640,
+    "paymentMethod": "تحويل",
+    "paymentStatus": "مدفوعة",
+    "paidAmount": 640,
+    "remainingAmount": 0,
+    "notes": ""
+  },
+  {
+    "id": 1786985673858,
+    "invoiceNumber": "INV-0008",
+    "date": "١٧‏/٨‏/٢٠٢٦",
+    "customerId": 1786985583824,
+    "customerName": "أحمد خالد",
+    "customerPhone": "01155929880",
+    "assetType": "سيارة",
+    "carId": 1786985643210,
+    "carpetId": null,
+    "carInfo": "هيونداي النترا - 123 م م ع",
+    "assetInfo": "هيونداي النترا - 123 م م ع",
+    "items": [
+      {
+        "serviceId": 3,
+        "serviceName": "تلميع كامل",
+        "quantity": 1,
+        "price": 250,
+        "unit": "ثابت",
+        "total": 250
+      }
+    ],
+    "total": 250,
+    "paymentMethod": "نقدي",
+    "paymentStatus": "مدفوعة جزئيًا",
+    "paidAmount": 230,
+    "remainingAmount": 20,
+    "notes": "",
+    "coveredByMembership": false,
+    "membershipId": null,
+    "membershipPlanName": ""
+  },
+  {
+    "id": 1786979326779,
+    "invoiceNumber": "INV-0007",
+    "date": "١٧‏/٨‏/٢٠٢٦",
+    "customerId": 1,
+    "customerName": "أحمد حسن",
+    "customerPhone": "01000000000",
+    "assetType": "سيارة",
+    "carId": 1,
+    "carpetId": null,
+    "carInfo": "Toyota Corolla - أ ب ج 1234",
+    "assetInfo": "Toyota Corolla - أ ب ج 1234",
+    "items": [
+      {
+        "serviceId": 1,
+        "serviceName": "غسيل خارجي",
+        "quantity": 1,
+        "price": 80,
+        "unit": "ثابت",
+        "total": 80
+      }
+    ],
+    "total": 80,
+    "paymentMethod": "نقدي",
+    "paymentStatus": "مدفوعة",
+    "paidAmount": 80,
+    "remainingAmount": 0,
+    "notes": ""
+  },
+  {
+    "id": 1786974014722,
+    "invoiceNumber": "INV-0006",
+    "date": "١٧‏/٨‏/٢٠٢٦",
+    "customerId": 2,
+    "customerName": "محمد علي",
+    "customerPhone": "01111111111",
+    "assetType": "سيارة",
+    "carId": 3,
+    "carpetId": null,
+    "carInfo": "Kia Sportage - س ص ع 9012",
+    "assetInfo": "Kia Sportage - س ص ع 9012",
+    "items": [
+      {
+        "serviceId": 1,
+        "serviceName": "غسيل خارجي",
+        "quantity": 1,
+        "price": 80,
+        "unit": "ثابت",
+        "total": 80
+      }
+    ],
+    "total": 80,
+    "paymentMethod": "نقدي",
+    "paymentStatus": "مدفوعة",
+    "paidAmount": 80,
+    "remainingAmount": 0,
+    "notes": ""
+  },
+  {
+    "id": 1786963111588,
+    "invoiceNumber": "INV-0005",
+    "date": "١٧‏/٨‏/٢٠٢٦",
+    "customerId": 1,
+    "customerName": "أحمد حسن",
+    "customerPhone": "01000000000",
+    "assetType": "سيارة",
+    "carId": 1,
+    "carpetId": null,
+    "carInfo": "Toyota Corolla - أ ب ج 1234",
+    "assetInfo": "Toyota Corolla - أ ب ج 1234",
+    "items": [
+      {
+        "serviceId": 1,
+        "serviceName": "غسيل خارجي",
+        "quantity": 1,
+        "price": 80,
+        "unit": "ثابت",
+        "total": 80
+      }
+    ],
+    "total": 80,
+    "paymentMethod": "نقدي",
+    "paymentStatus": "مدفوعة",
+    "paidAmount": 80,
+    "remainingAmount": 0,
+    "notes": ""
+  },
+  {
+    "id": 1786898279813,
+    "invoiceNumber": "INV-0004",
+    "date": "١٦‏/٨‏/٢٠٢٦",
+    "customerId": 1786878072506,
+    "customerName": "خلود خالد",
+    "customerPhone": "01126565615",
+    "assetType": "سجادة",
+    "carId": null,
+    "carpetId": 1786894825319,
+    "carInfo": "صاله - سجاد عادي - 3.52 م²",
+    "assetInfo": "صاله - سجاد عادي - 3.52 م²",
+    "items": [
+      {
+        "serviceId": 5,
+        "serviceName": "تنظيف سجاد فاخر",
+        "quantity": 6,
+        "price": 45,
+        "unit": "متر",
+        "total": 270
+      }
+    ],
+    "total": 270,
+    "paymentMethod": "نقدي",
+    "paymentStatus": "مدفوعة",
+    "paidAmount": 270,
+    "remainingAmount": 0,
+    "notes": ""
+  },
+  {
+    "id": 1786894879386,
+    "invoiceNumber": "INV-0003",
+    "date": "١٦‏/٨‏/٢٠٢٦",
+    "customerId": 1786878072506,
+    "customerName": "خلود خالد",
+    "customerPhone": "01126565615",
+    "carId": 1786891766095,
+    "carInfo": "بورش بورش - 92خ ا م",
+    "items": [
+      {
+        "serviceId": 4,
+        "serviceName": "غسيل سجاد",
+        "quantity": 1,
+        "price": 30,
+        "unit": "متر",
+        "total": 30
+      }
+    ],
+    "total": 30,
+    "paymentMethod": "نقدي",
+    "paymentStatus": "مدفوعة",
+    "paidAmount": 30,
+    "remainingAmount": 0,
+    "notes": ""
+  },
+  {
+    "id": 1786891801451,
+    "invoiceNumber": "INV-0002",
+    "date": "١٦‏/٨‏/٢٠٢٦",
+    "customerId": 1786878072506,
+    "customerName": "خلود خالد",
+    "customerPhone": "01126565615",
+    "carId": 1786891766095,
+    "carInfo": "بورش بورش - 92خ ا م",
+    "items": [
+      {
+        "serviceId": 3,
+        "serviceName": "تلميع كامل",
+        "quantity": 1,
+        "price": 250,
+        "unit": "ثابت",
+        "total": 250
+      }
+    ],
+    "total": 250,
+    "paymentMethod": "نقدي",
+    "paymentStatus": "مدفوعة جزئيًا",
+    "paidAmount": 100,
+    "remainingAmount": 150,
+    "notes": ""
+  },
+  {
+    "id": 1786890074967,
+    "invoiceNumber": "INV-0001",
+    "date": "١٦‏/٨‏/٢٠٢٦",
+    "customerId": 1,
+    "customerName": "أحمد حسن",
+    "customerPhone": "01000000000",
+    "carId": 1786836693410,
+    "carInfo": "مرسيدس جي كلاس - مصر 111",
+    "items": [
+      {
+        "serviceId": 3,
+        "serviceName": "تلميع كامل",
+        "quantity": 1,
+        "price": 250,
+        "unit": "ثابت",
+        "total": 250
+      }
+    ],
+    "total": 250,
+    "paymentMethod": "نقدي",
+    "paymentStatus": "مدفوعة",
+    "paidAmount": 250,
+    "remainingAmount": 0,
+    "notes": ""
+  }
+]

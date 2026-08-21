@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1787059815505,
+    "customerId": 1786985583824,
+    "customerName": "أحمد خالد",
+    "customerPhone": "01155929880",
+    "planName": "اشتراك شهري",
+    "durationMonths": 1,
+    "startDate": "2026-08-19",
+    "endDate": "2026-09-18",
+    "totalVisits": 4,
+    "remainingVisits": 3,
+    "price": 620,
+    "status": "منتهية",
+    "notes": "",
+    "createdAt": "2026-08-18T13:30:15.505Z"
+  },
+  {
+    "id": 1786985965694,
+    "customerId": 1786878072506,
+    "customerName": "خلود خالد",
+    "customerPhone": "01126565615",
+    "planName": "اشتراك شهري",
+    "durationMonths": 1,
+    "startDate": "2026-08-19",
+    "endDate": "2026-09-18",
+    "totalVisits": 6,
+    "remainingVisits": 6,
+    "price": 1000,
+    "status": "سارية",
+    "notes": "",
+    "createdAt": "2026-08-17T16:59:25.694Z"
+  }
+]
