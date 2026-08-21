@@ -18,14 +18,14 @@ app.use((req, res, next) => {
 });
 
 // =========================
-// Ã˜ÂªÃ˜Â³Ã˜Â¬Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¯Ã˜Â®Ã™Ë†Ã™â€ž
+// تسجيل الدخول
 // =========================
 
 const OWNER_USERNAME = "admin";
 const OWNER_PASSWORD = "123456";
 
 // =========================
-// Ã™â€¦Ã™â€žÃ™ÂÃ˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª
+// ملفات البيانات
 // =========================
 
 const dataDirectory = path.join(__dirname, "data");
@@ -41,34 +41,34 @@ const settingsFile = path.join(dataDirectory, "settings.json");
 const usersFile = path.join(dataDirectory, "users.json");
 
 // =========================
-// Ã˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â§Ã™ÂÃ˜ÂªÃ˜Â±Ã˜Â§Ã˜Â¶Ã™Å Ã˜Â©
+// بيانات افتراضية
 // =========================
 
 const initialCustomers = [
   {
     id: 1,
-    name: "Ã˜Â£Ã˜Â­Ã™â€¦Ã˜Â¯ Ã˜Â­Ã˜Â³Ã™â€ ",
+    name: "أحمد حسن",
     phone: "01000000000",
-    address: "Ã˜Â§Ã™â€žÃ™â€šÃ˜Â§Ã™â€¡Ã˜Â±Ã˜Â©",
-    notes: "Ã˜Â¹Ã™â€¦Ã™Å Ã™â€ž Ã˜ÂªÃ˜Â¬Ã˜Â±Ã™Å Ã˜Â¨Ã™Å ",
+    address: "القاهرة",
+    notes: "عميل تجريبي",
     cars: 1,
     carpets: 2,
   },
   {
     id: 2,
-    name: "Ã™â€¦Ã˜Â­Ã™â€¦Ã˜Â¯ Ã˜Â¹Ã™â€žÃ™Å ",
+    name: "محمد علي",
     phone: "01111111111",
-    address: "Ã˜Â§Ã™â€žÃ˜Â¬Ã™Å Ã˜Â²Ã˜Â©",
+    address: "الجيزة",
     notes: "",
     cars: 2,
     carpets: 0,
   },
   {
     id: 3,
-    name: "Ã™â€¦Ã˜Â­Ã™â€¦Ã™Ë†Ã˜Â¯ Ã˜Â¥Ã˜Â¨Ã˜Â±Ã˜Â§Ã™â€¡Ã™Å Ã™â€¦",
+    name: "محمود إبراهيم",
     phone: "01222222222",
-    address: "Ã™â€¦Ã˜Â¯Ã™Å Ã™â€ Ã˜Â© Ã™â€ Ã˜ÂµÃ˜Â±",
-    notes: "Ã™Å Ã™ÂÃ˜Â¶Ã™â€ž Ã˜Â§Ã™â€žÃ˜ÂªÃ™Ë†Ã˜Â§Ã˜ÂµÃ™â€ž Ã™â€šÃ˜Â¨Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã˜ÂªÃ™â€žÃ˜Â§Ã™â€¦",
+    address: "مدينة نصر",
+    notes: "يفضل التواصل قبل الاستلام",
     cars: 0,
     carpets: 3,
   },
@@ -78,21 +78,21 @@ const initialCars = [
   {
     id: 1,
     customerId: 1,
-    plateNumber: "Ã˜Â£ Ã˜Â¨ Ã˜Â¬ 1234",
+    plateNumber: "أ ب ج 1234",
     brand: "Toyota",
     model: "Corolla",
-    color: "Ã˜Â£Ã˜Â¨Ã™Å Ã˜Â¶",
+    color: "أبيض",
     year: 2022,
-    notes: "Ã˜ÂºÃ˜Â³Ã™Å Ã™â€ž Ã˜Â£Ã˜Â³Ã˜Â¨Ã™Ë†Ã˜Â¹Ã™Å ",
+    notes: "غسيل أسبوعي",
     active: true,
   },
   {
     id: 2,
     customerId: 2,
-    plateNumber: "Ã˜Â¯ Ã™â€¡Ã™â‚¬ Ã™Ë† 5678",
+    plateNumber: "د هـ و 5678",
     brand: "Hyundai",
     model: "Elantra",
-    color: "Ã˜Â£Ã˜Â³Ã™Ë†Ã˜Â¯",
+    color: "أسود",
     year: 2021,
     notes: "",
     active: true,
@@ -100,12 +100,12 @@ const initialCars = [
   {
     id: 3,
     customerId: 2,
-    plateNumber: "Ã˜Â³ Ã˜Âµ Ã˜Â¹ 9012",
+    plateNumber: "س ص ع 9012",
     brand: "Kia",
     model: "Sportage",
-    color: "Ã˜Â±Ã™â€¦Ã˜Â§Ã˜Â¯Ã™Å ",
+    color: "رمادي",
     year: 2023,
-    notes: "Ã˜ÂªÃ™â€ Ã˜Â¸Ã™Å Ã™Â Ã˜Â¯Ã˜Â§Ã˜Â®Ã™â€žÃ™Å  Ã™ÂÃ™â€šÃ˜Â·",
+    notes: "تنظيف داخلي فقط",
     active: true,
   },
 ];
@@ -118,10 +118,10 @@ const initialMemberships = [];
 const initialUsers = [
   {
     id: 1,
-    name: "Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¯Ã™Å Ã˜Â±",
+    name: "المدير",
     username: "admin",
     password: "123456",
-    role: "Ã™â€¦Ã˜Â§Ã™â€žÃ™Æ’",
+    role: "مالك",
     active: true,
   },
 ];
@@ -129,52 +129,52 @@ const initialUsers = [
 const initialServices = [
   {
     id: 1,
-    name: "Ã˜ÂºÃ˜Â³Ã™Å Ã™â€ž Ã˜Â®Ã˜Â§Ã˜Â±Ã˜Â¬Ã™Å ",
-    type: "Ã˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â§Ã˜Âª",
+    name: "غسيل خارجي",
+    type: "سيارات",
     price: 80,
-    unit: "Ã˜Â«Ã˜Â§Ã˜Â¨Ã˜Âª",
+    unit: "ثابت",
     count: 12,
-    description: "Ã˜ÂºÃ˜Â³Ã™Å Ã™â€ž Ã™Ë†Ã˜ÂªÃ™â€ Ã˜Â¸Ã™Å Ã™Â Ã˜Â§Ã™â€žÃ™â€¡Ã™Å Ã™Æ’Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â§Ã˜Â±Ã˜Â¬Ã™Å  Ã™â€žÃ™â€žÃ˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â©",
+    description: "غسيل وتنظيف الهيكل الخارجي للسيارة",
     active: true,
   },
   {
     id: 2,
-    name: "Ã˜ÂºÃ˜Â³Ã™Å Ã™â€ž Ã˜Â¯Ã˜Â§Ã˜Â®Ã™â€žÃ™Å  Ã™Ë†Ã˜Â®Ã˜Â§Ã˜Â±Ã˜Â¬Ã™Å ",
-    type: "Ã˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â§Ã˜Âª",
+    name: "غسيل داخلي وخارجي",
+    type: "سيارات",
     price: 120,
-    unit: "Ã˜Â«Ã˜Â§Ã˜Â¨Ã˜Âª",
+    unit: "ثابت",
     count: 8,
-    description: "Ã˜ÂªÃ™â€ Ã˜Â¸Ã™Å Ã™Â Ã™Æ’Ã˜Â§Ã™â€¦Ã™â€ž Ã™â€žÃ™â€žÃ˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â© Ã™â€¦Ã™â€  Ã˜Â§Ã™â€žÃ˜Â¯Ã˜Â§Ã˜Â®Ã™â€ž Ã™Ë†Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â§Ã˜Â±Ã˜Â¬",
+    description: "تنظيف كامل للسيارة من الداخل والخارج",
     active: true,
   },
   {
     id: 3,
-    name: "Ã˜ÂªÃ™â€žÃ™â€¦Ã™Å Ã˜Â¹ Ã™Æ’Ã˜Â§Ã™â€¦Ã™â€ž",
-    type: "Ã˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â§Ã˜Âª",
+    name: "تلميع كامل",
+    type: "سيارات",
     price: 250,
-    unit: "Ã˜Â«Ã˜Â§Ã˜Â¨Ã˜Âª",
+    unit: "ثابت",
     count: 4,
-    description: "Ã˜ÂªÃ™â€žÃ™â€¦Ã™Å Ã˜Â¹ Ã™Æ’Ã˜Â§Ã™â€¦Ã™â€ž Ã™â€žÃ™â€žÃ˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â©",
+    description: "تلميع كامل للسيارة",
     active: true,
   },
   {
     id: 4,
-    name: "Ã˜ÂºÃ˜Â³Ã™Å Ã™â€ž Ã˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯",
-    type: "Ã˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯",
+    name: "غسيل سجاد",
+    type: "سجاد",
     price: 30,
-    unit: "Ã™â€¦Ã˜ÂªÃ˜Â±",
+    unit: "متر",
     count: 0,
-    description: "Ã˜ÂºÃ˜Â³Ã™Å Ã™â€ž Ã™Ë†Ã˜ÂªÃ™â€ Ã˜Â¸Ã™Å Ã™Â Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯",
+    description: "غسيل وتنظيف السجاد",
     active: true,
   },
   {
     id: 5,
-    name: "Ã˜ÂªÃ™â€ Ã˜Â¸Ã™Å Ã™Â Ã˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯ Ã™ÂÃ˜Â§Ã˜Â®Ã˜Â±",
-    type: "Ã˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯",
+    name: "تنظيف سجاد فاخر",
+    type: "سجاد",
     price: 45,
-    unit: "Ã™â€¦Ã˜ÂªÃ˜Â±",
+    unit: "متر",
     count: 0,
-    description: "Ã˜ÂªÃ™â€ Ã˜Â¸Ã™Å Ã™Â Ã˜Â¹Ã™â€¦Ã™Å Ã™â€š Ã™â€žÃ™â€žÃ˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯ Ã˜Â§Ã™â€žÃ™ÂÃ˜Â§Ã˜Â®Ã˜Â±",
+    description: "تنظيف عميق للسجاد الفاخر",
     active: true,
   },
 ];
@@ -183,15 +183,15 @@ const initialSettings = {
   businessName: "Mussa Wash & Clean",
   phone: "",
   address: "",
-  invoiceFooter: "Ã˜Â´Ã™Æ’Ã˜Â±Ã™â€¹Ã˜Â§ Ã™â€žÃ˜Â²Ã™Å Ã˜Â§Ã˜Â±Ã˜ÂªÃ™Æ’Ã™â€¦",
-  defaultPaymentMethod: "Ã™â€ Ã™â€šÃ˜Â¯Ã™Å ",
+  invoiceFooter: "شكرًا لزيارتكم",
+  defaultPaymentMethod: "نقدي",
   showPhoneOnInvoice: true,
   showAddressOnInvoice: true,
   showFooterOnInvoice: true,
 };
 
 // =========================
-// Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¬Ã™â€žÃ˜Â¯ Ã™Ë†Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ™ÂÃ˜Â§Ã˜Âª
+// المجلد والملفات
 // =========================
 
 function ensureDataDirectory() {
@@ -226,7 +226,7 @@ function readJsonFile(filePath, fallbackData) {
 
     return Array.isArray(data) ? data : fallbackData;
   } catch (error) {
-    console.error(`Ã˜Â®Ã˜Â·Ã˜Â£ Ã™ÂÃ™Å  Ã™â€šÃ˜Â±Ã˜Â§Ã˜Â¡Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ™Â: ${filePath}`);
+    console.error(`خطأ في قراءة الملف: ${filePath}`);
     return fallbackData;
   }
 }
@@ -242,7 +242,7 @@ function writeJsonFile(filePath, data) {
 }
 
 // =========================
-// Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ˜Â§Ã˜Â¡
+// العملاء
 // =========================
 
 function readCustomers() {
@@ -254,7 +254,7 @@ function writeCustomers(customers) {
 }
 
 // =========================
-// Ã˜Â§Ã™â€žÃ˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â§Ã˜Âª
+// السيارات
 // =========================
 
 function readCars() {
@@ -266,7 +266,7 @@ function writeCars(cars) {
 }
 
 // =========================
-// Ã˜Â§Ã™â€žÃ™ÂÃ™Ë†Ã˜Â§Ã˜ÂªÃ™Å Ã˜Â±
+// الفواتير
 // =========================
 
 function readInvoices() {
@@ -278,7 +278,7 @@ function writeInvoices(invoices) {
 }
 
 // =========================
-// Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂµÃ˜Â±Ã™Ë†Ã™ÂÃ˜Â§Ã˜Âª
+// المصروفات
 // =========================
 
 function readExpenses() {
@@ -290,7 +290,7 @@ function writeExpenses(expenses) {
 }
 
 // =========================
-// Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯
+// السجاد
 // =========================
 
 function readCarpets() {
@@ -316,7 +316,7 @@ function writeMemberships(memberships) {
 }
 
 // =========================
-// Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â¯Ã™â€¦Ã˜Â§Ã˜Âª
+// الخدمات
 // =========================
 
 function readServices() {
@@ -328,7 +328,7 @@ function writeServices(services) {
 }
 
 // =========================
-// Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â¹Ã˜Â¯Ã˜Â§Ã˜Â¯Ã˜Â§Ã˜Âª
+// الإعدادات
 // =========================
 
 function readSettings() {
@@ -353,7 +353,7 @@ function readSettings() {
     };
   } catch (error) {
     console.error(
-      `Ã˜Â®Ã˜Â·Ã˜Â£ Ã™ÂÃ™Å  Ã™â€šÃ˜Â±Ã˜Â§Ã˜Â¡Ã˜Â© Ã™â€¦Ã™â€žÃ™Â Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â¹Ã˜Â¯Ã˜Â§Ã˜Â¯Ã˜Â§Ã˜Âª: ${settingsFile}`
+      `خطأ في قراءة ملف الإعدادات: ${settingsFile}`
     );
     return { ...initialSettings };
   }
@@ -368,7 +368,7 @@ function writeSettings(settings) {
 
 
 // =========================
-// Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â¯Ã™â€¦Ã™Å Ã™â€ 
+// المستخدمين
 // =========================
 
 function readUsers() {
@@ -380,7 +380,7 @@ function writeUsers(users) {
 }
 
 // =========================
-// Ã˜Â§Ã™â€žÃ˜ÂµÃ™ÂÃ˜Â­Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â±Ã˜Â¦Ã™Å Ã˜Â³Ã™Å Ã˜Â©
+// الصفحة الرئيسية
 // =========================
 
 app.get("/", (req, res) => {
@@ -391,7 +391,7 @@ app.get("/", (req, res) => {
 });
 
 // =========================
-// Ã˜ÂªÃ˜Â³Ã˜Â¬Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¯Ã˜Â®Ã™Ë†Ã™â€ž
+// تسجيل الدخول
 // =========================
 
 app.post("/api/login", (req, res) => {
@@ -410,41 +410,41 @@ app.post("/api/login", (req, res) => {
   if (found) {
     return res.json({
       success: true,
-      message: "ØªÙ… ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ø¨Ù†Ø¬Ø§Ø­",
+      message: "تم تسجيل الدخول بنجاح",
       user: {
         id: found.id,
         name: found.name,
         username: found.username,
-        role: found.role || "Ù…ÙˆØ¸Ù",
+        role: found.role || "موظف",
       },
     });
   }
 
-  // ØªÙˆØ§ÙÙ‚ Ù…Ø¹ Ø§Ù„Ø­Ø³Ø§Ø¨ Ø§Ù„Ù‚Ø¯ÙŠÙ…
+  // توافق مع الحساب القديم
   if (
     cleanUser === OWNER_USERNAME &&
     cleanPass === OWNER_PASSWORD
   ) {
     return res.json({
       success: true,
-      message: "ØªÙ… ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ø¨Ù†Ø¬Ø§Ø­",
+      message: "تم تسجيل الدخول بنجاح",
       user: {
         id: 1,
-        name: "Ø§Ù„Ù…Ø¯ÙŠØ±",
+        name: "المدير",
         username: "admin",
-        role: "Ù…Ø§Ù„Ùƒ",
+        role: "مالك",
       },
     });
   }
 
   return res.status(401).json({
     success: false,
-    message: "Ø§Ø³Ù… Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø£Ùˆ ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± ØºÙŠØ± ØµØ­ÙŠØ­Ø©",
+    message: "اسم المستخدم أو كلمة المرور غير صحيحة",
   });
 });
 
 // =====================================================
-// Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ† (Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ†)
+// المستخدمين (الموظفين)
 // =====================================================
 
 app.get("/api/users", (req, res) => {
@@ -461,7 +461,7 @@ app.post("/api/users", (req, res) => {
   if (!String(name || "").trim() || !String(username || "").trim() || !password) {
     return res.status(400).json({
       success: false,
-      message: "Ø§Ù„Ø§Ø³Ù… ÙˆØ§Ø³Ù… Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… ÙˆÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± Ù…Ø·Ù„ÙˆØ¨Ø©",
+      message: "الاسم واسم المستخدم وكلمة المرور مطلوبة",
     });
   }
 
@@ -471,7 +471,7 @@ app.post("/api/users", (req, res) => {
   if (users.some((u) => String(u.username).trim() === cleanUsername)) {
     return res.status(400).json({
       success: false,
-      message: "Ø§Ø³Ù… Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ù…ÙˆØ¬ÙˆØ¯ Ø¨Ø§Ù„ÙØ¹Ù„",
+      message: "اسم المستخدم موجود بالفعل",
     });
   }
 
@@ -480,7 +480,7 @@ app.post("/api/users", (req, res) => {
     name: String(name).trim(),
     username: cleanUsername,
     password: String(password),
-    role: role || "Ù…ÙˆØ¸Ù",
+    role: role || "موظف",
     active: active !== false,
   };
 
@@ -490,7 +490,7 @@ app.post("/api/users", (req, res) => {
   const { password: _, ...safe } = newUser;
   return res.status(201).json({
     success: true,
-    message: "ØªÙ…Øª Ø¥Ø¶Ø§ÙØ© Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø¨Ù†Ø¬Ø§Ø­",
+    message: "تمت إضافة المستخدم بنجاح",
     user: safe,
   });
 });
@@ -503,7 +503,7 @@ app.put("/api/users/:id", (req, res) => {
   if (index === -1) {
     return res.status(404).json({
       success: false,
-      message: "Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯",
+      message: "المستخدم غير موجود",
     });
   }
 
@@ -512,7 +512,7 @@ app.put("/api/users/:id", (req, res) => {
   if (!String(name || "").trim() || !String(username || "").trim()) {
     return res.status(400).json({
       success: false,
-      message: "Ø§Ù„Ø§Ø³Ù… ÙˆØ§Ø³Ù… Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ù…Ø·Ù„ÙˆØ¨Ø§Ù†",
+      message: "الاسم واسم المستخدم مطلوبان",
     });
   }
 
@@ -524,7 +524,7 @@ app.put("/api/users/:id", (req, res) => {
   ) {
     return res.status(400).json({
       success: false,
-      message: "Ø§Ø³Ù… Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ù…Ø³ØªØ®Ø¯Ù… Ø¨Ø§Ù„ÙØ¹Ù„",
+      message: "اسم المستخدم مستخدم بالفعل",
     });
   }
 
@@ -532,7 +532,7 @@ app.put("/api/users/:id", (req, res) => {
     ...users[index],
     name: String(name).trim(),
     username: cleanUsername,
-    role: role || users[index].role || "Ù…ÙˆØ¸Ù",
+    role: role || users[index].role || "موظف",
     active: active !== false,
   };
 
@@ -546,7 +546,7 @@ app.put("/api/users/:id", (req, res) => {
   const { password: _, ...safe } = updated;
   return res.json({
     success: true,
-    message: "ØªÙ… ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø¨Ù†Ø¬Ø§Ø­",
+    message: "تم تعديل المستخدم بنجاح",
     user: safe,
   });
 });
@@ -559,19 +559,19 @@ app.delete("/api/users/:id", (req, res) => {
   if (!user) {
     return res.status(404).json({
       success: false,
-      message: "Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯",
+      message: "المستخدم غير موجود",
     });
   }
 
   if (user.username === "admin") {
     return res.status(400).json({
       success: false,
-      message: "Ù„Ø§ ÙŠÙ…ÙƒÙ† Ø­Ø°Ù Ø­Ø³Ø§Ø¨ Ø§Ù„Ù…Ø¯ÙŠØ± Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠ",
+      message: "لا يمكن حذف حساب المدير الرئيسي",
     });
   }
 
   writeUsers(users.filter((u) => u.id !== userId));
-  return res.json({ success: true, message: "ØªÙ… Ø­Ø°Ù Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø¨Ù†Ø¬Ø§Ø­" });
+  return res.json({ success: true, message: "تم حذف المستخدم بنجاح" });
 });
 
 app.post("/api/users/change-password", (req, res) => {
@@ -580,14 +580,14 @@ app.post("/api/users/change-password", (req, res) => {
   if (!username || !currentPassword || !newPassword) {
     return res.status(400).json({
       success: false,
-      message: "Ø¨ÙŠØ§Ù†Ø§Øª ØºÙŠØ± Ù…ÙƒØªÙ…Ù„Ø©",
+      message: "بيانات غير مكتملة",
     });
   }
 
   if (String(newPassword).length < 4) {
     return res.status(400).json({
       success: false,
-      message: "ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± Ø§Ù„Ø¬Ø¯ÙŠØ¯Ø© Ù‚ØµÙŠØ±Ø© Ø¬Ø¯Ù‹Ø§",
+      message: "كلمة المرور الجديدة قصيرة جدًا",
     });
   }
 
@@ -599,7 +599,7 @@ app.post("/api/users/change-password", (req, res) => {
   if (index === -1 || String(users[index].password) !== String(currentPassword)) {
     return res.status(400).json({
       success: false,
-      message: "ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± Ø§Ù„Ø­Ø§Ù„ÙŠØ© ØºÙŠØ± ØµØ­ÙŠØ­Ø©",
+      message: "كلمة المرور الحالية غير صحيحة",
     });
   }
 
@@ -608,12 +608,12 @@ app.post("/api/users/change-password", (req, res) => {
 
   return res.json({
     success: true,
-    message: "ØªÙ… ØªØºÙŠÙŠØ± ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± Ø¨Ù†Ø¬Ø§Ø­",
+    message: "تم تغيير كلمة المرور بنجاح",
   });
 });
 
 // =====================================================
-// Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡
+// العملاء
 // =====================================================
 
 app.get("/api/customers", (req, res) => {
@@ -636,7 +636,7 @@ app.post("/api/customers", (req, res) => {
   if (!name || !phone) {
     return res.status(400).json({
       success: false,
-      message: "Ã˜Â§Ã˜Â³Ã™â€¦ Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™Å Ã™â€ž Ã™Ë†Ã˜Â±Ã™â€šÃ™â€¦ Ã˜Â§Ã™â€žÃ™â€¡Ã˜Â§Ã˜ÂªÃ™Â Ã™â€¦Ã˜Â·Ã™â€žÃ™Ë†Ã˜Â¨Ã˜Â§Ã™â€ ",
+      message: "اسم العميل ورقم الهاتف مطلوبان",
     });
   }
 
@@ -652,7 +652,7 @@ app.post("/api/customers", (req, res) => {
   if (duplicatePhone) {
     return res.status(400).json({
       success: false,
-      message: "Ã˜Â±Ã™â€šÃ™â€¦ Ã˜Â§Ã™â€žÃ™â€¡Ã˜Â§Ã˜ÂªÃ™Â Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯ Ã˜Â¨Ã˜Â§Ã™â€žÃ™ÂÃ˜Â¹Ã™â€ž",
+      message: "رقم الهاتف موجود بالفعل",
     });
   }
 
@@ -671,7 +671,7 @@ app.post("/api/customers", (req, res) => {
 
   return res.status(201).json({
     success: true,
-    message: "Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â¥Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™Å Ã™â€ž Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+    message: "تمت إضافة العميل بنجاح",
     customer: newCustomer,
   });
 });
@@ -687,7 +687,7 @@ app.put("/api/customers/:id", (req, res) => {
   if (index === -1) {
     return res.status(404).json({
       success: false,
-      message: "Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™Å Ã™â€ž Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯",
+      message: "العميل غير موجود",
     });
   }
 
@@ -703,7 +703,7 @@ app.put("/api/customers/:id", (req, res) => {
   if (!name || !phone) {
     return res.status(400).json({
       success: false,
-      message: "Ã˜Â§Ã˜Â³Ã™â€¦ Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™Å Ã™â€ž Ã™Ë†Ã˜Â±Ã™â€šÃ™â€¦ Ã˜Â§Ã™â€žÃ™â€¡Ã˜Â§Ã˜ÂªÃ™Â Ã™â€¦Ã˜Â·Ã™â€žÃ™Ë†Ã˜Â¨Ã˜Â§Ã™â€ ",
+      message: "اسم العميل ورقم الهاتف مطلوبان",
     });
   }
 
@@ -718,7 +718,7 @@ app.put("/api/customers/:id", (req, res) => {
   if (duplicatePhone) {
     return res.status(400).json({
       success: false,
-      message: "Ã˜Â±Ã™â€šÃ™â€¦ Ã˜Â§Ã™â€žÃ™â€¡Ã˜Â§Ã˜ÂªÃ™Â Ã™â€¦Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â¯Ã™â€¦ Ã™â€žÃ˜Â¯Ã™â€° Ã˜Â¹Ã™â€¦Ã™Å Ã™â€ž Ã˜Â¢Ã˜Â®Ã˜Â±",
+      message: "رقم الهاتف مستخدم لدى عميل آخر",
     });
   }
 
@@ -737,7 +737,7 @@ app.put("/api/customers/:id", (req, res) => {
 
   return res.json({
     success: true,
-    message: "Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™Å Ã™â€ž Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+    message: "تم تعديل العميل بنجاح",
     customer: updatedCustomer,
   });
 });
@@ -755,7 +755,7 @@ app.delete("/api/customers/:id", (req, res) => {
   if (!exists) {
     return res.status(404).json({
       success: false,
-      message: "Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™Å Ã™â€ž Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯",
+      message: "العميل غير موجود",
     });
   }
 
@@ -767,7 +767,7 @@ app.delete("/api/customers/:id", (req, res) => {
     return res.status(400).json({
       success: false,
       message:
-        "Ã™â€žÃ˜Â§ Ã™Å Ã™â€¦Ã™Æ’Ã™â€  Ã˜Â­Ã˜Â°Ã™Â Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™Å Ã™â€ž Ã™â€šÃ˜Â¨Ã™â€ž Ã˜Â­Ã˜Â°Ã™Â Ã˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â§Ã˜ÂªÃ™â€¡ Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â±Ã˜ÂªÃ˜Â¨Ã˜Â·Ã˜Â©",
+        "لا يمكن حذف العميل قبل حذف سياراته المرتبطة",
     });
   }
 
@@ -779,12 +779,12 @@ app.delete("/api/customers/:id", (req, res) => {
 
   return res.json({
     success: true,
-    message: "Ã˜ÂªÃ™â€¦ Ã˜Â­Ã˜Â°Ã™Â Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™Å Ã™â€ž Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+    message: "تم حذف العميل بنجاح",
   });
 });
 
 // =====================================================
-// Ã˜Â§Ã™â€žÃ˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â§Ã˜Âª
+// السيارات
 // =====================================================
 
 app.get("/api/cars", (req, res) => {
@@ -816,7 +816,7 @@ app.post("/api/cars", (req, res) => {
   ) {
     return res.status(400).json({
       success: false,
-      message: "Ã˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Æ’Ã˜ÂªÃ™â€¦Ã™â€žÃ˜Â©",
+      message: "بيانات السيارة غير مكتملة",
     });
   }
 
@@ -830,7 +830,7 @@ app.post("/api/cars", (req, res) => {
   if (!customerExists) {
     return res.status(400).json({
       success: false,
-      message: "Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™Å Ã™â€ž Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯",
+      message: "العميل غير موجود",
     });
   }
 
@@ -845,7 +845,7 @@ app.post("/api/cars", (req, res) => {
   if (duplicatePlate) {
     return res.status(400).json({
       success: false,
-      message: "Ã˜Â±Ã™â€šÃ™â€¦ Ã˜Â§Ã™â€žÃ™â€žÃ™Ë†Ã˜Â­Ã˜Â© Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯ Ã˜Â¨Ã˜Â§Ã™â€žÃ™ÂÃ˜Â¹Ã™â€ž",
+      message: "رقم اللوحة موجود بالفعل",
     });
   }
 
@@ -866,7 +866,7 @@ app.post("/api/cars", (req, res) => {
 
   return res.status(201).json({
     success: true,
-    message: "Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â¥Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+    message: "تمت إضافة السيارة بنجاح",
     car: newCar,
   });
 });
@@ -882,7 +882,7 @@ app.put("/api/cars/:id", (req, res) => {
   if (index === -1) {
     return res.status(404).json({
       success: false,
-      message: "Ã˜Â§Ã™â€žÃ˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯Ã˜Â©",
+      message: "السيارة غير موجودة",
     });
   }
 
@@ -907,7 +907,7 @@ app.put("/api/cars/:id", (req, res) => {
   ) {
     return res.status(400).json({
       success: false,
-      message: "Ã˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Æ’Ã˜ÂªÃ™â€¦Ã™â€žÃ˜Â©",
+      message: "بيانات السيارة غير مكتملة",
     });
   }
 
@@ -921,7 +921,7 @@ app.put("/api/cars/:id", (req, res) => {
   if (!customerExists) {
     return res.status(400).json({
       success: false,
-      message: "Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™Å Ã™â€ž Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯",
+      message: "العميل غير موجود",
     });
   }
 
@@ -937,7 +937,7 @@ app.put("/api/cars/:id", (req, res) => {
     return res.status(400).json({
       success: false,
       message:
-        "Ã˜Â±Ã™â€šÃ™â€¦ Ã˜Â§Ã™â€žÃ™â€žÃ™Ë†Ã˜Â­Ã˜Â© Ã™â€¦Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â¯Ã™â€¦ Ã™ÂÃ™Å  Ã˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â© Ã˜Â£Ã˜Â®Ã˜Â±Ã™â€°",
+        "رقم اللوحة مستخدم في سيارة أخرى",
     });
   }
 
@@ -958,7 +958,7 @@ app.put("/api/cars/:id", (req, res) => {
 
   return res.json({
     success: true,
-    message: "Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+    message: "تم تعديل السيارة بنجاح",
     car: updatedCar,
   });
 });
@@ -974,7 +974,7 @@ app.delete("/api/cars/:id", (req, res) => {
   if (!exists) {
     return res.status(404).json({
       success: false,
-      message: "Ã˜Â§Ã™â€žÃ˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯Ã˜Â©",
+      message: "السيارة غير موجودة",
     });
   }
 
@@ -986,12 +986,12 @@ app.delete("/api/cars/:id", (req, res) => {
 
   return res.json({
     success: true,
-    message: "Ã˜ÂªÃ™â€¦ Ã˜Â­Ã˜Â°Ã™Â Ã˜Â§Ã™â€žÃ˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+    message: "تم حذف السيارة بنجاح",
   });
 });
 
 // =====================================================
-// Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â¯Ã™â€¦Ã˜Â§Ã˜Âª
+// الخدمات
 // =====================================================
 
 app.get("/api/services", (req, res) => {
@@ -999,7 +999,7 @@ app.get("/api/services", (req, res) => {
 
   let services = readServices();
 
-  if (type && type !== "Ã˜Â§Ã™â€žÃ™Æ’Ã™â€ž") {
+  if (type && type !== "الكل") {
     services = services.filter(
       (service) => service.type === type
     );
@@ -1035,17 +1035,17 @@ app.post("/api/services", (req, res) => {
   ) {
     return res.status(400).json({
       success: false,
-      message: "Ã˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â¯Ã™â€¦Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Æ’Ã˜ÂªÃ™â€¦Ã™â€žÃ˜Â©",
+      message: "بيانات الخدمة غير مكتملة",
     });
   }
 
   if (
-    type !== "Ã˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â§Ã˜Âª" &&
-    type !== "Ã˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯"
+    type !== "سيارات" &&
+    type !== "سجاد"
   ) {
     return res.status(400).json({
       success: false,
-      message: "Ã™â€ Ã™Ë†Ã˜Â¹ Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â¯Ã™â€¦Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã˜ÂµÃ˜Â­Ã™Å Ã˜Â­",
+      message: "نوع الخدمة غير صحيح",
     });
   }
 
@@ -1061,7 +1061,7 @@ app.post("/api/services", (req, res) => {
   ) {
     return res.status(400).json({
       success: false,
-      message: "Ã˜Â§Ã˜Â³Ã™â€¦ Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â¯Ã™â€¦Ã˜Â© Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯ Ã˜Â¨Ã˜Â§Ã™â€žÃ™ÂÃ˜Â¹Ã™â€ž",
+      message: "اسم الخدمة موجود بالفعل",
     });
   }
 
@@ -1070,7 +1070,7 @@ app.post("/api/services", (req, res) => {
     name: cleanName,
     type,
     price: Number(price),
-    unit: unit || "Ã˜Â«Ã˜Â§Ã˜Â¨Ã˜Âª",
+    unit: unit || "ثابت",
     count: 0,
     description: description
       ? String(description).trim()
@@ -1083,7 +1083,7 @@ app.post("/api/services", (req, res) => {
 
   return res.status(201).json({
     success: true,
-    message: "Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â¥Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â¯Ã™â€¦Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+    message: "تمت إضافة الخدمة بنجاح",
     service: newService,
   });
 });
@@ -1101,7 +1101,7 @@ app.put("/api/services/:id", (req, res) => {
   if (index === -1) {
     return res.status(404).json({
       success: false,
-      message: "Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â¯Ã™â€¦Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯Ã˜Â©",
+      message: "الخدمة غير موجودة",
     });
   }
 
@@ -1122,17 +1122,17 @@ app.put("/api/services/:id", (req, res) => {
   ) {
     return res.status(400).json({
       success: false,
-      message: "Ã˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â¯Ã™â€¦Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Æ’Ã˜ÂªÃ™â€¦Ã™â€žÃ˜Â©",
+      message: "بيانات الخدمة غير مكتملة",
     });
   }
 
   if (
-    type !== "Ã˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â§Ã˜Âª" &&
-    type !== "Ã˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯"
+    type !== "سيارات" &&
+    type !== "سجاد"
   ) {
     return res.status(400).json({
       success: false,
-      message: "Ã™â€ Ã™Ë†Ã˜Â¹ Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â¯Ã™â€¦Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã˜ÂµÃ˜Â­Ã™Å Ã˜Â­",
+      message: "نوع الخدمة غير صحيح",
     });
   }
 
@@ -1148,7 +1148,7 @@ app.put("/api/services/:id", (req, res) => {
   ) {
     return res.status(400).json({
       success: false,
-      message: "Ã˜Â§Ã˜Â³Ã™â€¦ Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â¯Ã™â€¦Ã˜Â© Ã™â€¦Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â¯Ã™â€¦ Ã˜Â¨Ã˜Â§Ã™â€žÃ™ÂÃ˜Â¹Ã™â€ž",
+      message: "اسم الخدمة مستخدم بالفعل",
     });
   }
 
@@ -1157,7 +1157,7 @@ app.put("/api/services/:id", (req, res) => {
     name: cleanName,
     type,
     price: Number(price),
-    unit: unit || "Ã˜Â«Ã˜Â§Ã˜Â¨Ã˜Âª",
+    unit: unit || "ثابت",
     description: description
       ? String(description).trim()
       : "",
@@ -1170,7 +1170,7 @@ app.put("/api/services/:id", (req, res) => {
 
   return res.json({
     success: true,
-    message: "Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â¯Ã™â€¦Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+    message: "تم تعديل الخدمة بنجاح",
     service: updatedService,
   });
 });
@@ -1188,7 +1188,7 @@ app.delete("/api/services/:id", (req, res) => {
   ) {
     return res.status(404).json({
       success: false,
-      message: "Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â¯Ã™â€¦Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯Ã˜Â©",
+      message: "الخدمة غير موجودة",
     });
   }
 
@@ -1201,12 +1201,12 @@ app.delete("/api/services/:id", (req, res) => {
 
   return res.json({
     success: true,
-    message: "Ã˜ÂªÃ™â€¦ Ã˜Â­Ã˜Â°Ã™Â Ã˜Â§Ã™â€žÃ˜Â®Ã˜Â¯Ã™â€¦Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+    message: "تم حذف الخدمة بنجاح",
   });
 });
 
 // =====================================================
-// Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â¹Ã˜Â¯Ã˜Â§Ã˜Â¯Ã˜Â§Ã˜Âª
+// الإعدادات
 // =====================================================
 
 app.get("/api/settings", (req, res) => {
@@ -1247,9 +1247,9 @@ app.put("/api/settings", (req, res) => {
 
     defaultPaymentMethod:
       [
-        "Ã™â€ Ã™â€šÃ˜Â¯Ã™Å ",
-        "Ã˜Â¨Ã˜Â·Ã˜Â§Ã™â€šÃ˜Â©",
-        "Ã˜ÂªÃ˜Â­Ã™Ë†Ã™Å Ã™â€ž",
+        "نقدي",
+        "بطاقة",
+        "تحويل",
       ].includes(
         defaultPaymentMethod
       )
@@ -1271,7 +1271,7 @@ app.put("/api/settings", (req, res) => {
 
   return res.json({
     success: true,
-    message: "Ã˜ÂªÃ™â€¦ Ã˜Â­Ã™ÂÃ˜Â¸ Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â¹Ã˜Â¯Ã˜Â§Ã˜Â¯Ã˜Â§Ã˜Âª Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+    message: "تم حفظ الإعدادات بنجاح",
     settings: readSettings(),
   });
 });
@@ -1282,13 +1282,13 @@ app.post("/api/settings/reset", (req, res) => {
   return res.json({
     success: true,
     message:
-      "Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â³Ã˜ÂªÃ˜Â¹Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â¹Ã˜Â¯Ã˜Â§Ã˜Â¯Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â§Ã™ÂÃ˜ÂªÃ˜Â±Ã˜Â§Ã˜Â¶Ã™Å Ã˜Â©",
+      "تم استعادة الإعدادات الافتراضية",
     settings: readSettings(),
   });
 });
 
 // =====================================================
-// Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â¶Ã™Ë†Ã™Å Ã˜Â§Ã˜Âª
+// العضويات
 // =====================================================
 
 app.get("/api/memberships", (req, res) => {
@@ -1298,11 +1298,11 @@ app.get("/api/memberships", (req, res) => {
       memberships: readMemberships(),
     });
   } catch (error) {
-    console.error("Ã˜ÂªÃ˜Â¹Ã˜Â°Ã˜Â± Ã˜ÂªÃ˜Â­Ã™â€¦Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â¶Ã™Ë†Ã™Å Ã˜Â§Ã˜Âª:", error);
+    console.error("تعذر تحميل العضويات:", error);
 
     res.status(500).json({
       success: false,
-      message: "Ã˜ÂªÃ˜Â¹Ã˜Â°Ã˜Â± Ã˜ÂªÃ˜Â­Ã™â€¦Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â¶Ã™Ë†Ã™Å Ã˜Â§Ã˜Âª",
+      message: "تعذر تحميل العضويات",
     });
   }
 });
@@ -1332,7 +1332,7 @@ app.post("/api/memberships", (req, res) => {
   ) {
     return res.status(400).json({
       success: false,
-      message: "Ã˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â¶Ã™Ë†Ã™Å Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Æ’Ã˜ÂªÃ™â€¦Ã™â€žÃ˜Â©",
+      message: "بيانات العضوية غير مكتملة",
     });
   }
 
@@ -1344,7 +1344,7 @@ app.post("/api/memberships", (req, res) => {
   if (!customer) {
     return res.status(400).json({
       success: false,
-      message: "Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™Å Ã™â€ž Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯",
+      message: "العميل غير موجود",
     });
   }
 
@@ -1373,7 +1373,7 @@ app.post("/api/memberships", (req, res) => {
       )
     ),
     price: Number(price) || 0,
-    status: status === "Ã™â€¦Ã™â€ Ã˜ÂªÃ™â€¡Ã™Å Ã˜Â©" ? "Ã™â€¦Ã™â€ Ã˜ÂªÃ™â€¡Ã™Å Ã˜Â©" : "Ã˜Â³Ã˜Â§Ã˜Â±Ã™Å Ã˜Â©",
+    status: status === "منتهية" ? "منتهية" : "سارية",
     notes: notes ? String(notes).trim() : "",
     createdAt: new Date().toISOString(),
   };
@@ -1383,7 +1383,7 @@ app.post("/api/memberships", (req, res) => {
 
   res.status(201).json({
     success: true,
-    message: "Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â¥Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â¶Ã™Ë†Ã™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+    message: "تمت إضافة العضوية بنجاح",
     membership: newMembership,
   });
 });
@@ -1398,7 +1398,7 @@ app.put("/api/memberships/:id", (req, res) => {
   if (index === -1) {
     return res.status(404).json({
       success: false,
-      message: "Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â¶Ã™Ë†Ã™Å Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯Ã˜Â©",
+      message: "العضوية غير موجودة",
     });
   }
 
@@ -1426,7 +1426,7 @@ app.put("/api/memberships/:id", (req, res) => {
   ) {
     return res.status(400).json({
       success: false,
-      message: "Ã˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â¶Ã™Ë†Ã™Å Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Æ’Ã˜ÂªÃ™â€¦Ã™â€žÃ˜Â©",
+      message: "بيانات العضوية غير مكتملة",
     });
   }
 
@@ -1438,7 +1438,7 @@ app.put("/api/memberships/:id", (req, res) => {
   if (!customer) {
     return res.status(400).json({
       success: false,
-      message: "Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™Å Ã™â€ž Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯",
+      message: "العميل غير موجود",
     });
   }
 
@@ -1463,7 +1463,7 @@ app.put("/api/memberships/:id", (req, res) => {
     totalVisits: total,
     remainingVisits: safeRemaining,
     price: Number(price) || 0,
-    status: status === "Ã™â€¦Ã™â€ Ã˜ÂªÃ™â€¡Ã™Å Ã˜Â©" ? "Ã™â€¦Ã™â€ Ã˜ÂªÃ™â€¡Ã™Å Ã˜Â©" : "Ã˜Â³Ã˜Â§Ã˜Â±Ã™Å Ã˜Â©",
+    status: status === "منتهية" ? "منتهية" : "سارية",
     notes: notes ? String(notes).trim() : "",
   };
 
@@ -1472,7 +1472,7 @@ app.put("/api/memberships/:id", (req, res) => {
 
   res.json({
     success: true,
-    message: "Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â¶Ã™Ë†Ã™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+    message: "تم تعديل العضوية بنجاح",
     membership: updatedMembership,
   });
 });
@@ -1484,7 +1484,7 @@ app.delete("/api/memberships/:id", (req, res) => {
   if (!memberships.some((membership) => membership.id === id)) {
     return res.status(404).json({
       success: false,
-      message: "Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â¶Ã™Ë†Ã™Å Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯Ã˜Â©",
+      message: "العضوية غير موجودة",
     });
   }
 
@@ -1496,7 +1496,7 @@ app.delete("/api/memberships/:id", (req, res) => {
 
   res.json({
     success: true,
-    message: "Ã˜ÂªÃ™â€¦ Ã˜Â­Ã˜Â°Ã™Â Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â¶Ã™Ë†Ã™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+    message: "تم حذف العضوية بنجاح",
   });
 });
 
@@ -1510,23 +1510,23 @@ app.post("/api/memberships/:id/use-visit", (req, res) => {
   if (index === -1) {
     return res.status(404).json({
       success: false,
-      message: "Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â¶Ã™Ë†Ã™Å Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯Ã˜Â©",
+      message: "العضوية غير موجودة",
     });
   }
 
   const membership = memberships[index];
 
-  if (membership.status !== "Ã˜Â³Ã˜Â§Ã˜Â±Ã™Å Ã˜Â©") {
+  if (membership.status !== "سارية") {
     return res.status(400).json({
       success: false,
-      message: "Ã™â€¡Ã˜Â°Ã™â€¡ Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â¶Ã™Ë†Ã™Å Ã˜Â© Ã™â€žÃ™Å Ã˜Â³Ã˜Âª Ã˜Â³Ã˜Â§Ã˜Â±Ã™Å Ã˜Â©",
+      message: "هذه العضوية ليست سارية",
     });
   }
 
   if (Number(membership.remainingVisits) <= 0) {
     return res.status(400).json({
       success: false,
-      message: "Ã™â€žÃ˜Â§ Ã˜ÂªÃ™Ë†Ã˜Â¬Ã˜Â¯ Ã˜Â²Ã™Å Ã˜Â§Ã˜Â±Ã˜Â§Ã˜Âª Ã™â€¦Ã˜ÂªÃ˜Â¨Ã™â€šÃ™Å Ã˜Â© Ã™ÂÃ™Å  Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â¶Ã™Ë†Ã™Å Ã˜Â©",
+      message: "لا توجد زيارات متبقية في العضوية",
     });
   }
 
@@ -1535,7 +1535,7 @@ app.post("/api/memberships/:id/use-visit", (req, res) => {
 
   if (membership.remainingVisits <= 0) {
     membership.remainingVisits = 0;
-    membership.status = "Ã™â€¦Ã™â€ Ã˜ÂªÃ™â€¡Ã™Å Ã˜Â©";
+    membership.status = "منتهية";
   }
 
   memberships[index] = membership;
@@ -1543,7 +1543,7 @@ app.post("/api/memberships/:id/use-visit", (req, res) => {
 
   res.json({
     success: true,
-    message: "Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â³Ã˜Â¬Ã™Å Ã™â€ž Ã˜Â§Ã˜Â³Ã˜ÂªÃ˜Â®Ã˜Â¯Ã˜Â§Ã™â€¦ Ã˜Â²Ã™Å Ã˜Â§Ã˜Â±Ã˜Â© Ã™â€¦Ã™â€  Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â¶Ã™Ë†Ã™Å Ã˜Â©",
+    message: "تم تسجيل استخدام زيارة من العضوية",
     membership,
   });
 });
@@ -1558,7 +1558,7 @@ app.post("/api/memberships/:id/renew", (req, res) => {
   if (index === -1) {
     return res.status(404).json({
       success: false,
-      message: "Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â¶Ã™Ë†Ã™Å Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯Ã˜Â©",
+      message: "العضوية غير موجودة",
     });
   }
 
@@ -1579,7 +1579,7 @@ app.post("/api/memberships/:id/renew", (req, res) => {
   ) {
     return res.status(400).json({
       success: false,
-      message: "Ã˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯ Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Æ’Ã˜ÂªÃ™â€¦Ã™â€žÃ˜Â©",
+      message: "بيانات التجديد غير مكتملة",
     });
   }
 
@@ -1591,7 +1591,7 @@ app.post("/api/memberships/:id/renew", (req, res) => {
     totalVisits: Number(totalVisits) || 0,
     remainingVisits: Number(totalVisits) || 0,
     price: Number(price) || 0,
-    status: "Ã˜Â³Ã˜Â§Ã˜Â±Ã™Å Ã˜Â©",
+    status: "سارية",
     updatedAt: new Date().toISOString(),
   };
 
@@ -1600,13 +1600,13 @@ app.post("/api/memberships/:id/renew", (req, res) => {
 
   res.json({
     success: true,
-    message: "Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¬Ã˜Â¯Ã™Å Ã˜Â¯ Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â¶Ã™Ë†Ã™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+    message: "تم تجديد العضوية بنجاح",
     membership: updatedMembership,
   });
 });
 
 // =====================================================
-// Ã˜Â§Ã™â€žÃ™â€ Ã˜Â³Ã˜Â® Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â­Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â·Ã™Å  Ã™Ë†Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã˜ÂªÃ˜Â±Ã˜Â¬Ã˜Â§Ã˜Â¹
+// النسخ الاحتياطي والاسترجاع
 // =====================================================
 
 app.get("/api/backup", (req, res) => {
@@ -1631,11 +1631,11 @@ app.get("/api/backup", (req, res) => {
       backup,
     });
   } catch (error) {
-    console.error("Ã˜Â®Ã˜Â·Ã˜Â£ Ã˜Â£Ã˜Â«Ã™â€ Ã˜Â§Ã˜Â¡ Ã˜Â¥Ã™â€ Ã˜Â´Ã˜Â§Ã˜Â¡ Ã˜Â§Ã™â€žÃ™â€ Ã˜Â³Ã˜Â®Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â­Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â·Ã™Å Ã˜Â©:", error);
+    console.error("خطأ أثناء إنشاء النسخة الاحتياطية:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Ã˜ÂªÃ˜Â¹Ã˜Â°Ã˜Â± Ã˜Â¥Ã™â€ Ã˜Â´Ã˜Â§Ã˜Â¡ Ã˜Â§Ã™â€žÃ™â€ Ã˜Â³Ã˜Â®Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â­Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â·Ã™Å Ã˜Â©",
+      message: "تعذر إنشاء النسخة الاحتياطية",
     });
   }
 });
@@ -1647,7 +1647,7 @@ app.post("/api/backup/restore", (req, res) => {
     if (!backup || typeof backup !== "object" || !backup.data) {
       return res.status(400).json({
         success: false,
-        message: "Ã™â€¦Ã™â€žÃ™Â Ã˜Â§Ã™â€žÃ™â€ Ã˜Â³Ã˜Â®Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â­Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â·Ã™Å Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã˜ÂµÃ˜Â§Ã™â€žÃ˜Â­",
+        message: "ملف النسخة الاحتياطية غير صالح",
       });
     }
 
@@ -1666,7 +1666,7 @@ app.post("/api/backup/restore", (req, res) => {
       if (!Array.isArray(data[key])) {
         return res.status(400).json({
           success: false,
-          message: `Ã˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª ${key} Ã˜Â¯Ã˜Â§Ã˜Â®Ã™â€ž Ã˜Â§Ã™â€žÃ™â€ Ã˜Â³Ã˜Â®Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â­Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â·Ã™Å Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã˜ÂµÃ˜Â§Ã™â€žÃ˜Â­Ã˜Â©`,
+          message: `بيانات ${key} داخل النسخة الاحتياطية غير صالحة`,
         });
       }
     }
@@ -1678,7 +1678,7 @@ app.post("/api/backup/restore", (req, res) => {
     ) {
       return res.status(400).json({
         success: false,
-        message: "Ã˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â¥Ã˜Â¹Ã˜Â¯Ã˜Â§Ã˜Â¯Ã˜Â§Ã˜Âª Ã˜Â¯Ã˜Â§Ã˜Â®Ã™â€ž Ã˜Â§Ã™â€žÃ™â€ Ã˜Â³Ã˜Â®Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â­Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â·Ã™Å Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã˜ÂµÃ˜Â§Ã™â€žÃ˜Â­Ã˜Â©",
+        message: "بيانات الإعدادات داخل النسخة الاحتياطية غير صالحة",
       });
     }
 
@@ -1693,20 +1693,20 @@ app.post("/api/backup/restore", (req, res) => {
 
     return res.json({
       success: true,
-      message: "Ã˜ÂªÃ™â€¦ Ã˜Â§Ã˜Â³Ã˜ÂªÃ˜Â±Ã˜Â¬Ã˜Â§Ã˜Â¹ Ã˜Â§Ã™â€žÃ™â€ Ã˜Â³Ã˜Â®Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â­Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â·Ã™Å Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+      message: "تم استرجاع النسخة الاحتياطية بنجاح",
     });
   } catch (error) {
-    console.error("Ã˜Â®Ã˜Â·Ã˜Â£ Ã˜Â£Ã˜Â«Ã™â€ Ã˜Â§Ã˜Â¡ Ã˜Â§Ã˜Â³Ã˜ÂªÃ˜Â±Ã˜Â¬Ã˜Â§Ã˜Â¹ Ã˜Â§Ã™â€žÃ™â€ Ã˜Â³Ã˜Â®Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â­Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â·Ã™Å Ã˜Â©:", error);
+    console.error("خطأ أثناء استرجاع النسخة الاحتياطية:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Ã˜ÂªÃ˜Â¹Ã˜Â°Ã˜Â± Ã˜Â§Ã˜Â³Ã˜ÂªÃ˜Â±Ã˜Â¬Ã˜Â§Ã˜Â¹ Ã˜Â§Ã™â€žÃ™â€ Ã˜Â³Ã˜Â®Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â­Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â·Ã™Å Ã˜Â©",
+      message: "تعذر استرجاع النسخة الاحتياطية",
     });
   }
 });
 
 // =====================================================
-// Ã˜Â§Ã™â€žÃ™ÂÃ™Ë†Ã˜Â§Ã˜ÂªÃ™Å Ã˜Â±
+// الفواتير
 // =====================================================
 
 app.get("/api/invoices", (req, res) => {
@@ -1746,40 +1746,40 @@ app.post("/api/invoices", (req, res) => {
     return res.status(400).json({
       success: false,
       message:
-        "Ã˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™ÂÃ˜Â§Ã˜ÂªÃ™Ë†Ã˜Â±Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Æ’Ã˜ÂªÃ™â€¦Ã™â€žÃ˜Â©",
+        "بيانات الفاتورة غير مكتملة",
     });
   }
 
   if (
-    assetType !== "Ã˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â©" &&
-    assetType !== "Ã˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯Ã˜Â©"
+    assetType !== "سيارة" &&
+    assetType !== "سجادة"
   ) {
     return res.status(400).json({
       success: false,
       message:
-        "Ã™â€ Ã™Ë†Ã˜Â¹ Ã˜Â§Ã™â€žÃ˜Â±Ã˜Â¨Ã˜Â· Ã˜ÂºÃ™Å Ã˜Â± Ã˜ÂµÃ˜Â­Ã™Å Ã˜Â­",
+        "نوع الربط غير صحيح",
     });
   }
 
   if (
-    assetType === "Ã˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â©" &&
+    assetType === "سيارة" &&
     !carId
   ) {
     return res.status(400).json({
       success: false,
       message:
-        "Ã™Å Ã˜Â¬Ã˜Â¨ Ã˜Â§Ã˜Â®Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â± Ã˜Â§Ã™â€žÃ˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â©",
+        "يجب اختيار السيارة",
     });
   }
 
   if (
-    assetType === "Ã˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯Ã˜Â©" &&
+    assetType === "سجادة" &&
     !carpetId
   ) {
     return res.status(400).json({
       success: false,
       message:
-        "Ã™Å Ã˜Â¬Ã˜Â¨ Ã˜Â§Ã˜Â®Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â± Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯Ã˜Â©",
+        "يجب اختيار السجادة",
     });
   }
 
@@ -1806,7 +1806,7 @@ app.post("/api/invoices", (req, res) => {
     return res.status(400).json({
       success: false,
       message:
-        "Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™Å Ã™â€ž Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯",
+        "العميل غير موجود",
     });
   }
 
@@ -1824,7 +1824,7 @@ app.post("/api/invoices", (req, res) => {
     null;
 
   if (
-    assetType === "Ã˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â©"
+    assetType === "سيارة"
   ) {
     const car =
       cars.find(
@@ -1837,7 +1837,7 @@ app.post("/api/invoices", (req, res) => {
       return res.status(400).json({
         success: false,
         message:
-          "Ã˜Â§Ã™â€žÃ˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯Ã˜Â©",
+          "السيارة غير موجودة",
       });
     }
 
@@ -1848,7 +1848,7 @@ app.post("/api/invoices", (req, res) => {
       return res.status(400).json({
         success: false,
         message:
-          "Ã˜Â§Ã™â€žÃ˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â© Ã™â€žÃ™Å Ã˜Â³Ã˜Âª Ã˜ÂªÃ˜Â§Ã˜Â¨Ã˜Â¹Ã˜Â© Ã™â€žÃ™â€¡Ã˜Â°Ã˜Â§ Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™Å Ã™â€ž",
+          "السيارة ليست تابعة لهذا العميل",
       });
     }
 
@@ -1861,7 +1861,7 @@ app.post("/api/invoices", (req, res) => {
   }
 
   if (
-    assetType === "Ã˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯Ã˜Â©"
+    assetType === "سجادة"
   ) {
     const carpet =
       carpets.find(
@@ -1874,7 +1874,7 @@ app.post("/api/invoices", (req, res) => {
       return res.status(400).json({
         success: false,
         message:
-          "Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯Ã˜Â©",
+          "السجادة غير موجودة",
       });
     }
 
@@ -1885,7 +1885,7 @@ app.post("/api/invoices", (req, res) => {
       return res.status(400).json({
         success: false,
         message:
-          "Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯Ã˜Â© Ã™â€žÃ™Å Ã˜Â³Ã˜Âª Ã˜ÂªÃ˜Â§Ã˜Â¨Ã˜Â¹Ã˜Â© Ã™â€žÃ™â€¡Ã˜Â°Ã˜Â§ Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™Å Ã™â€ž",
+          "السجادة ليست تابعة لهذا العميل",
       });
     }
 
@@ -1896,7 +1896,7 @@ app.post("/api/invoices", (req, res) => {
       finalAssetInfo ||
       `${carpet.name} - ${carpet.type} - ${Number(
         carpet.area || 0
-      ).toFixed(2)} Ã™â€¦Ã‚Â²`;
+      ).toFixed(2)} م²`;
   }
 
   const newInvoice = {
@@ -1946,11 +1946,11 @@ app.post("/api/invoices", (req, res) => {
 
     paymentMethod:
       paymentMethod ||
-      "Ã™â€ Ã™â€šÃ˜Â¯Ã™Å ",
+      "نقدي",
 
     paymentStatus:
       paymentStatus ||
-      "Ã™â€¦Ã˜Â¯Ã™ÂÃ™Ë†Ã˜Â¹Ã˜Â©",
+      "مدفوعة",
 
     paidAmount:
       Number(paidAmount) || 0,
@@ -1976,7 +1976,7 @@ app.post("/api/invoices", (req, res) => {
   return res.status(201).json({
     success: true,
     message:
-      "Ã˜ÂªÃ™â€¦ Ã˜Â­Ã™ÂÃ˜Â¸ Ã˜Â§Ã™â€žÃ™ÂÃ˜Â§Ã˜ÂªÃ™Ë†Ã˜Â±Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+      "تم حفظ الفاتورة بنجاح",
     invoice:
       newInvoice,
   });
@@ -2000,7 +2000,7 @@ app.put("/api/invoices/:id", (req, res) => {
     return res.status(404).json({
       success: false,
       message:
-        "Ã˜Â§Ã™â€žÃ™ÂÃ˜Â§Ã˜ÂªÃ™Ë†Ã˜Â±Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯Ã˜Â©",
+        "الفاتورة غير موجودة",
     });
   }
 
@@ -2031,40 +2031,40 @@ app.put("/api/invoices/:id", (req, res) => {
     return res.status(400).json({
       success: false,
       message:
-        "Ã˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™ÂÃ˜Â§Ã˜ÂªÃ™Ë†Ã˜Â±Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Æ’Ã˜ÂªÃ™â€¦Ã™â€žÃ˜Â©",
+        "بيانات الفاتورة غير مكتملة",
     });
   }
 
   if (
-    assetType !== "Ã˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â©" &&
-    assetType !== "Ã˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯Ã˜Â©"
+    assetType !== "سيارة" &&
+    assetType !== "سجادة"
   ) {
     return res.status(400).json({
       success: false,
       message:
-        "Ã™â€ Ã™Ë†Ã˜Â¹ Ã˜Â§Ã™â€žÃ˜Â±Ã˜Â¨Ã˜Â· Ã˜ÂºÃ™Å Ã˜Â± Ã˜ÂµÃ˜Â­Ã™Å Ã˜Â­",
+        "نوع الربط غير صحيح",
     });
   }
 
   if (
-    assetType === "Ã˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â©" &&
+    assetType === "سيارة" &&
     !carId
   ) {
     return res.status(400).json({
       success: false,
       message:
-        "Ã™Å Ã˜Â¬Ã˜Â¨ Ã˜Â§Ã˜Â®Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â± Ã˜Â§Ã™â€žÃ˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â©",
+        "يجب اختيار السيارة",
     });
   }
 
   if (
-    assetType === "Ã˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯Ã˜Â©" &&
+    assetType === "سجادة" &&
     !carpetId
   ) {
     return res.status(400).json({
       success: false,
       message:
-        "Ã™Å Ã˜Â¬Ã˜Â¨ Ã˜Â§Ã˜Â®Ã˜ÂªÃ™Å Ã˜Â§Ã˜Â± Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯Ã˜Â©",
+        "يجب اختيار السجادة",
     });
   }
 
@@ -2088,7 +2088,7 @@ app.put("/api/invoices/:id", (req, res) => {
     return res.status(400).json({
       success: false,
       message:
-        "Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™Å Ã™â€ž Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯",
+        "العميل غير موجود",
     });
   }
 
@@ -2107,7 +2107,7 @@ app.put("/api/invoices/:id", (req, res) => {
 
   if (
     assetType ===
-    "Ã˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â©"
+    "سيارة"
   ) {
     const car =
       cars.find(
@@ -2120,7 +2120,7 @@ app.put("/api/invoices/:id", (req, res) => {
       return res.status(400).json({
         success: false,
         message:
-          "Ã˜Â§Ã™â€žÃ˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯Ã˜Â©",
+          "السيارة غير موجودة",
       });
     }
 
@@ -2131,7 +2131,7 @@ app.put("/api/invoices/:id", (req, res) => {
       return res.status(400).json({
         success: false,
         message:
-          "Ã˜Â§Ã™â€žÃ˜Â³Ã™Å Ã˜Â§Ã˜Â±Ã˜Â© Ã™â€žÃ™Å Ã˜Â³Ã˜Âª Ã˜ÂªÃ˜Â§Ã˜Â¨Ã˜Â¹Ã˜Â© Ã™â€žÃ™â€¡Ã˜Â°Ã˜Â§ Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™Å Ã™â€ž",
+          "السيارة ليست تابعة لهذا العميل",
       });
     }
 
@@ -2145,7 +2145,7 @@ app.put("/api/invoices/:id", (req, res) => {
 
   if (
     assetType ===
-    "Ã˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯Ã˜Â©"
+    "سجادة"
   ) {
     const carpet =
       carpets.find(
@@ -2158,7 +2158,7 @@ app.put("/api/invoices/:id", (req, res) => {
       return res.status(400).json({
         success: false,
         message:
-          "Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯Ã˜Â©",
+          "السجادة غير موجودة",
       });
     }
 
@@ -2169,7 +2169,7 @@ app.put("/api/invoices/:id", (req, res) => {
       return res.status(400).json({
         success: false,
         message:
-          "Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯Ã˜Â© Ã™â€žÃ™Å Ã˜Â³Ã˜Âª Ã˜ÂªÃ˜Â§Ã˜Â¨Ã˜Â¹Ã˜Â© Ã™â€žÃ™â€¡Ã˜Â°Ã˜Â§ Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™Å Ã™â€ž",
+          "السجادة ليست تابعة لهذا العميل",
       });
     }
 
@@ -2180,7 +2180,7 @@ app.put("/api/invoices/:id", (req, res) => {
       finalAssetInfo ||
       `${carpet.name} - ${carpet.type} - ${Number(
         carpet.area || 0
-      ).toFixed(2)} Ã™â€¦Ã‚Â²`;
+      ).toFixed(2)} م²`;
   }
 
   const updatedInvoice = {
@@ -2218,11 +2218,11 @@ app.put("/api/invoices/:id", (req, res) => {
 
     paymentMethod:
       paymentMethod ||
-      "Ã™â€ Ã™â€šÃ˜Â¯Ã™Å ",
+      "نقدي",
 
     paymentStatus:
       paymentStatus ||
-      "Ã™â€¦Ã˜Â¯Ã™ÂÃ™Ë†Ã˜Â¹Ã˜Â©",
+      "مدفوعة",
 
     paidAmount:
       Number(paidAmount) || 0,
@@ -2247,7 +2247,7 @@ app.put("/api/invoices/:id", (req, res) => {
   return res.json({
     success: true,
     message:
-      "Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ™ÂÃ˜Â§Ã˜ÂªÃ™Ë†Ã˜Â±Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+      "تم تعديل الفاتورة بنجاح",
     invoice:
       updatedInvoice,
   });
@@ -2271,7 +2271,7 @@ app.delete("/api/invoices/:id", (req, res) => {
     return res.status(404).json({
       success: false,
       message:
-        "Ã˜Â§Ã™â€žÃ™ÂÃ˜Â§Ã˜ÂªÃ™Ë†Ã˜Â±Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯Ã˜Â©",
+        "الفاتورة غير موجودة",
     });
   }
 
@@ -2289,12 +2289,12 @@ app.delete("/api/invoices/:id", (req, res) => {
   return res.json({
     success: true,
     message:
-      "Ã˜ÂªÃ™â€¦ Ã˜Â­Ã˜Â°Ã™Â Ã˜Â§Ã™â€žÃ™ÂÃ˜Â§Ã˜ÂªÃ™Ë†Ã˜Â±Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+      "تم حذف الفاتورة بنجاح",
   });
 });
 
 // =====================================================
-// Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂµÃ˜Â±Ã™Ë†Ã™ÂÃ˜Â§Ã˜Âª
+// المصروفات
 // =====================================================
 
 app.get("/api/expenses", (req, res) => {
@@ -2324,7 +2324,7 @@ app.post("/api/expenses", (req, res) => {
     return res.status(400).json({
       success: false,
       message:
-        "Ã˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂµÃ˜Â±Ã™Ë†Ã™Â Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Æ’Ã˜ÂªÃ™â€¦Ã™â€žÃ˜Â©",
+        "بيانات المصروف غير مكتملة",
     });
   }
 
@@ -2351,7 +2351,7 @@ app.post("/api/expenses", (req, res) => {
 
     paymentMethod:
       paymentMethod ||
-      "Ã™â€ Ã™â€šÃ˜Â¯Ã™Å ",
+      "نقدي",
 
     notes:
       notes
@@ -2370,7 +2370,7 @@ app.post("/api/expenses", (req, res) => {
   return res.status(201).json({
     success: true,
     message:
-      "Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â¥Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂµÃ˜Â±Ã™Ë†Ã™Â Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+      "تمت إضافة المصروف بنجاح",
     expense:
       newExpense,
   });
@@ -2394,7 +2394,7 @@ app.put("/api/expenses/:id", (req, res) => {
     return res.status(404).json({
       success: false,
       message:
-        "Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂµÃ˜Â±Ã™Ë†Ã™Â Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯",
+        "المصروف غير موجود",
     });
   }
 
@@ -2416,7 +2416,7 @@ app.put("/api/expenses/:id", (req, res) => {
     return res.status(400).json({
       success: false,
       message:
-        "Ã˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂµÃ˜Â±Ã™Ë†Ã™Â Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Æ’Ã˜ÂªÃ™â€¦Ã™â€žÃ˜Â©",
+        "بيانات المصروف غير مكتملة",
     });
   }
 
@@ -2438,7 +2438,7 @@ app.put("/api/expenses/:id", (req, res) => {
 
     paymentMethod:
       paymentMethod ||
-      "Ã™â€ Ã™â€šÃ˜Â¯Ã™Å ",
+      "نقدي",
 
     notes:
       notes
@@ -2456,7 +2456,7 @@ app.put("/api/expenses/:id", (req, res) => {
   return res.json({
     success: true,
     message:
-      "Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂµÃ˜Â±Ã™Ë†Ã™Â Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+      "تم تعديل المصروف بنجاح",
     expense:
       updatedExpense,
   });
@@ -2480,7 +2480,7 @@ app.delete("/api/expenses/:id", (req, res) => {
     return res.status(404).json({
       success: false,
       message:
-        "Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂµÃ˜Â±Ã™Ë†Ã™Â Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯",
+        "المصروف غير موجود",
     });
   }
 
@@ -2498,12 +2498,12 @@ app.delete("/api/expenses/:id", (req, res) => {
   return res.json({
     success: true,
     message:
-      "Ã˜ÂªÃ™â€¦ Ã˜Â­Ã˜Â°Ã™Â Ã˜Â§Ã™â€žÃ™â€¦Ã˜ÂµÃ˜Â±Ã™Ë†Ã™Â Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+      "تم حذف المصروف بنجاح",
   });
 });
 
 // =====================================================
-// Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯
+// السجاد
 // =====================================================
 
 app.get("/api/carpets", (req, res) => {
@@ -2536,7 +2536,7 @@ app.post("/api/carpets", (req, res) => {
     return res.status(400).json({
       success: false,
       message:
-        "Ã˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Æ’Ã˜ÂªÃ™â€¦Ã™â€žÃ˜Â©",
+        "بيانات السجادة غير مكتملة",
     });
   }
 
@@ -2554,7 +2554,7 @@ app.post("/api/carpets", (req, res) => {
     return res.status(400).json({
       success: false,
       message:
-        "Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™Å Ã™â€ž Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯",
+        "العميل غير موجود",
     });
   }
 
@@ -2594,7 +2594,7 @@ app.post("/api/carpets", (req, res) => {
 
     status:
       status ||
-      "Ã˜ÂªÃ™â€¦ Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã˜ÂªÃ™â€žÃ˜Â§Ã™â€¦",
+      "تم الاستلام",
 
     notes:
       notes
@@ -2616,7 +2616,7 @@ app.post("/api/carpets", (req, res) => {
   return res.status(201).json({
     success: true,
     message:
-      "Ã˜ÂªÃ™â€¦Ã˜Âª Ã˜Â¥Ã˜Â¶Ã˜Â§Ã™ÂÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+      "تمت إضافة السجادة بنجاح",
     carpet:
       newCarpet,
   });
@@ -2640,7 +2640,7 @@ app.put("/api/carpets/:id", (req, res) => {
     return res.status(404).json({
       success: false,
       message:
-        "Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯Ã˜Â©",
+        "السجادة غير موجودة",
     });
   }
 
@@ -2665,7 +2665,7 @@ app.put("/api/carpets/:id", (req, res) => {
     return res.status(400).json({
       success: false,
       message:
-        "Ã˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Æ’Ã˜ÂªÃ™â€¦Ã™â€žÃ˜Â©",
+        "بيانات السجادة غير مكتملة",
     });
   }
 
@@ -2683,7 +2683,7 @@ app.put("/api/carpets/:id", (req, res) => {
     return res.status(400).json({
       success: false,
       message:
-        "Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™Å Ã™â€ž Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯",
+        "العميل غير موجود",
     });
   }
 
@@ -2720,7 +2720,7 @@ app.put("/api/carpets/:id", (req, res) => {
 
     status:
       status ||
-      "Ã˜ÂªÃ™â€¦ Ã˜Â§Ã™â€žÃ˜Â§Ã˜Â³Ã˜ÂªÃ™â€žÃ˜Â§Ã™â€¦",
+      "تم الاستلام",
 
     notes:
       notes
@@ -2738,7 +2738,7 @@ app.put("/api/carpets/:id", (req, res) => {
   return res.json({
     success: true,
     message:
-      "Ã˜ÂªÃ™â€¦ Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+      "تم تعديل السجادة بنجاح",
     carpet:
       updatedCarpet,
   });
@@ -2762,7 +2762,7 @@ app.delete("/api/carpets/:id", (req, res) => {
     return res.status(404).json({
       success: false,
       message:
-        "Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜ÂºÃ™Å Ã˜Â± Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯Ã˜Â©",
+        "السجادة غير موجودة",
     });
   }
 
@@ -2780,12 +2780,12 @@ app.delete("/api/carpets/:id", (req, res) => {
   return res.json({
     success: true,
     message:
-      "Ã˜ÂªÃ™â€¦ Ã˜Â­Ã˜Â°Ã™Â Ã˜Â§Ã™â€žÃ˜Â³Ã˜Â¬Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜Â¨Ã™â€ Ã˜Â¬Ã˜Â§Ã˜Â­",
+      "تم حذف السجادة بنجاح",
   });
 });
 
 // =========================
-// Ã˜ÂªÃ˜Â¬Ã™â€¡Ã™Å Ã˜Â² Ã˜Â§Ã™â€žÃ™â€¦Ã™â€žÃ™ÂÃ˜Â§Ã˜Âª Ã™Ë†Ã˜ÂªÃ˜Â´Ã˜ÂºÃ™Å Ã™â€ž Ã˜Â§Ã™â€žÃ˜Â³Ã™Å Ã˜Â±Ã™ÂÃ˜Â±
+// تجهيز الملفات وتشغيل السيرفر
 // =========================
 
 ensureDataDirectory();
@@ -2835,26 +2835,8 @@ ensureJsonFile(
   initialUsers
 );
 
-process.on("uncaughtException", (err) => {
-  console.error("uncaughtException:", err);
-});
-
-process.on("unhandledRejection", (err) => {
-  console.error("unhandledRejection:", err);
-});
-
-process.on("exit", (code) => {
-  console.log("Process exit code:", code);
-});
-
-const server = app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-  console.log("Leave this window open. Do not close it.");
-});
-
-server.on("error", (err) => {
-  console.error("Server error:", err);
-  if (err.code === "EADDRINUSE") {
-    console.error("Port 3000 is already in use. Close the other program using it.");
-  }
+app.listen(PORT, () => {
+  console.log(
+    `Server is running on http://localhost:${PORT}`
+  );
 });
