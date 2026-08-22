@@ -85,7 +85,7 @@ function App() {
     async function loadMemberships() {
       try {
         const response = await apiFetch(
-          "http://localhost:3000/api/memberships"
+          `${API_BASE_URL}/api/memberships`
         )
         const data = await response.json()
 
@@ -450,7 +450,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
           return // لسه بدري
         }
 
-        const response = await fetch("http://localhost:3000/api/backup")
+        const response = await fetch(`${API_BASE_URL}/api/backup`)
         const contentType = response.headers.get("content-type") || ""
 
         if (!contentType.includes("application/json")) return
@@ -491,7 +491,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
     setBackupMessage("")
 
     try {
-      const response = await fetch("http://localhost:3000/api/backup")
+      const response = await fetch(`${API_BASE_URL}/api/backup`)
       const contentType =
         response.headers.get("content-type") || ""
 
@@ -579,7 +579,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
       }
 
       const response = await fetch(
-        "http://localhost:3000/api/backup/restore",
+        `${API_BASE_URL}/api/backup/restore`,
         {
           method: "POST",
           headers: {
@@ -745,8 +745,8 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
 
     try {
       const url = editingMembership
-        ? `http://localhost:3000/api/memberships/${editingMembership.id}`
-        : "http://localhost:3000/api/memberships"
+        ? `${API_BASE_URL}/api/memberships/${editingMembership.id}`
+        : `${API_BASE_URL}/api/memberships`
 
       const response = await apiFetch(url, {
         method: editingMembership ? "PUT" : "POST",
@@ -794,7 +794,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
 
     try {
       const response = await apiFetch(
-        `http://localhost:3000/api/memberships/${id}`,
+        `${API_BASE_URL}/api/memberships/${id}`,
         {
           method: "DELETE",
         }
@@ -827,7 +827,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
 
     try {
       const response = await apiFetch(
-        `http://localhost:3000/api/memberships/${membership.id}/use-visit`,
+        `${API_BASE_URL}/api/memberships/${membership.id}/use-visit`,
         {
           method: "POST",
         }
