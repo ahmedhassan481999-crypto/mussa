@@ -1,5 +1,21 @@
 [
   {
+    "id": 1787334648690,
+    "customerId": 1,
+    "customerName": "أحمد حسن",
+    "customerPhone": "01000115581",
+    "planName": "اشتراك شهري",
+    "durationMonths": 2,
+    "startDate": "2026-08-21",
+    "endDate": "2026-10-20",
+    "totalVisits": 8,
+    "remainingVisits": 8,
+    "price": 800,
+    "status": "سارية",
+    "notes": "",
+    "createdAt": "2026-08-21T17:50:48.690Z"
+  },
+  {
     "id": 1787059815505,
     "customerId": 1786985583824,
     "customerName": "أحمد خالد",

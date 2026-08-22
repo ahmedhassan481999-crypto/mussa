@@ -1,5 +1,34 @@
 [
   {
+    "id": 1787334540426,
+    "invoiceNumber": "INV-0017",
+    "date": "٢١‏/٨‏/٢٠٢٦",
+    "customerId": 3,
+    "customerName": "محمود إبراهيم",
+    "customerPhone": "01222222222",
+    "assetType": "سجادة",
+    "carId": null,
+    "carpetId": 1787334515255,
+    "carInfo": "اطفال - مشاية - 3.00 م²",
+    "assetInfo": "اطفال - مشاية - 3.00 م²",
+    "items": [
+      {
+        "serviceId": 1,
+        "serviceName": "غسيل خارجي",
+        "quantity": 3,
+        "price": 80,
+        "unit": "ثابت",
+        "total": 240
+      }
+    ],
+    "total": 240,
+    "paymentMethod": "نقدي",
+    "paymentStatus": "مدفوعة",
+    "paidAmount": 240,
+    "remainingAmount": 0,
+    "notes": ""
+  },
+  {
     "id": 1787142371699,
     "invoiceNumber": "INV-0016",
     "date": "١٩‏/٨‏/٢٠٢٦",
@@ -270,9 +299,9 @@
     ],
     "total": 250,
     "paymentMethod": "نقدي",
-    "paymentStatus": "مدفوعة جزئيًا",
-    "paidAmount": 230,
-    "remainingAmount": 20,
+    "paymentStatus": "مدفوعة",
+    "paidAmount": 250,
+    "remainingAmount": 0,
     "notes": "",
     "coveredByMembership": false,
     "membershipId": null,
@@ -441,10 +470,13 @@
     ],
     "total": 250,
     "paymentMethod": "نقدي",
-    "paymentStatus": "مدفوعة جزئيًا",
-    "paidAmount": 100,
-    "remainingAmount": 150,
-    "notes": ""
+    "paymentStatus": "مدفوعة",
+    "paidAmount": 250,
+    "remainingAmount": 0,
+    "notes": "",
+    "assetType": "سيارة",
+    "carpetId": null,
+    "assetInfo": "بورش بورش - 92خ ا م"
   },
   {
     "id": 1786890074967,
