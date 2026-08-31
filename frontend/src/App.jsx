@@ -3985,8 +3985,48 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
     ].filter((x) => x.value > 0)
   }, [reportInvoices])
 
+  const expenseChartData = useMemo(() => {
+    const map = {}
+    reportExpenses.forEach((exp) => {
+      const name = exp.category || "أخرى"
+      map[name] = (map[name] || 0) + Number(exp.amount || 0)
+    })
+    return Object.entries(map)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 6)
+  }, [reportExpenses])
+
   const maxServiceValue = Math.max(1, ...serviceChartData.map((x) => x.value))
   const maxPaymentValue = Math.max(1, ...paymentChartData.map((x) => x.value))
+  const maxExpenseValue = Math.max(1, ...expenseChartData.map((x) => x.value))
+
+  function setReportPeriod(period) {
+    const today = new Date()
+    const to = today.toISOString().slice(0, 10)
+    if (period === "all") {
+      setReportFromDate("")
+      setReportToDate("")
+      return
+    }
+    const from = new Date(today)
+    if (period === "today") {
+      setReportFromDate(to)
+      setReportToDate(to)
+      return
+    }
+    if (period === "week") {
+      from.setDate(from.getDate() - 6)
+    } else if (period === "month") {
+      from.setDate(1)
+    }
+    setReportFromDate(from.toISOString().slice(0, 10))
+    setReportToDate(to)
+  }
+
+  function printReports() {
+    window.print()
+  }
 
   const todayDate =
     getTodayDate()
@@ -8815,9 +8855,54 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                     sectionSubtitleStyle
                   }
                 >
-                  ملخص شامل للمبيعات والمدفوعات والخدمات والعملاء
+                  ملخص احترافي للمبيعات والمصروفات والأرباح حسب الفترة
                 </p>
               </div>
+              <button
+                type="button"
+                onClick={printReports}
+                style={{
+                  ...secondaryButtonStyle,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                طباعة التقرير
+              </button>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "8px",
+                marginBottom: "16px",
+              }}
+            >
+              {[
+                { key: "today", label: "اليوم" },
+                { key: "week", label: "آخر 7 أيام" },
+                { key: "month", label: "هذا الشهر" },
+                { key: "all", label: "الكل" },
+              ].map((p) => (
+                <button
+                  key={p.key}
+                  type="button"
+                  onClick={() => setReportPeriod(p.key)}
+                  style={{
+                    border: "1px solid #cbd5e1",
+                    background: "#fff",
+                    color: "#334155",
+                    borderRadius: "999px",
+                    padding: "8px 14px",
+                    cursor: "pointer",
+                    fontWeight: "600",
+                    fontSize: "13px",
+                    fontFamily: "Tahoma, Arial, sans-serif",
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
             </div>
 
             <div
@@ -9552,6 +9637,48 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                 </div>
               </div>
             </div>
+
+
+              {/* رسم المصروفات */}
+              <div style={reportBoxStyle}>
+                <h3 style={sectionTitleStyle}>المصروفات حسب التصنيف</h3>
+                {expenseChartData.length === 0 ? (
+                  <p style={{ color: "#94a3b8", textAlign: "center", marginTop: "30px" }}>
+                    لا توجد مصروفات في الفترة المحددة
+                  </p>
+                ) : (
+                  <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {expenseChartData.map((item) => (
+                      <div key={item.name}>
+                        <div style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginBottom: "6px",
+                          fontSize: "13px",
+                          color: "#475569",
+                        }}>
+                          <span style={{ fontWeight: "600" }}>{item.name}</span>
+                          <span>{item.value} ج</span>
+                        </div>
+                        <div style={{
+                          height: "12px",
+                          background: "#e2e8f0",
+                          borderRadius: "99px",
+                          overflow: "hidden",
+                        }}>
+                          <div style={{
+                            height: "100%",
+                            width: `${(item.value / maxExpenseValue) * 100}%`,
+                            background: "linear-gradient(90deg, #f97316, #c2410c)",
+                            borderRadius: "99px",
+                            transition: "width 0.4s ease",
+                          }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
             {/* أكثر الخدمات */}
 
