@@ -8831,45 +8831,55 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
 
         {activePage ===
           "التقارير" && (
-          <div
-            style={
-              sectionStyle
-            }
-          >
+          <div style={{ ...sectionStyle, background: "transparent", boxShadow: "none", padding: 0 }}>
+            {/* Header */}
             <div
-              style={
-                sectionHeaderStyle
-              }
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                flexWrap: "wrap",
+                gap: "16px",
+                marginBottom: "22px",
+              }}
             >
               <div>
                 <h2
-                  style={
-                    sectionTitleStyle
-                  }
+                  style={{
+                    margin: 0,
+                    fontSize: "26px",
+                    fontWeight: "800",
+                    color: "#0f172a",
+                    letterSpacing: "-0.02em",
+                  }}
                 >
-                  التقارير
+                  لوحة التقارير
                 </h2>
-
-                <p
-                  style={
-                    sectionSubtitleStyle
-                  }
-                >
-                  ملخص احترافي للمبيعات والمصروفات والأرباح حسب الفترة
+                <p style={{ margin: "8px 0 0", color: "#64748b", fontSize: "14px" }}>
+                  نظرة مالية وتشغيلية واضحة حسب الفترة التي تختارها
                 </p>
               </div>
               <button
                 type="button"
                 onClick={printReports}
                 style={{
-                  ...secondaryButtonStyle,
-                  whiteSpace: "nowrap",
+                  background: "#0f172a",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "12px",
+                  padding: "12px 18px",
+                  cursor: "pointer",
+                  fontWeight: "700",
+                  fontSize: "14px",
+                  fontFamily: "Tahoma, Arial, sans-serif",
+                  boxShadow: "0 8px 20px rgba(15,23,42,0.18)",
                 }}
               >
                 طباعة التقرير
               </button>
             </div>
 
+            {/* Period chips */}
             <div
               style={{
                 display: "flex",
@@ -8882,22 +8892,23 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                 { key: "today", label: "اليوم" },
                 { key: "week", label: "آخر 7 أيام" },
                 { key: "month", label: "هذا الشهر" },
-                { key: "all", label: "الكل" },
+                { key: "all", label: "كل الفترات" },
               ].map((p) => (
                 <button
                   key={p.key}
                   type="button"
                   onClick={() => setReportPeriod(p.key)}
                   style={{
-                    border: "1px solid #cbd5e1",
+                    border: "1px solid #e2e8f0",
                     background: "#fff",
                     color: "#334155",
                     borderRadius: "999px",
-                    padding: "8px 14px",
+                    padding: "9px 16px",
                     cursor: "pointer",
-                    fontWeight: "600",
+                    fontWeight: "700",
                     fontSize: "13px",
                     fontFamily: "Tahoma, Arial, sans-serif",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
                   }}
                 >
                   {p.label}
@@ -8905,774 +8916,255 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
               ))}
             </div>
 
+            {/* Date filter card */}
             <div
               style={{
-                ...reportBoxStyle,
-                background:
-                  "#f8fafc",
-                marginTop:
-                  "0",
+                background: "#fff",
+                border: "1px solid #e2e8f0",
+                borderRadius: "18px",
+                padding: "18px 20px",
+                marginBottom: "20px",
+                boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
               }}
             >
-              <h3
-                style={
-                  sectionTitleStyle
-                }
-              >
-                فلترة التقارير بالتاريخ
-              </h3>
-
               <div
                 style={{
-                  display:
-                    "grid",
-                  gridTemplateColumns:
-                    "1fr 1fr auto",
-                  gap:
-                    "12px",
-                  alignItems:
-                    "end",
-                  marginTop:
-                    "15px",
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                  gap: "14px",
+                  alignItems: "end",
                 }}
               >
                 <div>
-                  <label
-                    style={
-                      labelStyle
-                    }
-                  >
-                    من تاريخ
-                  </label>
-
+                  <label style={{ ...labelStyle, marginBottom: "6px" }}>من تاريخ</label>
                   <input
                     type="date"
-                    value={
-                      reportFromDate
-                    }
-                    onChange={(
-                      e
-                    ) =>
-                      setReportFromDate(
-                        e.target.value
-                      )
-                    }
+                    value={reportFromDate}
+                    onChange={(e) => setReportFromDate(e.target.value)}
                     dir="ltr"
-                    style={{
-                      ...inputStyle,
-                      marginBottom:
-                        0,
-                    }}
+                    style={{ ...inputStyle, marginBottom: 0 }}
                   />
                 </div>
-
                 <div>
-                  <label
-                    style={
-                      labelStyle
-                    }
-                  >
-                    إلى تاريخ
-                  </label>
-
+                  <label style={{ ...labelStyle, marginBottom: "6px" }}>إلى تاريخ</label>
                   <input
                     type="date"
-                    value={
-                      reportToDate
-                    }
-                    min={
-                      reportFromDate ||
-                      undefined
-                    }
-                    onChange={(
-                      e
-                    ) =>
-                      setReportToDate(
-                        e.target.value
-                      )
-                    }
+                    value={reportToDate}
+                    onChange={(e) => setReportToDate(e.target.value)}
                     dir="ltr"
-                    style={{
-                      ...inputStyle,
-                      marginBottom:
-                        0,
-                    }}
+                    style={{ ...inputStyle, marginBottom: 0 }}
                   />
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setReportFromDate("")
-                    setReportToDate("")
-                  }}
-                  style={{
-                    ...secondaryButtonStyle,
-                    height:
-                      "48px",
-                    whiteSpace:
-                      "nowrap",
-                  }}
-                >
-                  عرض كل الفترة
-                </button>
-              </div>
-
-              <div
-                style={{
-                  display:
-                    "flex",
-                  gap:
-                    "8px",
-                  flexWrap:
-                    "wrap",
-                  marginTop:
-                    "12px",
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => {
-                    const today = new Date()
-                      .toISOString()
-                      .split("T")[0]
-
-                    setReportFromDate(today)
-                    setReportToDate(today)
-                  }}
-                  style={{
-                    ...secondaryButtonSmallStyle,
-                  }}
-                >
-                  اليوم
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    const now = new Date()
-                    const year =
-                      now.getFullYear()
-                    const month = String(
-                      now.getMonth() + 1
-                    ).padStart(2, "0")
-
-                    setReportFromDate(
-                      `${year}-${month}-01`
-                    )
-
-                    setReportToDate(
-                      now.toISOString().split("T")[0]
-                    )
-                  }}
-                  style={{
-                    ...secondaryButtonSmallStyle,
-                  }}
-                >
-                  هذا الشهر
-                </button>
-              </div>
-            </div>
-
-            <div
-              style={{
-                ...reportBoxStyle,
-                background:
-                  "#f8fafc",
-              }}
-            >
-              <h3
-                style={
-                  sectionTitleStyle
-                }
-              >
-                ملخص الربحية
-              </h3>
-
-              <div
-                style={{
-                  display:
-                    "grid",
-                  gridTemplateColumns:
-                    "repeat(auto-fit, minmax(190px, 1fr))",
-                  gap:
-                    "15px",
-                  marginTop:
-                    "15px",
-                }}
-              >
-                <div
-                  style={{
-                    ...miniReportCardStyle,
-                    background:
-                      "#f0fdf4",
-                  }}
-                >
-                  <span>
-                    إجمالي المبيعات
-                  </span>
-
-                  <strong
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReportFromDate("")
+                      setReportToDate("")
+                    }}
                     style={{
-                      color:
-                        "#15803d",
+                      ...secondaryButtonStyle,
+                      width: "100%",
+                      marginTop: 0,
                     }}
                   >
-                    {totalSales} جنيه
-                  </strong>
+                    مسح الفلتر
+                  </button>
                 </div>
-
-                <div
-                  style={{
-                    ...miniReportCardStyle,
-                    background:
-                      "#fff7ed",
-                  }}
-                >
-                  <span>
-                    إجمالي المصروفات
-                  </span>
-
-                  <strong
-                    style={{
-                      color:
-                        "#c2410c",
-                    }}
-                  >
-                    {reportTotalExpenses} جنيه
-                  </strong>
-                </div>
-
-                <div
-                  style={{
-                    ...miniReportCardStyle,
-                    background:
-                      reportNetProfit >= 0
-                        ? "#ecfdf5"
-                        : "#fef2f2",
-                  }}
-                >
-                  <span>
-                    صافي الربح
-                  </span>
-
-                  <strong
-                    style={{
-                      color:
-                        reportNetProfit >= 0
-                          ? "#047857"
-                          : "#b91c1c",
-                    }}
-                  >
-                    {reportNetProfit} جنيه
-                  </strong>
-                </div>
+              </div>
+              <div
+                style={{
+                  marginTop: "14px",
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "10px",
+                  color: "#64748b",
+                  fontSize: "13px",
+                }}
+              >
+                <span style={{ background: "#f1f5f9", padding: "6px 10px", borderRadius: "8px" }}>
+                  فواتير الفترة: <b style={{ color: "#0f172a" }}>{reportInvoices.length}</b>
+                </span>
+                <span style={{ background: "#f1f5f9", padding: "6px 10px", borderRadius: "8px" }}>
+                  خدمات مباعة: <b style={{ color: "#0f172a" }}>{totalServicesSold}</b>
+                </span>
               </div>
             </div>
 
-            {/* الإحصائيات العامة */}
-
-            <div
-              style={{
-                display:
-                  "grid",
-                gridTemplateColumns:
-                  "repeat(auto-fit, minmax(190px, 1fr))",
-                gap:
-                  "15px",
-                marginBottom:
-                  "25px",
-              }}
-            >
-              <div
-                style={
-                  statCardStyle
-                }
-              >
-                <div
-                  style={
-                    statLabelStyle
-                  }
-                >
-                  إجمالي المبيعات
-                </div>
-
-                <div
-                  style={{
-                    ...statValueStyle,
-                    color:
-                      "#15803d",
-                  }}
-                >
-                  {
-                    totalSales
-                  }{" "}
-                  جنيه
-                </div>
-              </div>
-
-              <div
-                style={{
-                  ...statCardStyle,
-                  background:
-                    "#fff7ed",
-                }}
-              >
-                <div
-                  style={
-                    statLabelStyle
-                  }
-                >
-                  إجمالي المصروفات
-                </div>
-
-                <div
-                  style={{
-                    ...statValueStyle,
-                    color:
-                      "#c2410c",
-                  }}
-                >
-                  {reportTotalExpenses} جنيه
-                </div>
-              </div>
-
-              <div
-                style={{
-                  ...statCardStyle,
-                  background:
-                    "#eff6ff",
-                }}
-              >
-                <div
-                  style={
-                    statLabelStyle
-                  }
-                >
-                  إجمالي المدفوع
-                </div>
-
-                <div
-                  style={{
-                    ...statValueStyle,
-                    color:
-                      "#1d4ed8",
-                  }}
-                >
-                  {
-                    totalPaid
-                  }{" "}
-                  جنيه
-                </div>
-              </div>
-
-              <div
-                style={{
-                  ...statCardStyle,
-                  background:
-                    "#fff7ed",
-                }}
-              >
-                <div
-                  style={
-                    statLabelStyle
-                  }
-                >
-                  إجمالي المتبقي
-                </div>
-
-                <div
-                  style={{
-                    ...statValueStyle,
-                    color:
-                      "#c2410c",
-                  }}
-                >
-                  {
-                    totalRemaining
-                  }{" "}
-                  جنيه
-                </div>
-              </div>
-
-              <div
-                style={{
-                  ...statCardStyle,
-                  background:
-                    reportNetProfit >= 0
-                      ? "#ecfdf5"
-                      : "#fef2f2",
-                }}
-              >
-                <div
-                  style={
-                    statLabelStyle
-                  }
-                >
-                  صافي الربح
-                </div>
-
-                <div
-                  style={{
-                    ...statValueStyle,
-                    color:
-                      reportNetProfit >= 0
-                        ? "#047857"
-                        : "#b91c1c",
-                  }}
-                >
-                  {reportNetProfit} جنيه
-                </div>
-              </div>
-
-              <div
-                style={{
-                  ...statCardStyle,
-                  background:
-                    "#f8fafc",
-                }}
-              >
-                <div
-                  style={
-                    statLabelStyle
-                  }
-                >
-                  عدد الفواتير
-                </div>
-
-                <div
-                  style={
-                    statValueStyle
-                  }
-                >
-                  {
-                    reportInvoices.length
-                  }
-                </div>
-              </div>
-
-              <div
-                style={{
-                  ...statCardStyle,
-                  background:
-                    "#fdf4ff",
-                }}
-              >
-                <div
-                  style={
-                    statLabelStyle
-                  }
-                >
-                  الخدمات المباعة
-                </div>
-
-                <div
-                  style={{
-                    ...statValueStyle,
-                    color:
-                      "#a21caf",
-                  }}
-                >
-                  {
-                    totalServicesSold
-                  }
-                </div>
-              </div>
-
-              <div
-                style={{
-                  ...statCardStyle,
-                  background:
-                    "#ecfdf5",
-                }}
-              >
-                <div
-                  style={
-                    statLabelStyle
-                  }
-                >
-                  مبيعات اليوم
-                </div>
-
-                <div
-                  style={{
-                    ...statValueStyle,
-                    color:
-                      "#047857",
-                  }}
-                >
-                  {
-                    todaySales
-                  }{" "}
-                  جنيه
-                </div>
-              </div>
-            </div>
-
-            {/* ملخص اليوم */}
-
-            <div
-              style={{
-                ...reportBoxStyle,
-                background:
-                  "#f8fafc",
-              }}
-            >
-              <h3
-                style={
-                  sectionTitleStyle
-                }
-              >
-                ملخص اليوم
-              </h3>
-
-              <div
-                style={{
-                  display:
-                    "grid",
-                  gridTemplateColumns:
-                    "repeat(auto-fit, minmax(180px, 1fr))",
-                  gap:
-                    "15px",
-                }}
-              >
-                <div
-                  style={
-                    miniReportCardStyle
-                  }
-                >
-                  <span>
-                    عدد فواتير اليوم
-                  </span>
-
-                  <strong>
-                    {
-                      todayInvoices.length
-                    }
-                  </strong>
-                </div>
-
-                <div
-                  style={
-                    miniReportCardStyle
-                  }
-                >
-                  <span>
-                    مبيعات اليوم
-                  </span>
-
-                  <strong>
-                    {
-                      todaySales
-                    }{" "}
-                    جنيه
-                  </strong>
-                </div>
-
-                <div
-                  style={
-                    miniReportCardStyle
-                  }
-                >
-                  <span>
-                    المدفوع اليوم
-                  </span>
-
-                  <strong>
-                    {
-                      todayPaid
-                    }{" "}
-                    جنيه
-                  </strong>
-                </div>
-
-                <div
-                  style={
-                    miniReportCardStyle
-                  }
-                >
-                  <span>
-                    المتبقي اليوم
-                  </span>
-
-                  <strong>
-                    {Math.max(
-                      0,
-                      todaySales -
-                        todayPaid
-                    )}{" "}
-                    جنيه
-                  </strong>
-                </div>
-              </div>
-            </div>
-
-            {/* رسوم بيانية */}
+            {/* KPI cards */}
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-                gap: "20px",
-                marginTop: "20px",
+                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                gap: "14px",
+                marginBottom: "20px",
               }}
             >
-              {/* رسم الخدمات */}
-              <div style={reportBoxStyle}>
-                <h3 style={sectionTitleStyle}>الخدمات الأكثر مبيعًا</h3>
-                {serviceChartData.length === 0 ? (
-                  <p style={{ color: "#94a3b8", textAlign: "center", marginTop: "30px" }}>
-                    لا توجد بيانات في الفترة المحددة
-                  </p>
-                ) : (
-                  <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                    {serviceChartData.map((item) => (
-                      <div key={item.name}>
-                        <div style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          marginBottom: "6px",
-                          fontSize: "13px",
-                          color: "#475569",
-                        }}>
-                          <span style={{ fontWeight: "600" }}>{item.name}</span>
-                          <span>{item.value}</span>
-                        </div>
-                        <div style={{
-                          height: "12px",
-                          background: "#e2e8f0",
-                          borderRadius: "99px",
-                          overflow: "hidden",
-                        }}>
-                          <div style={{
-                            height: "100%",
-                            width: `${(item.value / maxServiceValue) * 100}%`,
-                            background: "linear-gradient(90deg, #3b82f6, #1d4ed8)",
-                            borderRadius: "99px",
-                            transition: "width 0.4s ease",
-                          }} />
-                        </div>
-                      </div>
-                    ))}
+              {[
+                {
+                  label: "إجمالي المبيعات",
+                  value: reportTotalSales,
+                  color: "#047857",
+                  bg: "linear-gradient(180deg, #ecfdf5 0%, #ffffff 100%)",
+                  border: "#a7f3d0",
+                },
+                {
+                  label: "المدفوع فعليًا",
+                  value: reportTotalPaid,
+                  color: "#1d4ed8",
+                  bg: "linear-gradient(180deg, #eff6ff 0%, #ffffff 100%)",
+                  border: "#bfdbfe",
+                },
+                {
+                  label: "المتبقي على العملاء",
+                  value: totalRemaining,
+                  color: "#c2410c",
+                  bg: "linear-gradient(180deg, #fff7ed 0%, #ffffff 100%)",
+                  border: "#fed7aa",
+                },
+                {
+                  label: "صافي الربح",
+                  value: reportNetProfit,
+                  color: reportNetProfit >= 0 ? "#047857" : "#b91c1c",
+                  bg:
+                    reportNetProfit >= 0
+                      ? "linear-gradient(180deg, #ecfdf5 0%, #ffffff 100%)"
+                      : "linear-gradient(180deg, #fef2f2 0%, #ffffff 100%)",
+                  border: reportNetProfit >= 0 ? "#a7f3d0" : "#fecaca",
+                },
+              ].map((card) => (
+                <div
+                  key={card.label}
+                  style={{
+                    background: card.bg,
+                    border: `1px solid ${card.border}`,
+                    borderRadius: "18px",
+                    padding: "18px 18px 16px",
+                    boxShadow: "0 8px 24px rgba(15,23,42,0.04)",
+                  }}
+                >
+                  <div style={{ color: "#64748b", fontSize: "13px", fontWeight: "600" }}>
+                    {card.label}
                   </div>
-                )}
-              </div>
-
-              {/* رسم حالات الدفع */}
-              <div style={reportBoxStyle}>
-                <h3 style={sectionTitleStyle}>توزيع حالات الدفع</h3>
-                {paymentChartData.length === 0 ? (
-                  <p style={{ color: "#94a3b8", textAlign: "center", marginTop: "30px" }}>
-                    لا توجد فواتير في الفترة المحددة
-                  </p>
-                ) : (
-                  <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                    {paymentChartData.map((item) => (
-                      <div key={item.name}>
-                        <div style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          marginBottom: "6px",
-                          fontSize: "13px",
-                          color: "#475569",
-                        }}>
-                          <span style={{ fontWeight: "600" }}>{item.name}</span>
-                          <span>{item.value} فاتورة</span>
-                        </div>
-                        <div style={{
-                          height: "12px",
-                          background: "#e2e8f0",
-                          borderRadius: "99px",
-                          overflow: "hidden",
-                        }}>
-                          <div style={{
-                            height: "100%",
-                            width: `${(item.value / maxPaymentValue) * 100}%`,
-                            background: item.color,
-                            borderRadius: "99px",
-                            transition: "width 0.4s ease",
-                          }} />
-                        </div>
-                      </div>
-                    ))}
+                  <div
+                    style={{
+                      marginTop: "10px",
+                      fontSize: "26px",
+                      fontWeight: "800",
+                      color: card.color,
+                      letterSpacing: "-0.02em",
+                    }}
+                  >
+                    {Number(card.value || 0).toLocaleString("ar-EG")}
+                    <span style={{ fontSize: "14px", fontWeight: "700", marginRight: "6px" }}>
+                      ج.م
+                    </span>
                   </div>
-                )}
-              </div>
+                </div>
+              ))}
             </div>
 
-            {/* بطاقات ملخص الفترة */}
+            {/* Today strip */}
             <div
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-                gap: "14px",
-                marginTop: "20px",
+                gap: "12px",
+                marginBottom: "20px",
               }}
             >
-              <div style={{ ...statCardStyle, background: "#eff6ff" }}>
-                <div style={statLabelStyle}>مبيعات الفترة</div>
-                <div style={{ ...statValueStyle, color: "#1d4ed8", fontSize: "20px" }}>
-                  {reportTotalSales} جنيه
+              {[
+                { label: "مبيعات اليوم", value: todaySales, color: "#0f172a" },
+                { label: "محصّل اليوم", value: todayPaid, color: "#047857" },
+                {
+                  label: "متبقي اليوم",
+                  value: Math.max(0, todaySales - todayPaid),
+                  color: "#c2410c",
+                },
+              ].map((x) => (
+                <div
+                  key={x.label}
+                  style={{
+                    background: "#0f172a",
+                    color: "#fff",
+                    borderRadius: "16px",
+                    padding: "16px 18px",
+                  }}
+                >
+                  <div style={{ opacity: 0.75, fontSize: "12px", fontWeight: "600" }}>
+                    {x.label}
+                  </div>
+                  <div style={{ marginTop: "8px", fontSize: "20px", fontWeight: "800", color: x.color === "#0f172a" ? "#fff" : x.color }}>
+                    {Number(x.value || 0).toLocaleString("ar-EG")} ج.م
+                  </div>
                 </div>
-              </div>
-              <div style={{ ...statCardStyle, background: "#ecfdf5" }}>
-                <div style={statLabelStyle}>المدفوع</div>
-                <div style={{ ...statValueStyle, color: "#047857", fontSize: "20px" }}>
-                  {reportTotalPaid} جنيه
-                </div>
-              </div>
-              <div style={{ ...statCardStyle, background: "#fff7ed" }}>
-                <div style={statLabelStyle}>المتبقي</div>
-                <div style={{ ...statValueStyle, color: "#c2410c", fontSize: "20px" }}>
-                  {totalRemaining} جنيه
-                </div>
-              </div>
-              <div style={{ ...statCardStyle, background: reportNetProfit >= 0 ? "#ecfdf5" : "#fef2f2" }}>
-                <div style={statLabelStyle}>صافي الربح</div>
-                <div style={{
-                  ...statValueStyle,
-                  color: reportNetProfit >= 0 ? "#047857" : "#b91c1c",
-                  fontSize: "20px",
-                }}>
-                  {reportNetProfit} جنيه
-                </div>
-              </div>
+              ))}
             </div>
 
-
-              {/* رسم المصروفات */}
-              <div style={reportBoxStyle}>
-                <h3 style={sectionTitleStyle}>المصروفات حسب التصنيف</h3>
-                {expenseChartData.length === 0 ? (
-                  <p style={{ color: "#94a3b8", textAlign: "center", marginTop: "30px" }}>
-                    لا توجد مصروفات في الفترة المحددة
+            {/* Charts grid */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+                gap: "16px",
+                marginBottom: "20px",
+              }}
+            >
+              {/* Services */}
+              <div
+                style={{
+                  background: "#fff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "18px",
+                  padding: "18px",
+                  boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
+                }}
+              >
+                <h3 style={{ margin: "0 0 4px", fontSize: "16px", color: "#0f172a" }}>
+                  الخدمات الأكثر مبيعًا
+                </h3>
+                <p style={{ margin: "0 0 16px", color: "#94a3b8", fontSize: "12px" }}>
+                  حسب الكمية في الفترة المحددة
+                </p>
+                {serviceChartData.length === 0 ? (
+                  <p style={{ color: "#94a3b8", textAlign: "center", padding: "30px 0" }}>
+                    لا توجد بيانات
                   </p>
                 ) : (
-                  <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                    {expenseChartData.map((item) => (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                    {serviceChartData.map((item, idx) => (
                       <div key={item.name}>
-                        <div style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          marginBottom: "6px",
-                          fontSize: "13px",
-                          color: "#475569",
-                        }}>
-                          <span style={{ fontWeight: "600" }}>{item.name}</span>
-                          <span>{item.value} ج</span>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            marginBottom: "6px",
+                            fontSize: "13px",
+                            color: "#475569",
+                          }}
+                        >
+                          <span style={{ fontWeight: "700" }}>
+                            <span style={{ color: "#94a3b8", marginLeft: "6px" }}>{idx + 1}.</span>
+                            {item.name}
+                          </span>
+                          <span style={{ fontWeight: "800", color: "#1d4ed8" }}>{item.value}</span>
                         </div>
-                        <div style={{
-                          height: "12px",
-                          background: "#e2e8f0",
-                          borderRadius: "99px",
-                          overflow: "hidden",
-                        }}>
-                          <div style={{
-                            height: "100%",
-                            width: `${(item.value / maxExpenseValue) * 100}%`,
-                            background: "linear-gradient(90deg, #f97316, #c2410c)",
+                        <div
+                          style={{
+                            height: "10px",
+                            background: "#f1f5f9",
                             borderRadius: "99px",
-                            transition: "width 0.4s ease",
-                          }} />
+                            overflow: "hidden",
+                          }}
+                        >
+                          <div
+                            style={{
+                              height: "100%",
+                              width: `${(item.value / maxServiceValue) * 100}%`,
+                              background: "linear-gradient(90deg, #60a5fa, #2563eb)",
+                              borderRadius: "99px",
+                            }}
+                          />
                         </div>
                       </div>
                     ))}
@@ -9680,252 +9172,181 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                 )}
               </div>
 
-            {/* أكثر الخدمات */}
-
-            <div
-              style={
-                reportBoxStyle
-              }
-            >
-              <h3
-                style={
-                  sectionTitleStyle
-                }
-              >
-                أكثر الخدمات استخدامًا
-              </h3>
-
+              {/* Payment status */}
               <div
                 style={{
-                  overflowX:
-                    "auto",
+                  background: "#fff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "18px",
+                  padding: "18px",
+                  boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
                 }}
               >
-                <table
-                  dir="rtl"
-                  style={{
-                    width:
-                      "100%",
-                    borderCollapse:
-                      "collapse",
-                    minWidth:
-                      "700px",
-                  }}
-                >
-                  <thead>
-                    <tr
-                      style={{
-                        background:
-                          "#f8fafc",
-                      }}
-                    >
-                      <th
-                        style={
-                          tableHeaderStyle
-                        }
-                      >
-                        الخدمة
-                      </th>
-
-                      <th
-                        style={
-                          tableHeaderStyle
-                        }
-                      >
-                        النوع
-                      </th>
-
-                      <th
-                        style={
-                          tableHeaderStyle
-                        }
-                      >
-                        عدد الاستخدامات
-                      </th>
-
-                      <th
-                        style={
-                          tableHeaderStyle
-                        }
-                      >
-                        الإيراد
-                      </th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {serviceReports.map(
-                      (
-                        service
-                      ) => (
-                        <tr
-                          key={
-                            service.id
-                          }
+                <h3 style={{ margin: "0 0 4px", fontSize: "16px", color: "#0f172a" }}>
+                  حالات الدفع
+                </h3>
+                <p style={{ margin: "0 0 16px", color: "#94a3b8", fontSize: "12px" }}>
+                  توزيع الفواتير حسب التحصيل
+                </p>
+                {paymentChartData.length === 0 ? (
+                  <p style={{ color: "#94a3b8", textAlign: "center", padding: "30px 0" }}>
+                    لا توجد بيانات
+                  </p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                    {paymentChartData.map((item) => (
+                      <div key={item.name}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            marginBottom: "6px",
+                            fontSize: "13px",
+                            color: "#475569",
+                          }}
                         >
-                          <td
-                            style={
-                              tableCellStyle
-                            }
-                          >
-                            {
-                              service.name
-                            }
-                          </td>
-
-                          <td
-                            style={
-                              tableCellStyle
-                            }
-                          >
-                            {
-                              service.type
-                            }
-                          </td>
-
-                          <td
-                            style={
-                              tableCellStyle
-                            }
-                          >
-                            {
-                              service.usage
-                            }
-                          </td>
-
-                          <td
+                          <span style={{ fontWeight: "700" }}>{item.name}</span>
+                          <span style={{ fontWeight: "800", color: item.color }}>{item.value}</span>
+                        </div>
+                        <div
+                          style={{
+                            height: "10px",
+                            background: "#f1f5f9",
+                            borderRadius: "99px",
+                            overflow: "hidden",
+                          }}
+                        >
+                          <div
                             style={{
-                              ...tableCellStyle,
-                              fontWeight:
-                                "700",
+                              height: "100%",
+                              width: `${(item.value / maxPaymentValue) * 100}%`,
+                              background: item.color,
+                              borderRadius: "99px",
                             }}
-                          >
-                            {
-                              service.revenue
-                            }{" "}
-                            جنيه
-                          </td>
-                        </tr>
-                      )
-                    )}
-                  </tbody>
-                </table>
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Expenses */}
+              <div
+                style={{
+                  background: "#fff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "18px",
+                  padding: "18px",
+                  boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
+                }}
+              >
+                <h3 style={{ margin: "0 0 4px", fontSize: "16px", color: "#0f172a" }}>
+                  المصروفات حسب التصنيف
+                </h3>
+                <p style={{ margin: "0 0 16px", color: "#94a3b8", fontSize: "12px" }}>
+                  أين تذهب فلوس التشغيل
+                </p>
+                {expenseChartData.length === 0 ? (
+                  <p style={{ color: "#94a3b8", textAlign: "center", padding: "30px 0" }}>
+                    لا توجد مصروفات
+                  </p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                    {expenseChartData.map((item) => (
+                      <div key={item.name}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            marginBottom: "6px",
+                            fontSize: "13px",
+                            color: "#475569",
+                          }}
+                        >
+                          <span style={{ fontWeight: "700" }}>{item.name}</span>
+                          <span style={{ fontWeight: "800", color: "#c2410c" }}>
+                            {Number(item.value).toLocaleString("ar-EG")} ج
+                          </span>
+                        </div>
+                        <div
+                          style={{
+                            height: "10px",
+                            background: "#f1f5f9",
+                            borderRadius: "99px",
+                            overflow: "hidden",
+                          }}
+                        >
+                          <div
+                            style={{
+                              height: "100%",
+                              width: `${(item.value / maxExpenseValue) * 100}%`,
+                              background: "linear-gradient(90deg, #fb923c, #ea580c)",
+                              borderRadius: "99px",
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* أكثر العملاء */}
-
+            {/* Services table */}
             <div
-              style={
-                reportBoxStyle
-              }
+              style={{
+                background: "#fff",
+                border: "1px solid #e2e8f0",
+                borderRadius: "18px",
+                padding: "18px",
+                boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
+                overflow: "auto",
+              }}
             >
-              <h3
-                style={
-                  sectionTitleStyle
-                }
-              >
-                أكثر العملاء تعاملًا
+              <h3 style={{ margin: "0 0 4px", fontSize: "16px", color: "#0f172a" }}>
+                تفصيل أداء الخدمات
               </h3>
-
-              <div
+              <p style={{ margin: "0 0 16px", color: "#94a3b8", fontSize: "12px" }}>
+                العدد والإيراد لكل خدمة في الفترة
+              </p>
+              <table
+                dir="rtl"
                 style={{
-                  overflowX:
-                    "auto",
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  minWidth: "640px",
                 }}
               >
-                <table
-                  dir="rtl"
-                  style={{
-                    width:
-                      "100%",
-                    borderCollapse:
-                      "collapse",
-                    minWidth:
-                      "650px",
-                  }}
-                >
-                  <thead>
-                    <tr
-                      style={{
-                        background:
-                          "#f8fafc",
-                      }}
-                    >
-                      <th
-                        style={
-                          tableHeaderStyle
-                        }
-                      >
-                        العميل
-                      </th>
-
-                      <th
-                        style={
-                          tableHeaderStyle
-                        }
-                      >
-                        عدد الفواتير
-                      </th>
-
-                      <th
-                        style={
-                          tableHeaderStyle
-                        }
-                      >
-                        إجمالي المشتريات
-                      </th>
+                <thead>
+                  <tr style={{ background: "#f8fafc" }}>
+                    <th style={{ ...tableHeaderStyle, borderRadius: "10px 0 0 10px" }}>الخدمة</th>
+                    <th style={tableHeaderStyle}>النوع</th>
+                    <th style={tableHeaderStyle}>عدد الاستخدامات</th>
+                    <th style={{ ...tableHeaderStyle, borderRadius: "0 10px 10px 0" }}>الإيراد</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {serviceReports.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} style={{ padding: "28px", textAlign: "center", color: "#94a3b8" }}>
+                        لا توجد بيانات في هذه الفترة
+                      </td>
                     </tr>
-                  </thead>
-
-                  <tbody>
-                    {customerReports.map(
-                      (
-                        customer
-                      ) => (
-                        <tr
-                          key={
-                            customer.id
-                          }
-                        >
-                          <td
-                            style={
-                              tableCellStyle
-                            }
-                          >
-                            {
-                              customer.name
-                            }
-                          </td>
-
-                          <td
-                            style={
-                              tableCellStyle
-                            }
-                          >
-                            {
-                              customer.invoiceCount
-                            }
-                          </td>
-
-                          <td
-                            style={{
-                              ...tableCellStyle,
-                              fontWeight:
-                                "700",
-                            }}
-                          >
-                            {
-                              customer.total
-                            }{" "}
-                            جنيه
-                          </td>
-                        </tr>
-                      )
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                  ) : (
+                    serviceReports.map((service) => (
+                      <tr key={service.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                        <td style={{ ...tableCellStyle, fontWeight: "700" }}>{service.name}</td>
+                        <td style={tableCellStyle}>{service.type}</td>
+                        <td style={tableCellStyle}>{service.usage}</td>
+                        <td style={{ ...tableCellStyle, fontWeight: "800", color: "#047857" }}>
+                          {Number(service.revenue || 0).toLocaleString("ar-EG")} ج.م
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
