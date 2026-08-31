@@ -60,6 +60,8 @@ function App() {
   const [activePage, setActivePage] =
     useState("الرئيسية")
   const [message, setMessage] = useState("")
+  const [inventoryItems, setInventoryItems] = useState([])
+  const [invoiceInventoryUsage, setInvoiceInventoryUsage] = useState([])
 
   // =========================
   // الاشتراكات
@@ -98,6 +100,21 @@ function App() {
     }
 
     loadMemberships()
+  }, [])
+
+  useEffect(() => {
+    async function loadInventory() {
+      try {
+        const response = await apiFetch(`${API_BASE_URL}/api/inventory`)
+        const data = await response.json()
+        if (data.success) {
+          setInventoryItems(data.items || [])
+        }
+      } catch (error) {
+        console.error("تعذر تحميل المخزون:", error)
+      }
+    }
+    loadInventory()
   }, [])
 
   // =========================
@@ -2163,6 +2180,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
     setInvoicePaidAmount("")
     setInvoiceNotes("")
     setInvoiceItems([])
+    setInvoiceInventoryUsage([])
     setShowInvoiceModal(true)
   }
 
@@ -2258,6 +2276,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
     setInvoicePaidAmount("")
     setInvoiceNotes("")
     setInvoiceItems([])
+    setInvoiceInventoryUsage([])
   }
 
   function addInvoiceItem() {
@@ -2658,6 +2677,19 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
           : "",
       notes:
         invoiceNotes.trim(),
+      inventoryUsage:
+        !editingInvoice
+          ? invoiceInventoryUsage
+              .filter(
+                (row) =>
+                  Number(row.inventoryId) &&
+                  Number(row.quantity) > 0
+              )
+              .map((row) => ({
+                inventoryId: Number(row.inventoryId),
+                quantity: Number(row.quantity),
+              }))
+          : [],
     }
 
     try {
@@ -2714,6 +2746,14 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
             ...currentInvoices,
           ]
         )
+
+        if (invoiceInventoryUsage.length > 0) {
+          try {
+            const invRes = await apiFetch(`${API_BASE_URL}/api/inventory`)
+            const invData = await invRes.json()
+            if (invData.success) setInventoryItems(invData.items || [])
+          } catch (e) {}
+        }
 
         setServices(
           (currentServices) =>
@@ -13189,7 +13229,157 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                   labelStyle
                 }
               >
-                ملاحظات الفاتورة
+
+              {/* أصناف من المخزون */}
+              {!editingInvoice && (
+                <div
+                  style={{
+                    marginTop: "18px",
+                    marginBottom: "18px",
+                    padding: "16px",
+                    borderRadius: "12px",
+                    border: "1px solid #e2e8f0",
+                    background: "#f8fafc",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: "12px",
+                      flexWrap: "wrap",
+                      gap: "8px",
+                    }}
+                  >
+                    <strong style={{ color: "#334155", fontSize: "14px" }}>
+                      مواد من المخزون (اختياري)
+                    </strong>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!inventoryItems.length) {
+                          alert("لا توجد أصناف في المخزون")
+                          return
+                        }
+                        setInvoiceInventoryUsage((prev) => [
+                          ...prev,
+                          {
+                            inventoryId: inventoryItems[0].id,
+                            quantity: 1,
+                          },
+                        ])
+                      }}
+                      style={{
+                        border: "none",
+                        background: "#dbeafe",
+                        color: "#1d4ed8",
+                        borderRadius: "8px",
+                        padding: "8px 12px",
+                        cursor: "pointer",
+                        fontWeight: "600",
+                        fontSize: "13px",
+                        fontFamily: "Tahoma, Arial, sans-serif",
+                      }}
+                    >
+                      + إضافة مادة
+                    </button>
+                  </div>
+                  <p
+                    style={{
+                      margin: "0 0 10px",
+                      color: "#64748b",
+                      fontSize: "12px",
+                    }}
+                  >
+                    عند حفظ الفاتورة يتم خصم الكميات من المخزون تلقائيًا
+                  </p>
+                  {invoiceInventoryUsage.map((row, index) => {
+                    const inv = inventoryItems.find(
+                      (x) => x.id === Number(row.inventoryId)
+                    )
+                    return (
+                      <div
+                        key={index}
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "2fr 1fr auto",
+                          gap: "10px",
+                          marginBottom: "10px",
+                          alignItems: "end",
+                        }}
+                      >
+                        <div>
+                          <label style={{ ...smallLabelStyle }}>الصنف</label>
+                          <select
+                            value={row.inventoryId}
+                            onChange={(e) => {
+                              const val = Number(e.target.value)
+                              setInvoiceInventoryUsage((prev) =>
+                                prev.map((r, i) =>
+                                  i === index
+                                    ? { ...r, inventoryId: val }
+                                    : r
+                                )
+                              )
+                            }}
+                            dir="rtl"
+                            style={inputStyle}
+                          >
+                            {inventoryItems.map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name} (متاح: {item.quantity})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ ...smallLabelStyle }}>الكمية</label>
+                          <input
+                            type="number"
+                            min="1"
+                            max={inv ? Number(inv.quantity) : undefined}
+                            value={row.quantity}
+                            onChange={(e) => {
+                              const val = Math.max(1, Number(e.target.value) || 1)
+                              setInvoiceInventoryUsage((prev) =>
+                                prev.map((r, i) =>
+                                  i === index ? { ...r, quantity: val } : r
+                                )
+                              )
+                            }}
+                            dir="ltr"
+                            style={inputStyle}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setInvoiceInventoryUsage((prev) =>
+                              prev.filter((_, i) => i !== index)
+                            )
+                          }
+                          style={{
+                            height: "48px",
+                            border: "none",
+                            borderRadius: "10px",
+                            background: "#fee2e2",
+                            color: "#b91c1c",
+                            padding: "0 14px",
+                            cursor: "pointer",
+                            fontFamily: "Tahoma, Arial, sans-serif",
+                          }}
+                        >
+                          حذف
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+                
+ملاحظات الفاتورة
               </label>
 
               <textarea
