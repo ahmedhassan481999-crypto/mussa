@@ -198,6 +198,10 @@ const initialSettings = {
   showPhoneOnInvoice: true,
   showAddressOnInvoice: true,
   showFooterOnInvoice: true,
+  logoData: "",
+  qrText: "",
+  showLogoOnInvoice: true,
+  showQrOnInvoice: true,
 };
 
 // =========================
@@ -1112,6 +1116,10 @@ app.put("/api/settings", (req, res) => {
     showPhoneOnInvoice,
     showAddressOnInvoice,
     showFooterOnInvoice,
+    logoData,
+    qrText,
+    showLogoOnInvoice,
+    showQrOnInvoice,
   } = req.body;
 
   const cleanSettings = {
@@ -1142,8 +1150,6 @@ app.put("/api/settings", (req, res) => {
         ? defaultPaymentMethod
         : initialSettings.defaultPaymentMethod,
 
-
-
     showPhoneOnInvoice:
       showPhoneOnInvoice !== false,
 
@@ -1152,6 +1158,18 @@ app.put("/api/settings", (req, res) => {
 
     showFooterOnInvoice:
       showFooterOnInvoice !== false,
+
+    logoData:
+      typeof logoData === "string" ? logoData : "",
+
+    qrText:
+      String(qrText || "").trim(),
+
+    showLogoOnInvoice:
+      showLogoOnInvoice !== false,
+
+    showQrOnInvoice:
+      showQrOnInvoice !== false,
   };
   writeSettings(cleanSettings);
 

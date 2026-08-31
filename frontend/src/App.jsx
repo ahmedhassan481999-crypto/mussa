@@ -334,87 +334,6 @@ function App() {
  // =========================
   // دالة طباعة الفاتورة الحرارية (80mm)
   // =========================
-  function printThermalInvoice(invoice) {
-    if (!invoice) return;
-    const printWindow = window.open("", "_blank", "width=400,height=600");
-    if (!printWindow) return;
-
-    const itemsHtml = (invoice.items || [])
-      .map(
-        (item) => `
-        <tr>
-          <td style="text-align:right;">${item.name || item.serviceName || ""}</td>
-          <td style="text-align:center;">${item.quantity || 1}</td>
-          <td style="text-align:left;">${item.price || 0} ج</td>
-        </tr>`
-      )
-      .join("");
-
-    const remainingHtml = invoice.remainingAmount > 0 
-      ? `<div><b>المتبقي:</b> ${invoice.remainingAmount} جنيه</div>` 
-      : "";
-
-    const printContent = `
-      <!DOCTYPE html>
-      <html dir="rtl" lang="ar">
-      <head>
-        <title>فاتورة ${invoice.invoiceNumber || invoice.id}</title>
-        <style>
-          body { font-family: Arial, sans-serif; width: 75mm; margin: 0 auto; padding: 5px; font-size: 12px; }
-          .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 5px; margin-bottom: 5px; }
-          .title { font-size: 16px; font-weight: bold; }
-          .info { margin-bottom: 5px; font-size: 11px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 5px; }
-          th { border-bottom: 1px solid #000; font-size: 11px; }
-          td { padding: 3px 0; font-size: 11px; }
-          .totals { border-top: 1px dashed #000; margin-top: 5px; padding-top: 5px; }
-          .footer { text-align: center; margin-top: 10px; font-size: 10px; border-top: 1px solid #000; padding-top: 5px; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="title">Mussa Wash & Clean</div>
-          <div>مغسلة سيارات وسجاد</div>
-        </div>
-        <div class="info">
-          <div><b>رقم الفاتورة:</b> ${invoice.invoiceNumber || invoice.id}</div>
-          <div><b>التاريخ:</b> ${invoice.date || ""}</div>
-          <div><b>العميل:</b> ${invoice.customerName || ""}</div>
-          <div><b>المرتبط:</b> ${invoice.assetInfo || ""}</div>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th style="text-align:right;">الخدمة</th>
-              <th style="text-align:center;">العدد</th>
-              <th style="text-align:left;">السعر</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${itemsHtml}
-          </tbody>
-        </table>
-        <div class="totals">
-          <div><b>الإجمالي:</b> ${invoice.total} جنيه</div>
-          <div><b>المدفوع:</b> ${invoice.paidAmount || invoice.total} جنيه</div>
-          ${remainingHtml}
-        </div>
-        <div class="footer">
-          شكرًا لزيارتكم! 🌹<br/>الرجاء الاحتفاظ بالفاتورة
-        </div>
-        <script>
-          window.onload = function() { window.print(); window.close(); };
-        </script>
-      </body>
-      </html>
-    `;
-
-    printWindow.document.write(printContent);
-printWindow.document.close();
-  }
-// =========================
-  // دالة إرسال الفاتورة عبر الواتساب
-  // =========================
   function sendWhatsAppInvoice(invoice) {
     if (!invoice) return;
 
@@ -3164,6 +3083,18 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
       ${businessPhone}
       ${businessAddress}
       ${footer}
+
+    ${settings.showQrOnInvoice ? `
+    <div class="qr-box" style="text-align:center;margin-top:16px;padding-top:12px;border-top:1px dashed #cbd5e1;">
+      <img
+        src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=8&data=${encodeURIComponent(buildInvoiceQrData(invoice))}"
+        alt="QR"
+        width="120"
+        height="120"
+        style="display:inline-block;"
+      />
+      <div style="margin-top:6px;font-size:11px;color:#64748b;">امسح للتواصل أو حفظ بيانات الفاتورة</div>
+    </div>` : ""}
     </div>
   </div>
 
@@ -7301,6 +7232,96 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                     </label>
                   </div>
                 </div>
+
+
+              {/* الهوية البصرية للفاتورة */}
+              <div style={reportBoxStyle}>
+                <h3 style={{ ...sectionTitleStyle, marginBottom: "16px" }}>الهوية البصرية للفاتورة</h3>
+                <p style={{ margin: "0 0 14px", color: "#64748b", fontSize: "13px" }}>
+                  غيّر اسم المغسلة، ارفع اللوجو، وأضف QR في آخر الفاتورة
+                </p>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "14px" }}>
+                  <div>
+                    <label style={labelStyle}>اسم المغسلة (يظهر على الفاتورة)</label>
+                    <input
+                      type="text"
+                      value={settings.businessName || ""}
+                      onChange={(e) => updateSetting("businessName", e.target.value)}
+                      dir="rtl"
+                      style={inputStyle}
+                      placeholder="مثال: مغسلة النور"
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>محتوى الـ QR (رابط أو نص)</label>
+                    <input
+                      type="text"
+                      value={settings.qrText || ""}
+                      onChange={(e) => updateSetting("qrText", e.target.value)}
+                      dir="ltr"
+                      style={inputStyle}
+                      placeholder="رابط واتساب أو الموقع — أو اتركه فارغًا"
+                    />
+                    <p style={{ margin: "6px 0 0", fontSize: "12px", color: "#94a3b8" }}>
+                      لو فاضي: هيتولد تلقائي من رقم الهاتف / اسم المغسلة
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: "16px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "14px", alignItems: "start" }}>
+                  <div>
+                    <label style={labelStyle}>لوجو المغسلة</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      style={{ ...inputStyle, padding: "10px" }}
+                    />
+                    <div style={{ display: "flex", gap: "8px", marginTop: "10px", flexWrap: "wrap" }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: "#334155" }}>
+                        <input
+                          type="checkbox"
+                          checked={!!settings.showLogoOnInvoice}
+                          onChange={(e) => updateSetting("showLogoOnInvoice", e.target.checked)}
+                        />
+                        إظهار اللوجو على الفاتورة
+                      </label>
+                      <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: "#334155" }}>
+                        <input
+                          type="checkbox"
+                          checked={!!settings.showQrOnInvoice}
+                          onChange={(e) => updateSetting("showQrOnInvoice", e.target.checked)}
+                        />
+                        إظهار QR في آخر الفاتورة
+                      </label>
+                    </div>
+                    {settings.logoData ? (
+                      <button
+                        type="button"
+                        onClick={() => updateSetting("logoData", "")}
+                        style={{ ...secondaryButtonStyle, marginTop: "10px" }}
+                      >
+                        حذف اللوجو
+                      </button>
+                    ) : null}
+                  </div>
+                  <div style={{ textAlign: "center", background: "#f8fafc", borderRadius: "14px", padding: "16px", border: "1px solid #e2e8f0" }}>
+                    <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "10px" }}>معاينة</div>
+                    {settings.logoData ? (
+                      <img
+                        src={settings.logoData}
+                        alt="logo preview"
+                        style={{ maxWidth: "140px", maxHeight: "80px", objectFit: "contain" }}
+                      />
+                    ) : (
+                      <div style={{ color: "#94a3b8", fontSize: "13px", padding: "20px 0" }}>لا يوجد لوجو بعد</div>
+                    )}
+                    <div style={{ marginTop: "10px", fontWeight: "800", color: "#0f172a" }}>
+                      {settings.businessName || "اسم المغسلة"}
+                    </div>
+                  </div>
+                </div>
+              </div>
 
                 <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center", marginTop: "18px" }}>
                   <button onClick={saveSettings} style={primaryButtonStyle}>حفظ الإعدادات</button>
