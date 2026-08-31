@@ -5,7 +5,7 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
+app.use(express.json({ limit: "5mb" }));
 
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
@@ -1171,13 +1171,20 @@ app.put("/api/settings", (req, res) => {
     showQrOnInvoice:
       showQrOnInvoice !== false,
   };
-  writeSettings(cleanSettings);
-
-  return res.json({
-    success: true,
-    message: "تم حفظ الإعدادات بنجاح",
-    settings: readSettings(),
-  });
+  try {
+    writeSettings(cleanSettings);
+    return res.json({
+      success: true,
+      message: "تم حفظ الإعدادات بنجاح",
+      settings: readSettings(),
+    });
+  } catch (error) {
+    console.error("خطأ حفظ الإعدادات:", error);
+    return res.status(500).json({
+      success: false,
+      message: "تعذر حفظ الإعدادات على السيرفر",
+    });
+  }
 });
 
 app.post("/api/settings/reset", (req, res) => {

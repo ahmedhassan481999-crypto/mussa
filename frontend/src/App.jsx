@@ -1212,13 +1212,32 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
       alert("من فضلك اختر صورة فقط")
       return
     }
-    if (file.size > 900 * 1024) {
-      alert("حجم الصورة كبير. اختَر صورة أقل من 900 كيلوبايت")
+    if (file.size > 2 * 1024 * 1024) {
+      alert("حجم الصورة كبير جدًا. اختَر صورة أقل من 2 ميجا")
       return
     }
+
     const reader = new FileReader()
     reader.onload = () => {
-      updateSetting("logoData", String(reader.result || ""))
+      const src = String(reader.result || "")
+      const img = new Image()
+      img.onload = () => {
+        const maxW = 400
+        const scale = Math.min(1, maxW / Math.max(img.width, 1))
+        const w = Math.max(1, Math.round(img.width * scale))
+        const h = Math.max(1, Math.round(img.height * scale))
+        const canvas = document.createElement("canvas")
+        canvas.width = w
+        canvas.height = h
+        const ctx = canvas.getContext("2d")
+        ctx.drawImage(img, 0, 0, w, h)
+        const compressed = canvas.toDataURL("image/jpeg", 0.82)
+        updateSetting("logoData", compressed)
+      }
+      img.onerror = () => {
+        updateSetting("logoData", src)
+      }
+      img.src = src
     }
     reader.onerror = () => {
       alert("تعذر قراءة الصورة")
@@ -1271,7 +1290,11 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
       setSettingsMessage("تم حفظ الإعدادات بنجاح")
     } catch (error) {
       console.error(error)
-      setSettingsMessage("تعذر حفظ الإعدادات")
+      setSettingsMessage(
+        error?.message
+          ? `تعذر حفظ الإعدادات: ${error.message}`
+          : "تعذر حفظ الإعدادات — تأكد أن السيرفر محدّث"
+      )
     }
   }
 
