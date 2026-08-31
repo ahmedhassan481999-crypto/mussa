@@ -4001,6 +4001,27 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
   const maxPaymentValue = Math.max(1, ...paymentChartData.map((x) => x.value))
   const maxExpenseValue = Math.max(1, ...expenseChartData.map((x) => x.value))
 
+  const dailySalesChart = useMemo(() => {
+    const map = {}
+    reportInvoices.forEach((inv) => {
+      const d = normalizeDateForReport(inv.date)
+      if (!d) return
+      map[d] = (map[d] || 0) + Number(inv.total || 0)
+    })
+    return Object.entries(map)
+      .map(([date, value]) => ({ date, value }))
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(-14)
+  }, [reportInvoices])
+
+  const maxDailySales = Math.max(1, ...dailySalesChart.map((x) => x.value))
+
+  const paymentTotalCount = Math.max(
+    1,
+    paymentChartData.reduce((s, x) => s + Number(x.value || 0), 0)
+  )
+
+
   function setReportPeriod(period) {
     const today = new Date()
     const to = today.toISOString().slice(0, 10)
@@ -9133,7 +9154,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
               ))}
             </div>
 
-            {/* Charts grid */}
+            {/* Charts grid - تصور بياني */}
             <div
               style={{
                 display: "grid",
@@ -9142,7 +9163,77 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                 marginBottom: "20px",
               }}
             >
-              {/* Services */}
+              {/* مبيعات يومية - أعمدة */}
+              <div
+                style={{
+                  background: "#fff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "18px",
+                  padding: "18px",
+                  boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
+                  gridColumn: "1 / -1",
+                }}
+              >
+                <h3 style={{ margin: "0 0 4px", fontSize: "16px", color: "#0f172a" }}>
+                  المبيعات اليومية
+                </h3>
+                <p style={{ margin: "0 0 16px", color: "#94a3b8", fontSize: "12px" }}>
+                  آخر أيام فيها فواتير خلال الفترة المحددة
+                </p>
+                {dailySalesChart.length === 0 ? (
+                  <p style={{ color: "#94a3b8", textAlign: "center", padding: "40px 0" }}>
+                    لا توجد بيانات لعرض الرسم
+                  </p>
+                ) : (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-end",
+                      gap: "8px",
+                      height: "180px",
+                      padding: "0 4px 8px",
+                      borderBottom: "1px solid #e2e8f0",
+                      overflowX: "auto",
+                    }}
+                  >
+                    {dailySalesChart.map((item) => (
+                      <div
+                        key={item.date}
+                        style={{
+                          flex: "1 1 36px",
+                          minWidth: "36px",
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "flex-end",
+                          height: "100%",
+                          gap: "6px",
+                        }}
+                        title={`${item.date}: ${item.value} ج`}
+                      >
+                        <span style={{ fontSize: "10px", color: "#64748b", fontWeight: "700" }}>
+                          {Number(item.value).toLocaleString("ar-EG")}
+                        </span>
+                        <div
+                          style={{
+                            width: "100%",
+                            maxWidth: "42px",
+                            height: `${Math.max(8, (item.value / maxDailySales) * 140)}px`,
+                            background: "linear-gradient(180deg, #60a5fa 0%, #1d4ed8 100%)",
+                            borderRadius: "8px 8px 4px 4px",
+                            boxShadow: "0 6px 12px rgba(37,99,235,0.25)",
+                          }}
+                        />
+                        <span style={{ fontSize: "10px", color: "#94a3b8", whiteSpace: "nowrap" }}>
+                          {String(item.date).slice(5)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* خدمات - أعمدة أفقية محسنة */}
               <div
                 style={{
                   background: "#fff",
@@ -9156,12 +9247,10 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                   الخدمات الأكثر مبيعًا
                 </h3>
                 <p style={{ margin: "0 0 16px", color: "#94a3b8", fontSize: "12px" }}>
-                  حسب الكمية في الفترة المحددة
+                  مقارنة بصرية حسب الكمية
                 </p>
                 {serviceChartData.length === 0 ? (
-                  <p style={{ color: "#94a3b8", textAlign: "center", padding: "30px 0" }}>
-                    لا توجد بيانات
-                  </p>
+                  <p style={{ color: "#94a3b8", textAlign: "center", padding: "30px 0" }}>لا توجد بيانات</p>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
                     {serviceChartData.map((item, idx) => (
@@ -9183,7 +9272,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                         </div>
                         <div
                           style={{
-                            height: "10px",
+                            height: "14px",
                             background: "#f1f5f9",
                             borderRadius: "99px",
                             overflow: "hidden",
@@ -9193,8 +9282,9 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                             style={{
                               height: "100%",
                               width: `${(item.value / maxServiceValue) * 100}%`,
-                              background: "linear-gradient(90deg, #60a5fa, #2563eb)",
+                              background: "linear-gradient(90deg, #93c5fd, #2563eb)",
                               borderRadius: "99px",
+                              boxShadow: "inset 0 -2px 0 rgba(0,0,0,0.08)",
                             }}
                           />
                         </div>
@@ -9204,7 +9294,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                 )}
               </div>
 
-              {/* Payment status */}
+              {/* حالات الدفع - دونات */}
               <div
                 style={{
                   background: "#fff",
@@ -9215,55 +9305,91 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                 }}
               >
                 <h3 style={{ margin: "0 0 4px", fontSize: "16px", color: "#0f172a" }}>
-                  حالات الدفع
+                  توزيع حالات الدفع
                 </h3>
                 <p style={{ margin: "0 0 16px", color: "#94a3b8", fontSize: "12px" }}>
-                  توزيع الفواتير حسب التحصيل
+                  رسم دائري لنسب التحصيل
                 </p>
                 {paymentChartData.length === 0 ? (
-                  <p style={{ color: "#94a3b8", textAlign: "center", padding: "30px 0" }}>
-                    لا توجد بيانات
-                  </p>
+                  <p style={{ color: "#94a3b8", textAlign: "center", padding: "30px 0" }}>لا توجد بيانات</p>
                 ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                    {paymentChartData.map((item) => (
-                      <div key={item.name}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      alignItems: "center",
+                      gap: "20px",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "150px",
+                        height: "150px",
+                        borderRadius: "50%",
+                        background: (() => {
+                          let acc = 0
+                          const parts = paymentChartData.map((item) => {
+                            const start = acc
+                            const pct = (Number(item.value) / paymentTotalCount) * 100
+                            acc += pct
+                            return `${item.color} ${start}% ${acc}%`
+                          })
+                          return `conic-gradient(${parts.join(", ")})`
+                        })(),
+                        boxShadow: "0 10px 24px rgba(15,23,42,0.12)",
+                        position: "relative",
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: "absolute",
+                          inset: "28px",
+                          borderRadius: "50%",
+                          background: "#fff",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexDirection: "column",
+                        }}
+                      >
+                        <span style={{ fontSize: "11px", color: "#94a3b8" }}>فواتير</span>
+                        <strong style={{ fontSize: "22px", color: "#0f172a" }}>
+                          {paymentTotalCount}
+                        </strong>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px", minWidth: "140px" }}>
+                      {paymentChartData.map((item) => (
                         <div
+                          key={item.name}
                           style={{
                             display: "flex",
-                            justifyContent: "space-between",
-                            marginBottom: "6px",
+                            alignItems: "center",
+                            gap: "8px",
                             fontSize: "13px",
                             color: "#475569",
                           }}
                         >
-                          <span style={{ fontWeight: "700" }}>{item.name}</span>
-                          <span style={{ fontWeight: "800", color: item.color }}>{item.value}</span>
-                        </div>
-                        <div
-                          style={{
-                            height: "10px",
-                            background: "#f1f5f9",
-                            borderRadius: "99px",
-                            overflow: "hidden",
-                          }}
-                        >
-                          <div
+                          <span
                             style={{
-                              height: "100%",
-                              width: `${(item.value / maxPaymentValue) * 100}%`,
+                              width: "10px",
+                              height: "10px",
+                              borderRadius: "50%",
                               background: item.color,
-                              borderRadius: "99px",
+                              flexShrink: 0,
                             }}
                           />
+                          <span style={{ flex: 1, fontWeight: "600" }}>{item.name}</span>
+                          <strong style={{ color: item.color }}>{item.value}</strong>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
 
-              {/* Expenses */}
+              {/* مصروفات */}
               <div
                 style={{
                   background: "#fff",
@@ -9277,12 +9403,10 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                   المصروفات حسب التصنيف
                 </h3>
                 <p style={{ margin: "0 0 16px", color: "#94a3b8", fontSize: "12px" }}>
-                  أين تذهب فلوس التشغيل
+                  أين تذهب مصاريف التشغيل
                 </p>
                 {expenseChartData.length === 0 ? (
-                  <p style={{ color: "#94a3b8", textAlign: "center", padding: "30px 0" }}>
-                    لا توجد مصروفات
-                  </p>
+                  <p style={{ color: "#94a3b8", textAlign: "center", padding: "30px 0" }}>لا توجد مصروفات</p>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
                     {expenseChartData.map((item) => (
@@ -9303,7 +9427,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                         </div>
                         <div
                           style={{
-                            height: "10px",
+                            height: "14px",
                             background: "#f1f5f9",
                             borderRadius: "99px",
                             overflow: "hidden",
@@ -9313,7 +9437,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                             style={{
                               height: "100%",
                               width: `${(item.value / maxExpenseValue) * 100}%`,
-                              background: "linear-gradient(90deg, #fb923c, #ea580c)",
+                              background: "linear-gradient(90deg, #fdba74, #ea580c)",
                               borderRadius: "99px",
                             }}
                           />
