@@ -2445,17 +2445,29 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
       return
     }
 
-    if (
-      invoiceItems.length ===
-      0
-    ) {
+    const hasServices = invoiceItems.length > 0
+    const hasMaterials = invoiceInventoryUsage.some(
+      (row) => Number(row.inventoryId) && Number(row.quantity) > 0
+    )
+
+    if (!hasServices && !hasMaterials) {
       alert(
-        "من فضلك أضف خدمة واحدة على الأقل"
+        "من فضلك أضف خدمة أو مادة من المخزون على الأقل"
       )
       return
     }
 
-    if (invoiceTotal <= 0) {
+    const materialsTotal = invoiceInventoryUsage.reduce((sum, row) => {
+      if (!Number(row.inventoryId) || !Number(row.quantity)) return sum
+      const inv = inventoryItems.find((x) => x.id === Number(row.inventoryId))
+      const unit = inv ? Number(inv.price) || 0 : 0
+      return sum + unit * Number(row.quantity)
+    }, 0)
+
+    const servicesTotal = hasServices ? Number(invoiceTotal) || 0 : 0
+    const combinedTotal = servicesTotal + materialsTotal
+
+    if (combinedTotal <= 0) {
       alert(
         "إجمالي الفاتورة يجب أن يكون أكبر من صفر"
       )
@@ -2495,7 +2507,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
       "مدفوعة"
     ) {
       paidAmount =
-        invoiceTotal
+        combinedTotal
     }
 
     if (
@@ -2507,10 +2519,10 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
 
     if (
       paidAmount >
-      invoiceTotal
+      combinedTotal
     ) {
       paidAmount =
-        invoiceTotal
+        combinedTotal
     }
 
     if (invoiceUseMembership) {
@@ -2570,13 +2582,13 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
       invoiceUseMembership
         ? "مغطاة بالعضوية"
         : paidAmount ===
-          invoiceTotal
+          combinedTotal
         ? "مدفوعة"
         : paidAmount > 0
         ? "مدفوعة جزئيًا"
         : "غير مدفوعة"
 
-    const finalItems =
+    const serviceItems =
       invoiceItems.map(
         (item) => {
           const details =
@@ -2604,6 +2616,35 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
           }
         }
       )
+
+    const materialItems =
+      invoiceInventoryUsage
+        .filter(
+          (row) =>
+            Number(row.inventoryId) &&
+            Number(row.quantity) > 0
+        )
+        .map((row) => {
+          const inv = inventoryItems.find(
+            (x) => x.id === Number(row.inventoryId)
+          )
+          const qty = Number(row.quantity) || 0
+          const price = inv ? Number(inv.price) || 0 : 0
+          return {
+            serviceId: null,
+            serviceName: inv
+              ? inv.name + " (من المخزون)"
+              : "مادة مخزون",
+            quantity: qty,
+            price: price,
+            unit: "ثابت",
+            total: price * qty,
+            inventoryId: Number(row.inventoryId),
+            fromInventory: true,
+          }
+        })
+
+    const finalItems = [...serviceItems, ...materialItems]
 
     const assetInfo =
       invoiceTargetType ===
@@ -2653,7 +2694,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
       items:
         finalItems,
       total:
-        invoiceTotal,
+        combinedTotal,
       paymentMethod:
         invoicePaymentMethod,
       paymentStatus:
@@ -2663,7 +2704,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
       remainingAmount:
         invoiceUseMembership
           ? 0
-          : invoiceTotal -
+          : combinedTotal -
             paidAmount,
       coveredByMembership:
         invoiceUseMembership,
@@ -2753,6 +2794,9 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
             const invData = await invRes.json()
             if (invData.success) setInventoryItems(invData.items || [])
           } catch (e) {}
+        }
+        if (invoiceInventoryUsage.length > 0) {
+          window.dispatchEvent(new Event("mussa-inventory-updated"))
         }
 
         setServices(

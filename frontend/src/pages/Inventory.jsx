@@ -28,7 +28,21 @@ export default function Inventory() {
     }
   }
 
-  useEffect(() => { loadItems(); }, []);
+  useEffect(() => {
+    loadItems();
+    function onFocus() {
+      loadItems();
+    }
+    function onInvUpdated() {
+      loadItems();
+    }
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("mussa-inventory-updated", onInvUpdated);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("mussa-inventory-updated", onInvUpdated);
+    };
+  }, []);
 
   const lowCount = items.filter((i) => Number(i.quantity) <= Number(i.minLimit)).length;
   const filtered = items.filter((item) => {
