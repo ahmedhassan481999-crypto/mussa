@@ -39,6 +39,7 @@ const membershipsFile = path.join(dataDirectory, "memberships.json");
 const servicesFile = path.join(dataDirectory, "services.json");
 const settingsFile = path.join(dataDirectory, "settings.json");
 const usersFile = path.join(dataDirectory, "users.json");
+const inventoryFile = path.join(dataDirectory, "inventory.json");
 
 // =========================
 // بيانات افتراضية
@@ -113,6 +114,7 @@ const initialCars = [
 const initialInvoices = [];
 const initialExpenses = [];
 const initialCarpets = [];
+
 const initialMemberships = [];
 
 const initialUsers = [
@@ -125,6 +127,14 @@ const initialUsers = [
     active: true,
   },
 ];
+
+const initialInventory = [
+  { id: 1, name: "شامبو سيارات مركز (جالون)", category: "كيماويات", quantity: 15, minLimit: 5, price: 350 },
+  { id: 2, name: "منظف جنوط وفوانيس", category: "كيماويات", quantity: 3, minLimit: 5, price: 120 },
+  { id: 3, name: "فوط ميكروفايبر (قطعة)", category: "أدوات", quantity: 45, minLimit: 10, price: 25 },
+  { id: 4, name: "معطر جو برائحة الفانيليا", category: "معطرات", quantity: 8, minLimit: 10, price: 60 },
+];
+
 
 const initialServices = [
   {
@@ -366,10 +376,10 @@ function writeSettings(settings) {
   });
 }
 
+// =========================
+// الصفحة الرئيسية
+// =========================
 
-// =========================
-// المستخدمين
-// =========================
 
 function readUsers() {
   return readJsonFile(usersFile, initialUsers);
@@ -379,9 +389,61 @@ function writeUsers(users) {
   writeJsonFile(usersFile, users);
 }
 
-// =========================
-// الصفحة الرئيسية
-// =========================
+function readInventory() {
+  return readJsonFile(inventoryFile, initialInventory);
+}
+
+function writeInventory(items) {
+  writeJsonFile(inventoryFile, items);
+}
+
+function createInventoryExpense(title, amount, notes) {
+  if (!amount || Number(amount) <= 0) return null;
+  const expenses = readExpenses();
+  const expense = {
+    id: Date.now(),
+    date: new Date().toLocaleDateString("ar-EG"),
+    category: "مشتريات مخزون",
+    title: String(title).trim(),
+    amount: Number(amount),
+    paymentMethod: "نقدي",
+    notes: notes ? String(notes).trim() : "تلقائي من المخزون",
+  };
+  expenses.unshift(expense);
+  writeExpenses(expenses);
+  return expense;
+}
+
+function deductInventoryUsage(usageList) {
+  if (!Array.isArray(usageList) || usageList.length === 0) {
+    return { ok: true };
+  }
+  const items = readInventory();
+  for (const row of usageList) {
+    const id = Number(row.inventoryId || row.id);
+    const qty = Number(row.quantity) || 0;
+    if (!id || qty <= 0) continue;
+    const index = items.findIndex((x) => x.id === id);
+    if (index === -1) {
+      return { ok: false, message: "صنف مخزون غير موجود" };
+    }
+    if (Number(items[index].quantity) < qty) {
+      return {
+        ok: false,
+        message: "الكمية غير كافية للصنف: " + items[index].name,
+      };
+    }
+  }
+  for (const row of usageList) {
+    const id = Number(row.inventoryId || row.id);
+    const qty = Number(row.quantity) || 0;
+    if (!id || qty <= 0) continue;
+    const index = items.findIndex((x) => x.id === id);
+    items[index].quantity = Number(items[index].quantity) - qty;
+  }
+  writeInventory(items);
+  return { ok: true };
+}
 
 app.get("/", (req, res) => {
   res.json({
@@ -420,11 +482,7 @@ app.post("/api/login", (req, res) => {
     });
   }
 
-  // توافق مع الحساب القديم
-  if (
-    cleanUser === OWNER_USERNAME &&
-    cleanPass === OWNER_PASSWORD
-  ) {
+  if (cleanUser === OWNER_USERNAME && cleanPass === OWNER_PASSWORD) {
     return res.json({
       success: true,
       message: "تم تسجيل الدخول بنجاح",
@@ -443,178 +501,6 @@ app.post("/api/login", (req, res) => {
   });
 });
 
-// =====================================================
-// المستخدمين (الموظفين)
-// =====================================================
-
-app.get("/api/users", (req, res) => {
-  const users = readUsers().map((u) => {
-    const { password, ...rest } = u;
-    return rest;
-  });
-  return res.json({ success: true, users });
-});
-
-app.post("/api/users", (req, res) => {
-  const { name, username, password, role, active } = req.body;
-
-  if (!String(name || "").trim() || !String(username || "").trim() || !password) {
-    return res.status(400).json({
-      success: false,
-      message: "الاسم واسم المستخدم وكلمة المرور مطلوبة",
-    });
-  }
-
-  const users = readUsers();
-  const cleanUsername = String(username).trim();
-
-  if (users.some((u) => String(u.username).trim() === cleanUsername)) {
-    return res.status(400).json({
-      success: false,
-      message: "اسم المستخدم موجود بالفعل",
-    });
-  }
-
-  const newUser = {
-    id: Date.now(),
-    name: String(name).trim(),
-    username: cleanUsername,
-    password: String(password),
-    role: role || "موظف",
-    active: active !== false,
-  };
-
-  users.push(newUser);
-  writeUsers(users);
-
-  const { password: _, ...safe } = newUser;
-  return res.status(201).json({
-    success: true,
-    message: "تمت إضافة المستخدم بنجاح",
-    user: safe,
-  });
-});
-
-app.put("/api/users/:id", (req, res) => {
-  const userId = Number(req.params.id);
-  const users = readUsers();
-  const index = users.findIndex((u) => u.id === userId);
-
-  if (index === -1) {
-    return res.status(404).json({
-      success: false,
-      message: "المستخدم غير موجود",
-    });
-  }
-
-  const { name, username, password, role, active } = req.body;
-
-  if (!String(name || "").trim() || !String(username || "").trim()) {
-    return res.status(400).json({
-      success: false,
-      message: "الاسم واسم المستخدم مطلوبان",
-    });
-  }
-
-  const cleanUsername = String(username).trim();
-  if (
-    users.some(
-      (u) => u.id !== userId && String(u.username).trim() === cleanUsername
-    )
-  ) {
-    return res.status(400).json({
-      success: false,
-      message: "اسم المستخدم مستخدم بالفعل",
-    });
-  }
-
-  const updated = {
-    ...users[index],
-    name: String(name).trim(),
-    username: cleanUsername,
-    role: role || users[index].role || "موظف",
-    active: active !== false,
-  };
-
-  if (password && String(password).trim()) {
-    updated.password = String(password).trim();
-  }
-
-  users[index] = updated;
-  writeUsers(users);
-
-  const { password: _, ...safe } = updated;
-  return res.json({
-    success: true,
-    message: "تم تعديل المستخدم بنجاح",
-    user: safe,
-  });
-});
-
-app.delete("/api/users/:id", (req, res) => {
-  const userId = Number(req.params.id);
-  const users = readUsers();
-  const user = users.find((u) => u.id === userId);
-
-  if (!user) {
-    return res.status(404).json({
-      success: false,
-      message: "المستخدم غير موجود",
-    });
-  }
-
-  if (user.username === "admin") {
-    return res.status(400).json({
-      success: false,
-      message: "لا يمكن حذف حساب المدير الرئيسي",
-    });
-  }
-
-  writeUsers(users.filter((u) => u.id !== userId));
-  return res.json({ success: true, message: "تم حذف المستخدم بنجاح" });
-});
-
-app.post("/api/users/change-password", (req, res) => {
-  const { username, currentPassword, newPassword } = req.body;
-
-  if (!username || !currentPassword || !newPassword) {
-    return res.status(400).json({
-      success: false,
-      message: "بيانات غير مكتملة",
-    });
-  }
-
-  if (String(newPassword).length < 4) {
-    return res.status(400).json({
-      success: false,
-      message: "كلمة المرور الجديدة قصيرة جدًا",
-    });
-  }
-
-  const users = readUsers();
-  const index = users.findIndex(
-    (u) => String(u.username).trim() === String(username).trim()
-  );
-
-  if (index === -1 || String(users[index].password) !== String(currentPassword)) {
-    return res.status(400).json({
-      success: false,
-      message: "كلمة المرور الحالية غير صحيحة",
-    });
-  }
-
-  users[index].password = String(newPassword);
-  writeUsers(users);
-
-  return res.json({
-    success: true,
-    message: "تم تغيير كلمة المرور بنجاح",
-  });
-});
-
-// =====================================================
-// العملاء
-// =====================================================
 
 app.get("/api/customers", (req, res) => {
   res.json({
@@ -1296,6 +1182,7 @@ app.get("/api/memberships", (req, res) => {
     res.json({
       success: true,
       memberships: readMemberships(),
+        inventory: readInventory(),
     });
   } catch (error) {
     console.error("تعذر تحميل العضويات:", error);
@@ -1609,6 +1496,220 @@ app.post("/api/memberships/:id/renew", (req, res) => {
 // النسخ الاحتياطي والاسترجاع
 // =====================================================
 
+
+// =====================================================
+// المستخدمين (الموظفين)
+// =====================================================
+
+app.get("/api/users", (req, res) => {
+  const users = readUsers().map((u) => {
+    const { password, ...rest } = u;
+    return rest;
+  });
+  return res.json({ success: true, users });
+});
+
+app.post("/api/users", (req, res) => {
+  const { name, username, password, role, active } = req.body;
+  if (!String(name || "").trim() || !String(username || "").trim() || !password) {
+    return res.status(400).json({ success: false, message: "الاسم واسم المستخدم وكلمة المرور مطلوبة" });
+  }
+  const users = readUsers();
+  const cleanUsername = String(username).trim();
+  if (users.some((u) => String(u.username).trim() === cleanUsername)) {
+    return res.status(400).json({ success: false, message: "اسم المستخدم موجود بالفعل" });
+  }
+  const newUser = {
+    id: Date.now(),
+    name: String(name).trim(),
+    username: cleanUsername,
+    password: String(password),
+    role: role || "موظف",
+    active: active !== false,
+  };
+  users.push(newUser);
+  writeUsers(users);
+  const { password: _, ...safe } = newUser;
+  return res.status(201).json({ success: true, message: "تمت إضافة المستخدم بنجاح", user: safe });
+});
+
+app.put("/api/users/:id", (req, res) => {
+  const userId = Number(req.params.id);
+  const users = readUsers();
+  const index = users.findIndex((u) => u.id === userId);
+  if (index === -1) {
+    return res.status(404).json({ success: false, message: "المستخدم غير موجود" });
+  }
+  const { name, username, password, role, active } = req.body;
+  if (!String(name || "").trim() || !String(username || "").trim()) {
+    return res.status(400).json({ success: false, message: "الاسم واسم المستخدم مطلوبان" });
+  }
+  const cleanUsername = String(username).trim();
+  if (users.some((u) => u.id !== userId && String(u.username).trim() === cleanUsername)) {
+    return res.status(400).json({ success: false, message: "اسم المستخدم مستخدم بالفعل" });
+  }
+  const updated = {
+    ...users[index],
+    name: String(name).trim(),
+    username: cleanUsername,
+    role: role || users[index].role || "موظف",
+    active: active !== false,
+  };
+  if (password && String(password).trim()) {
+    updated.password = String(password).trim();
+  }
+  users[index] = updated;
+  writeUsers(users);
+  const { password: _, ...safe } = updated;
+  return res.json({ success: true, message: "تم تعديل المستخدم بنجاح", user: safe });
+});
+
+app.delete("/api/users/:id", (req, res) => {
+  const userId = Number(req.params.id);
+  const users = readUsers();
+  const user = users.find((u) => u.id === userId);
+  if (!user) {
+    return res.status(404).json({ success: false, message: "المستخدم غير موجود" });
+  }
+  if (user.username === "admin") {
+    return res.status(400).json({ success: false, message: "لا يمكن حذف حساب المدير الرئيسي" });
+  }
+  writeUsers(users.filter((u) => u.id !== userId));
+  return res.json({ success: true, message: "تم حذف المستخدم بنجاح" });
+});
+
+app.post("/api/users/change-password", (req, res) => {
+  const { username, currentPassword, newPassword } = req.body;
+  if (!username || !currentPassword || !newPassword) {
+    return res.status(400).json({ success: false, message: "بيانات غير مكتملة" });
+  }
+  if (String(newPassword).length < 4) {
+    return res.status(400).json({ success: false, message: "كلمة المرور الجديدة قصيرة جدا" });
+  }
+  const users = readUsers();
+  const index = users.findIndex((u) => String(u.username).trim() === String(username).trim());
+  if (index === -1 || String(users[index].password) !== String(currentPassword)) {
+    return res.status(400).json({ success: false, message: "كلمة المرور الحالية غير صحيحة" });
+  }
+  users[index].password = String(newPassword);
+  writeUsers(users);
+  return res.json({ success: true, message: "تم تغيير كلمة المرور بنجاح" });
+});
+
+// =====================================================
+// المخزون
+// =====================================================
+
+app.get("/api/inventory", (req, res) => {
+  return res.json({ success: true, items: readInventory() });
+});
+
+app.post("/api/inventory", (req, res) => {
+  const { name, category, quantity, minLimit, price, createExpense } = req.body;
+  if (!String(name || "").trim()) {
+    return res.status(400).json({ success: false, message: "اسم الصنف مطلوب" });
+  }
+  const qty = Number(quantity) || 0;
+  if (qty < 0) {
+    return res.status(400).json({ success: false, message: "الكمية غير صحيحة" });
+  }
+  const items = readInventory();
+  const unitPrice = Number(price) || 0;
+  const newItem = {
+    id: Date.now(),
+    name: String(name).trim(),
+    category: String(category || "أخرى").trim(),
+    quantity: qty,
+    minLimit: Number(minLimit) || 0,
+    price: unitPrice,
+  };
+  items.unshift(newItem);
+  writeInventory(items);
+  let expense = null;
+  if (createExpense !== false && qty > 0 && unitPrice > 0) {
+    expense = createInventoryExpense(
+      "شراء مخزون: " + newItem.name,
+      qty * unitPrice,
+      "كمية " + qty + " × " + unitPrice + " جنيه"
+    );
+  }
+  return res.status(201).json({ success: true, message: "تمت إضافة الصنف بنجاح", item: newItem, expense });
+});
+
+app.put("/api/inventory/:id", (req, res) => {
+  const itemId = Number(req.params.id);
+  const items = readInventory();
+  const index = items.findIndex((x) => x.id === itemId);
+  if (index === -1) {
+    return res.status(404).json({ success: false, message: "الصنف غير موجود" });
+  }
+  const { name, category, quantity, minLimit, price } = req.body;
+  if (!String(name || "").trim()) {
+    return res.status(400).json({ success: false, message: "اسم الصنف مطلوب" });
+  }
+  items[index] = {
+    ...items[index],
+    name: String(name).trim(),
+    category: String(category || items[index].category || "أخرى").trim(),
+    quantity: Number(quantity) >= 0 ? Number(quantity) : items[index].quantity,
+    minLimit: Number(minLimit) >= 0 ? Number(minLimit) : items[index].minLimit,
+    price: Number(price) >= 0 ? Number(price) : items[index].price,
+  };
+  writeInventory(items);
+  return res.json({ success: true, message: "تم تعديل الصنف بنجاح", item: items[index] });
+});
+
+app.delete("/api/inventory/:id", (req, res) => {
+  const itemId = Number(req.params.id);
+  const items = readInventory();
+  if (!items.some((x) => x.id === itemId)) {
+    return res.status(404).json({ success: false, message: "الصنف غير موجود" });
+  }
+  writeInventory(items.filter((x) => x.id !== itemId));
+  return res.json({ success: true, message: "تم حذف الصنف بنجاح" });
+});
+
+app.post("/api/inventory/:id/adjust", (req, res) => {
+  const itemId = Number(req.params.id);
+  const { mode, quantity, createExpense } = req.body;
+  const qty = Number(quantity) || 0;
+  if (!qty || qty <= 0) {
+    return res.status(400).json({ success: false, message: "أدخل كمية صحيحة" });
+  }
+  if (mode !== "add" && mode !== "subtract") {
+    return res.status(400).json({ success: false, message: "نوع العملية غير صحيح" });
+  }
+  const items = readInventory();
+  const index = items.findIndex((x) => x.id === itemId);
+  if (index === -1) {
+    return res.status(404).json({ success: false, message: "الصنف غير موجود" });
+  }
+  const current = Number(items[index].quantity) || 0;
+  if (mode === "subtract" && current < qty) {
+    return res.status(400).json({ success: false, message: "الكمية المتاحة غير كافية" });
+  }
+  items[index].quantity = mode === "add" ? current + qty : current - qty;
+  writeInventory(items);
+  let expense = null;
+  if (mode === "add" && createExpense !== false) {
+    const unitPrice = Number(items[index].price) || 0;
+    if (unitPrice > 0) {
+      expense = createInventoryExpense(
+        "شراء مخزون: " + items[index].name,
+        qty * unitPrice,
+        "زيادة كمية " + qty + " × " + unitPrice + " جنيه"
+      );
+    }
+  }
+  return res.json({
+    success: true,
+    message: mode === "add" ? "تمت إضافة الكمية" : "تم خصم الكمية",
+    item: items[index],
+    expense,
+  });
+});
+
+
 app.get("/api/backup", (req, res) => {
   try {
     const backup = {
@@ -1690,6 +1791,9 @@ app.post("/api/backup/restore", (req, res) => {
     writeServices(data.services);
     writeSettings(data.settings);
     writeMemberships(data.memberships || []);
+    if (Array.isArray(data.inventory)) {
+      writeInventory(data.inventory);
+    }
 
     return res.json({
       success: true,
@@ -1735,7 +1839,16 @@ app.post("/api/invoices", (req, res) => {
     paidAmount,
     remainingAmount,
     notes,
+    inventoryUsage,
   } = req.body;
+
+  const usageCheck = deductInventoryUsage(inventoryUsage);
+  if (!usageCheck.ok) {
+    return res.status(400).json({
+      success: false,
+      message: usageCheck.message,
+    });
+  }
 
   if (
     !customerId ||
@@ -2830,10 +2943,9 @@ ensureJsonFile(
   initialSettings
 );
 
-ensureJsonFile(
-  usersFile,
-  initialUsers
-);
+
+ensureJsonFile(usersFile, initialUsers);
+ensureJsonFile(inventoryFile, initialInventory);
 
 app.listen(PORT, () => {
   console.log(
