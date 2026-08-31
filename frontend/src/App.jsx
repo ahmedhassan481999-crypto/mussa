@@ -4202,13 +4202,31 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                   0
                 )
 
+              const paid = customerInvoices.reduce(
+                (sum, invoice) => sum + Number(invoice.paidAmount || 0),
+                0
+              )
+              const remaining = customerInvoices.reduce(
+                (sum, invoice) => sum + Number(invoice.remainingAmount || 0),
+                0
+              )
+              const lastDate = customerInvoices
+                .map((inv) => normalizeDateForReport(inv.date))
+                .filter(Boolean)
+                .sort()
+                .reverse()[0] || ""
+
               return {
                 ...customer,
                 invoiceCount,
                 total,
+                paid,
+                remaining,
+                lastDate,
               }
             }
           )
+          .filter((c) => c.invoiceCount > 0)
           .sort(
             (a, b) =>
               b.total -
@@ -4216,6 +4234,20 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
           ),
       [customers, reportInvoices]
     )
+
+  const topCustomers = useMemo(
+    () => customerReports.slice(0, 8),
+    [customerReports]
+  )
+
+  const customersWithDebt = useMemo(
+    () =>
+      customerReports
+        .filter((c) => Number(c.remaining) > 0)
+        .sort((a, b) => Number(b.remaining) - Number(a.remaining))
+        .slice(0, 8),
+    [customerReports]
+  )
 
   // =========================
   // شاشة تسجيل الدخول
@@ -9342,6 +9374,211 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                         <td style={{ ...tableCellStyle, fontWeight: "800", color: "#047857" }}>
                           {Number(service.revenue || 0).toLocaleString("ar-EG")} ج.م
                         </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* تحليل العملاء */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                gap: "16px",
+                marginTop: "20px",
+              }}
+            >
+              <div
+                style={{
+                  background: "#fff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "18px",
+                  padding: "18px",
+                  boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
+                }}
+              >
+                <h3 style={{ margin: "0 0 4px", fontSize: "16px", color: "#0f172a" }}>
+                  أفضل العملاء
+                </h3>
+                <p style={{ margin: "0 0 14px", color: "#94a3b8", fontSize: "12px" }}>
+                  أعلى إيراد في الفترة المحددة
+                </p>
+                {topCustomers.length === 0 ? (
+                  <p style={{ color: "#94a3b8", textAlign: "center", padding: "24px 0" }}>
+                    لا توجد فواتير عملاء في هذه الفترة
+                  </p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    {topCustomers.map((c, idx) => {
+                      const maxTotal = Math.max(1, Number(topCustomers[0].total) || 1)
+                      return (
+                        <div key={c.id}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              gap: "10px",
+                              marginBottom: "5px",
+                              fontSize: "13px",
+                            }}
+                          >
+                            <span style={{ fontWeight: "700", color: "#334155" }}>
+                              <span style={{ color: "#94a3b8", marginLeft: "6px" }}>{idx + 1}.</span>
+                              {c.name}
+                            </span>
+                            <span style={{ fontWeight: "800", color: "#047857", whiteSpace: "nowrap" }}>
+                              {Number(c.total || 0).toLocaleString("ar-EG")} ج
+                            </span>
+                          </div>
+                          <div
+                            style={{
+                              height: "8px",
+                              background: "#f1f5f9",
+                              borderRadius: "99px",
+                              overflow: "hidden",
+                              marginBottom: "4px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                height: "100%",
+                                width: `${(Number(c.total) / maxTotal) * 100}%`,
+                                background: "linear-gradient(90deg, #34d399, #059669)",
+                                borderRadius: "99px",
+                              }}
+                            />
+                          </div>
+                          <div style={{ fontSize: "11px", color: "#94a3b8" }}>
+                            {c.invoiceCount} فاتورة
+                            {c.phone ? ` · ${c.phone}` : ""}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div
+                style={{
+                  background: "#fff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "18px",
+                  padding: "18px",
+                  boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
+                }}
+              >
+                <h3 style={{ margin: "0 0 4px", fontSize: "16px", color: "#0f172a" }}>
+                  عملاء عليهم مبالغ
+                </h3>
+                <p style={{ margin: "0 0 14px", color: "#94a3b8", fontSize: "12px" }}>
+                  أعلى مديونيات في الفترة
+                </p>
+                {customersWithDebt.length === 0 ? (
+                  <p style={{ color: "#94a3b8", textAlign: "center", padding: "24px 0" }}>
+                    لا توجد مديونيات في هذه الفترة
+                  </p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    {customersWithDebt.map((c) => (
+                      <div
+                        key={c.id}
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          gap: "12px",
+                          padding: "10px 12px",
+                          borderRadius: "12px",
+                          background: "#fff7ed",
+                          border: "1px solid #ffedd5",
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: "700", color: "#9a3412", fontSize: "13px" }}>
+                            {c.name}
+                          </div>
+                          <div style={{ fontSize: "11px", color: "#c2410c", marginTop: "2px" }}>
+                            {c.invoiceCount} فاتورة
+                            {c.phone ? ` · ${c.phone}` : ""}
+                          </div>
+                        </div>
+                        <div style={{ fontWeight: "800", color: "#c2410c", whiteSpace: "nowrap" }}>
+                          {Number(c.remaining || 0).toLocaleString("ar-EG")} ج
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* جدول تحليل العملاء */}
+            <div
+              style={{
+                background: "#fff",
+                border: "1px solid #e2e8f0",
+                borderRadius: "18px",
+                padding: "18px",
+                boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
+                overflow: "auto",
+                marginTop: "16px",
+              }}
+            >
+              <h3 style={{ margin: "0 0 4px", fontSize: "16px", color: "#0f172a" }}>
+                تحليل بيانات العملاء
+              </h3>
+              <p style={{ margin: "0 0 16px", color: "#94a3b8", fontSize: "12px" }}>
+                ملخص تعامل كل عميل خلال الفترة المختارة
+              </p>
+              <table
+                dir="rtl"
+                style={{ width: "100%", borderCollapse: "collapse", minWidth: "720px" }}
+              >
+                <thead>
+                  <tr style={{ background: "#f8fafc" }}>
+                    <th style={tableHeaderStyle}>العميل</th>
+                    <th style={tableHeaderStyle}>الهاتف</th>
+                    <th style={tableHeaderStyle}>عدد الفواتير</th>
+                    <th style={tableHeaderStyle}>الإجمالي</th>
+                    <th style={tableHeaderStyle}>المدفوع</th>
+                    <th style={tableHeaderStyle}>المتبقي</th>
+                    <th style={tableHeaderStyle}>آخر زيارة</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {customerReports.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} style={{ padding: "28px", textAlign: "center", color: "#94a3b8" }}>
+                        لا توجد بيانات عملاء في هذه الفترة
+                      </td>
+                    </tr>
+                  ) : (
+                    customerReports.map((c) => (
+                      <tr key={c.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                        <td style={{ ...tableCellStyle, fontWeight: "700" }}>{c.name}</td>
+                        <td style={{ ...tableCellStyle, direction: "ltr", textAlign: "right" }}>
+                          {c.phone || "—"}
+                        </td>
+                        <td style={tableCellStyle}>{c.invoiceCount}</td>
+                        <td style={{ ...tableCellStyle, fontWeight: "700" }}>
+                          {Number(c.total || 0).toLocaleString("ar-EG")} ج
+                        </td>
+                        <td style={{ ...tableCellStyle, color: "#047857", fontWeight: "700" }}>
+                          {Number(c.paid || 0).toLocaleString("ar-EG")} ج
+                        </td>
+                        <td
+                          style={{
+                            ...tableCellStyle,
+                            color: Number(c.remaining) > 0 ? "#c2410c" : "#64748b",
+                            fontWeight: "800",
+                          }}
+                        >
+                          {Number(c.remaining || 0).toLocaleString("ar-EG")} ج
+                        </td>
+                        <td style={tableCellStyle}>{c.lastDate || "—"}</td>
                       </tr>
                     ))
                   )}
