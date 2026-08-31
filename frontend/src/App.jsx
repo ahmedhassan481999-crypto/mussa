@@ -1205,6 +1205,46 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
     setSettingsMessage("")
   }
 
+  function handleLogoUpload(e) {
+    const file = e.target.files && e.target.files[0]
+    if (!file) return
+    if (!String(file.type || "").startsWith("image/")) {
+      alert("من فضلك اختر صورة فقط")
+      return
+    }
+    if (file.size > 900 * 1024) {
+      alert("حجم الصورة كبير. اختَر صورة أقل من 900 كيلوبايت")
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      updateSetting("logoData", String(reader.result || ""))
+    }
+    reader.onerror = () => {
+      alert("تعذر قراءة الصورة")
+    }
+    reader.readAsDataURL(file)
+  }
+
+  function buildInvoiceQrData(invoice) {
+    const custom = String(settings.qrText || "").trim()
+    if (custom) return custom
+    const phone = String(settings.phone || "").replace(/[^0-9]/g, "")
+    let wa = phone
+    if (wa.startsWith("0")) wa = "20" + wa.slice(1)
+    if (wa) {
+      return (
+        "https://wa.me/" +
+        wa +
+        "?text=" +
+        encodeURIComponent(
+          "فاتورة " + (invoice && invoice.invoiceNumber ? invoice.invoiceNumber : "") + " - " + (settings.businessName || "")
+        )
+      )
+    }
+    return (settings.businessName || "Mussa Wash & Clean") + " | " + (invoice && invoice.invoiceNumber ? invoice.invoiceNumber : "")
+  }
+
   async function saveSettings() {
     try {
       const response = await apiFetch(`${API_BASE_URL}/api/settings`, {
@@ -7323,20 +7363,19 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                 </div>
               </div>
 
-                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center", marginTop: "18px" }}>
-                  <button onClick={saveSettings} style={primaryButtonStyle}>حفظ الإعدادات</button>
-                  <button onClick={resetSettings} style={secondaryButtonStyle}>استعادة الافتراضي</button>
-                  {settingsMessage && (
-                    <div style={{
-                      ...rtlText,
-                      color: settingsMessage.includes("تعذر") ? "#b91c1c" : "#15803d",
-                      fontWeight: "700",
-                      fontSize: "13px",
-                    }}>
-                      {settingsMessage}
-                    </div>
-                  )}
-                </div>
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+                <button type="button" onClick={saveSettings} style={primaryButtonStyle}>حفظ الإعدادات</button>
+                <button type="button" onClick={resetSettings} style={secondaryButtonStyle}>استعادة الافتراضي</button>
+                {settingsMessage ? (
+                  <div style={{
+                    ...rtlText,
+                    color: String(settingsMessage).includes("تعذر") ? "#b91c1c" : "#15803d",
+                    fontWeight: "700",
+                    fontSize: "13px",
+                  }}>
+                    {settingsMessage}
+                  </div>
+                ) : null}
               </div>
 
               {/* 3) الأمان */}
@@ -7521,6 +7560,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                 </div>
               </div>
             )}
+            </div>
           </div>
         )}
 
