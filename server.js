@@ -449,6 +449,38 @@ function deductInventoryUsage(usageList) {
   return { ok: true };
 }
 
+function restoreInventoryUsage(usageList) {
+  if (!Array.isArray(usageList) || usageList.length === 0) {
+    return { ok: true };
+  }
+  const items = readInventory();
+  for (const row of usageList) {
+    const id = Number(row.inventoryId || row.id);
+    const qty = Number(row.quantity) || 0;
+    if (!id || qty <= 0) continue;
+    const index = items.findIndex((x) => x.id === id);
+    if (index === -1) continue;
+    items[index].quantity = Number(items[index].quantity || 0) + qty;
+  }
+  writeInventory(items);
+  return { ok: true };
+}
+
+function extractUsageFromInvoice(invoice) {
+  if (!invoice) return [];
+  if (Array.isArray(invoice.inventoryUsage) && invoice.inventoryUsage.length > 0) {
+    return invoice.inventoryUsage;
+  }
+  const items = Array.isArray(invoice.items) ? invoice.items : [];
+  return items
+    .filter((it) => it && (it.fromInventory || it.inventoryId))
+    .map((it) => ({
+      inventoryId: Number(it.inventoryId),
+      quantity: Number(it.quantity) || 0,
+    }))
+    .filter((it) => it.inventoryId && it.quantity > 0);
+}
+
 app.get("/", (req, res) => {
   res.json({
     success: true,
@@ -2101,6 +2133,15 @@ app.post("/api/invoices", (req, res) => {
       notes
         ? String(notes).trim()
         : "",
+
+    inventoryUsage: Array.isArray(inventoryUsage)
+      ? inventoryUsage
+          .filter((row) => Number(row.inventoryId || row.id) && Number(row.quantity) > 0)
+          .map((row) => ({
+            inventoryId: Number(row.inventoryId || row.id),
+            quantity: Number(row.quantity) || 0,
+          }))
+      : extractUsageFromInvoice({ items }),
   };
 
   invoices.unshift(
@@ -2392,42 +2433,31 @@ app.put("/api/invoices/:id", (req, res) => {
 });
 
 app.delete("/api/invoices/:id", (req, res) => {
-  const invoiceId =
-    Number(req.params.id);
+  const invoiceId = Number(req.params.id);
+  const invoices = readInvoices();
+  const invoice = invoices.find((inv) => inv.id === invoiceId);
 
-  const invoices =
-    readInvoices();
-
-  const exists =
-    invoices.some(
-      (invoice) =>
-        invoice.id ===
-        invoiceId
-    );
-
-  if (!exists) {
+  if (!invoice) {
     return res.status(404).json({
       success: false,
-      message:
-        "الفاتورة غير موجودة",
+      message: "الفاتورة غير موجودة",
     });
   }
 
-  const updatedInvoices =
-    invoices.filter(
-      (invoice) =>
-        invoice.id !==
-        invoiceId
-    );
+  // إرجاع كميات المخزون عند حذف/مرتجع الفاتورة
+  const usage = extractUsageFromInvoice(invoice);
+  restoreInventoryUsage(usage);
 
-  writeInvoices(
-    updatedInvoices
-  );
+  const updatedInvoices = invoices.filter((inv) => inv.id !== invoiceId);
+  writeInvoices(updatedInvoices);
 
   return res.json({
     success: true,
     message:
-      "تم حذف الفاتورة بنجاح",
+      usage.length > 0
+        ? "تم حذف الفاتورة وإرجاع كميات المخزون"
+        : "تم حذف الفاتورة بنجاح",
+    restoredInventory: usage,
   });
 });
 

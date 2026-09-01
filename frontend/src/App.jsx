@@ -3271,6 +3271,23 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
           )
         )
       }
+
+      // تحديث المخزون بعد المرتجع/الحذف
+      if (
+        data.restoredInventory &&
+        data.restoredInventory.length > 0
+      ) {
+        window.dispatchEvent(new Event("mussa-inventory-updated"))
+        try {
+          const invRes = await apiFetch(`${API_BASE_URL}/api/inventory`)
+          const invData = await invRes.json()
+          if (invData.success) setInventoryItems(invData.items || [])
+        } catch (e) {}
+      }
+
+      if (data.message) {
+        setMessage(data.message)
+      }
     } catch (error) {
       console.error(error)
 
