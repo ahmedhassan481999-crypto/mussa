@@ -2956,6 +2956,24 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
         ? "السجادة"
         : "السيارة"
 
+    const logoHtml =
+      settings.showLogoOnInvoice !== false && settings.logoData
+        ? `<div class="logo-wrap"><img class="logo" src="${settings.logoData}" alt="logo" /></div>`
+        : ""
+
+    const qrHtml =
+      settings.showQrOnInvoice !== false
+        ? `<div class="qr-box">
+            <img
+              src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=8&data=${encodeURIComponent(buildInvoiceQrData(invoice))}"
+              alt="QR"
+              width="120"
+              height="120"
+            />
+            <div class="qr-caption">امسح للتواصل معنا</div>
+          </div>`
+        : ""
+
     printWindow.document.open()
     printWindow.document.write(`<!doctype html>
 <html lang="ar" dir="rtl">
@@ -2984,9 +3002,32 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
       padding-bottom: 18px;
       margin-bottom: 20px;
     }
+    .logo-wrap {
+      margin-bottom: 10px;
+    }
+    .logo {
+      max-width: 140px;
+      max-height: 80px;
+      object-fit: contain;
+      display: block;
+    }
     .business h1 {
       margin: 0 0 8px;
       font-size: 25px;
+    }
+    .qr-box {
+      text-align: center;
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px dashed #cbd5e1;
+    }
+    .qr-box img {
+      display: inline-block;
+    }
+    .qr-caption {
+      margin-top: 6px;
+      font-size: 11px;
+      color: #64748b;
     }
     .muted { color: #64748b; line-height: 1.8; }
     .invoice-no {
@@ -3079,6 +3120,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
   <div class="invoice">
     <div class="top">
       <div class="business">
+        ${logoHtml}
         <h1>${escapePrintHtml(settings.businessName)}</h1>
         ${businessPhone}
         ${businessAddress}
@@ -3146,18 +3188,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
       ${businessPhone}
       ${businessAddress}
       ${footer}
-
-    ${settings.showQrOnInvoice ? `
-    <div class="qr-box" style="text-align:center;margin-top:16px;padding-top:12px;border-top:1px dashed #cbd5e1;">
-      <img
-        src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=8&data=${encodeURIComponent(buildInvoiceQrData(invoice))}"
-        alt="QR"
-        width="120"
-        height="120"
-        style="display:inline-block;"
-      />
-      <div style="margin-top:6px;font-size:11px;color:#64748b;">امسح للتواصل أو حفظ بيانات الفاتورة</div>
-    </div>` : ""}
+      ${qrHtml}
     </div>
   </div>
 
