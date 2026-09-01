@@ -4140,6 +4140,47 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
       [todayInvoices]
     )
 
+  const todayExpenses = useMemo(() => {
+    return expenses.reduce((sum, expense) => {
+      const d = normalizeDateForReport
+        ? normalizeDateForReport(expense.date)
+        : ""
+      const todayIso = new Date().toISOString().slice(0, 10)
+      // match ar-EG string equality or normalized
+      if (expense.date === todayDate || d === todayIso) {
+        return sum + Number(expense.amount || 0)
+      }
+      return sum
+    }, 0)
+  }, [expenses, todayDate])
+
+  const todayNetProfit = useMemo(
+    () => Number(todaySales || 0) - Number(todayExpenses || 0),
+    [todaySales, todayExpenses]
+  )
+
+  const lowStockHomeItems = useMemo(() => {
+    return (inventoryItems || []).filter(
+      (item) => Number(item.quantity) <= Number(item.minLimit || 0)
+    )
+  }, [inventoryItems])
+
+  const todayTopServices = useMemo(() => {
+    const map = {}
+    todayInvoices.forEach((inv) => {
+      (inv.items || []).forEach((item) => {
+        const name = item.serviceName || "خدمة"
+        map[name] = (map[name] || 0) + Number(item.total || item.price || 0)
+      })
+    })
+    return Object.entries(map)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5)
+  }, [todayInvoices])
+
+  const maxTodayService = Math.max(1, ...todayTopServices.map((x) => x.value))
+
   const serviceReports =
     useMemo(
       () =>
@@ -4981,313 +5022,259 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
         {activePage ===
           "الرئيسية" && (
           <>
-            {/* بطاقات الملخص */}
+            {/* Hero - حالة المغسلة اليوم */}
             <div
               style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                gap: "16px",
-                marginBottom: "22px",
+                background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 55%, #0f172a 100%)",
+                borderRadius: "22px",
+                padding: "22px 24px",
+                marginBottom: "18px",
+                color: "#fff",
+                boxShadow: "0 16px 40px rgba(15,23,42,0.25)",
+                position: "relative",
+                overflow: "hidden",
               }}
             >
-              <div style={{
-                background: "#fff",
-                borderRadius: "16px",
-                padding: "20px",
-                boxShadow: "0 2px 12px rgba(0,0,0,.05)",
-                border: "1px solid #f1f5f9",
-              }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div style={{ position: "relative", zIndex: 1 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "12px", alignItems: "flex-start" }}>
                   <div>
-                    <div style={{ color: "#64748b", fontSize: "13px", marginBottom: "8px" }}>مبيعات اليوم</div>
-                    <div style={{ fontSize: "26px", fontWeight: "700", color: "#111827" }}>{todaySales} <span style={{ fontSize: "14px", fontWeight: "600", color: "#64748b" }}>جنيه</span></div>
+                    <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "800", letterSpacing: "-0.02em" }}>
+                      حالة المغسلة اليوم
+                    </h2>
+                    <p style={{ margin: "6px 0 0", opacity: 0.75, fontSize: "13px" }}>
+                      نظرة عامة على الأداء المالي اليوم
+                    </p>
                   </div>
-                  <div style={{ width: "42px", height: "42px", borderRadius: "12px", background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px" }}>💰</div>
+                  <div style={{
+                    background: "rgba(255,255,255,0.1)",
+                    borderRadius: "12px",
+                    padding: "8px 12px",
+                    fontSize: "12px",
+                    fontWeight: "600",
+                  }}>
+                    {todayDate}
+                  </div>
                 </div>
-              </div>
-
-              <div style={{
-                background: "#fff",
-                borderRadius: "16px",
-                padding: "20px",
-                boxShadow: "0 2px 12px rgba(0,0,0,.05)",
-                border: "1px solid #f1f5f9",
-              }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+                  gap: "12px",
+                  marginTop: "18px",
+                }}>
                   <div>
-                    <div style={{ color: "#64748b", fontSize: "13px", marginBottom: "8px" }}>المتبقي</div>
-                    <div style={{ fontSize: "26px", fontWeight: "700", color: "#c2410c" }}>{totalRemaining} <span style={{ fontSize: "14px", fontWeight: "600", color: "#64748b" }}>جنيه</span></div>
+                    <div style={{ opacity: 0.7, fontSize: "11px" }}>عدد الفواتير</div>
+                    <div style={{ fontSize: "22px", fontWeight: "800", marginTop: "4px" }}>{todayInvoices.length}</div>
                   </div>
-                  <div style={{ width: "42px", height: "42px", borderRadius: "12px", background: "#fff7ed", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px" }}>🧾</div>
-                </div>
-              </div>
-
-              <div style={{
-                background: "#fff",
-                borderRadius: "16px",
-                padding: "20px",
-                boxShadow: "0 2px 12px rgba(0,0,0,.05)",
-                border: "1px solid #f1f5f9",
-              }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                   <div>
-                    <div style={{ color: "#64748b", fontSize: "13px", marginBottom: "8px" }}>الاشتراكات</div>
-                    <div style={{ fontSize: "26px", fontWeight: "700", color: "#111827" }}>{activeMembershipsCount}</div>
-                    <div style={{ fontSize: "12px", color: "#16a34a", marginTop: "4px" }}>{activeMembershipsCount} سارية</div>
+                    <div style={{ opacity: 0.7, fontSize: "11px" }}>عضويات سارية</div>
+                    <div style={{ fontSize: "22px", fontWeight: "800", marginTop: "4px" }}>{activeMembershipsCount}</div>
                   </div>
-                  <div style={{ width: "42px", height: "42px", borderRadius: "12px", background: "#ecfdf5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px" }}>👑</div>
-                </div>
-              </div>
-
-              <div style={{
-                background: "#fff",
-                borderRadius: "16px",
-                padding: "20px",
-                boxShadow: "0 2px 12px rgba(0,0,0,.05)",
-                border: "1px solid #f1f5f9",
-              }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                   <div>
-                    <div style={{ color: "#64748b", fontSize: "13px", marginBottom: "8px" }}>العملاء</div>
-                    <div style={{ fontSize: "26px", fontWeight: "700", color: "#111827" }}>{customers.length}</div>
+                    <div style={{ opacity: 0.7, fontSize: "11px" }}>مخزون ناقص</div>
+                    <div style={{ fontSize: "22px", fontWeight: "800", marginTop: "4px" }}>{lowStockHomeItems.length}</div>
                   </div>
-                  <div style={{ width: "42px", height: "42px", borderRadius: "12px", background: "#f5f3ff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px" }}>👥</div>
+                  <div>
+                    <div style={{ opacity: 0.7, fontSize: "11px" }}>عملاء</div>
+                    <div style={{ fontSize: "22px", fontWeight: "800", marginTop: "4px" }}>{customers.length}</div>
+                  </div>
                 </div>
               </div>
             </div>
 
+            {/* KPI cards */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                gap: "14px",
+                marginBottom: "18px",
+              }}
+            >
+              {[
+                { label: "المبيعات", value: todaySales, color: "#fff", bg: "linear-gradient(135deg,#16a34a,#15803d)", sub: "اليوم" },
+                { label: "المدفوع المحصّل", value: todayPaid, color: "#fff", bg: "linear-gradient(135deg,#2563eb,#1d4ed8)", sub: "اليوم" },
+                { label: "المصروفات", value: todayExpenses, color: "#fff", bg: "linear-gradient(135deg,#f59e0b,#d97706)", sub: "اليوم" },
+                { label: "صافي الربح", value: todayNetProfit, color: "#fff", bg: todayNetProfit >= 0 ? "linear-gradient(135deg,#0d9488,#0f766e)" : "linear-gradient(135deg,#dc2626,#b91c1c)", sub: "مبيعات − مصروفات" },
+              ].map((card) => (
+                <div
+                  key={card.label}
+                  style={{
+                    background: card.bg,
+                    borderRadius: "18px",
+                    padding: "18px 16px",
+                    color: card.color,
+                    boxShadow: "0 10px 28px rgba(15,23,42,0.12)",
+                  }}
+                >
+                  <div style={{ fontSize: "13px", fontWeight: "600", opacity: 0.9 }}>{card.label}</div>
+                  <div style={{ fontSize: "26px", fontWeight: "800", marginTop: "8px", letterSpacing: "-0.02em" }}>
+                    {Number(card.value || 0).toLocaleString("ar-EG")}
+                    <span style={{ fontSize: "13px", fontWeight: "700", marginRight: "6px" }}>ج.م</span>
+                  </div>
+                  <div style={{ fontSize: "11px", marginTop: "6px", opacity: 0.85 }}>{card.sub}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* تنبيهات */}
+            {(soonExpiringMemberships.length > 0 || expiredMembershipsList.length > 0 || lowStockHomeItems.length > 0) && (
+              <div
+                style={{
+                  background: "#fff7ed",
+                  border: "1px solid #fed7aa",
+                  borderRadius: "16px",
+                  padding: "14px 16px",
+                  marginBottom: "18px",
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "10px",
+                  alignItems: "center",
+                }}
+              >
+                <strong style={{ color: "#9a3412", fontSize: "13px" }}>تنبيهات مهمة</strong>
+                {soonExpiringMemberships.length > 0 && (
+                  <span style={{
+                    background: "#fff",
+                    border: "1px solid #fdba74",
+                    borderRadius: "999px",
+                    padding: "6px 12px",
+                    fontSize: "12px",
+                    fontWeight: "700",
+                    color: "#c2410c",
+                  }}>
+                    عضويات تنتهي خلال 7 أيام: {soonExpiringMemberships.length}
+                  </span>
+                )}
+                {expiredMembershipsList.length > 0 && (
+                  <span style={{
+                    background: "#fff",
+                    border: "1px solid #fecaca",
+                    borderRadius: "999px",
+                    padding: "6px 12px",
+                    fontSize: "12px",
+                    fontWeight: "700",
+                    color: "#b91c1c",
+                  }}>
+                    عضويات منتهية: {expiredMembershipsList.length}
+                  </span>
+                )}
+                {lowStockHomeItems.length > 0 && (
+                  <span
+                    onClick={() => setActivePage("المخزون")}
+                    style={{
+                      background: "#fff",
+                      border: "1px solid #fecaca",
+                      borderRadius: "999px",
+                      padding: "6px 12px",
+                      fontSize: "12px",
+                      fontWeight: "700",
+                      color: "#b91c1c",
+                      cursor: "pointer",
+                    }}
+                  >
+                    عناصر مخزون منخفضة: {lowStockHomeItems.length}
+                  </span>
+                )}
+              </div>
+            )}
+
             {/* إجراءات سريعة */}
-            <div style={{ marginBottom: "22px" }}>
-              <div style={{ color: "#64748b", fontSize: "13px", fontWeight: "600", marginBottom: "12px", textAlign: "right" }}>
+            <div style={{ marginBottom: "18px" }}>
+              <div style={{ fontWeight: "700", color: "#334155", marginBottom: "10px", fontSize: "14px" }}>
                 إجراءات سريعة
               </div>
               <div style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                gap: "12px",
+                gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                gap: "10px",
               }}>
-                <button
-                  onClick={() => {
-                    setActivePage("الفواتير")
-                    // will open add if function exists - fallback navigate
-                  }}
-                  style={{
-                    background: "#fff",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "14px",
-                    padding: "16px 18px",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    fontFamily: "Tahoma, Arial, sans-serif",
-                    textAlign: "right",
-                    direction: "rtl",
-                  }}
-                >
-                  <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px" }}>📄</div>
-                  <div>
-                    <div style={{ fontWeight: "700", color: "#111827", fontSize: "14px" }}>فاتورة جديدة</div>
-                    <div style={{ color: "#94a3b8", fontSize: "12px", marginTop: "2px" }}>إنشاء فاتورة غسيل</div>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => setActivePage("العملاء")}
-                  style={{
-                    background: "#fff",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "14px",
-                    padding: "16px 18px",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    fontFamily: "Tahoma, Arial, sans-serif",
-                    textAlign: "right",
-                    direction: "rtl",
-                  }}
-                >
-                  <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "#ecfdf5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px" }}>👤</div>
-                  <div>
-                    <div style={{ fontWeight: "700", color: "#111827", fontSize: "14px" }}>عميل جديد</div>
-                    <div style={{ color: "#94a3b8", fontSize: "12px", marginTop: "2px" }}>إضافة عميل للنظام</div>
-                  </div>
-                </button>
-<button
-                  onClick={() => setActivePage("المخزون")}
-                  style={{
-                    background: "#fff",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "14px",
-                    padding: "16px 18px",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    fontFamily: "Tahoma, Arial, sans-serif",
-                    textAlign: "right",
-                    direction: "rtl",
-                  }}
-                >
-                  <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "#fff7ed", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px" }}>📦</div>
-                  <div>
-                    <div style={{ fontWeight: "700", color: "#111827", fontSize: "14px" }}>المخزون</div>
-                    <div style={{ color: "#94a3b8", fontSize: "12px", marginTop: "2px" }}>إدارة الأصناف والكميات</div>
-                  </div>
-                </button>
-                <button
-                  onClick={() => setActivePage("الاشتراكات")}
-                  style={{
-                    background: "#fff",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "14px",
-                    padding: "16px 18px",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    fontFamily: "Tahoma, Arial, sans-serif",
-                    textAlign: "right",
-                    direction: "rtl",
-                  }}
-                >
-                  <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "#fdf4ff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px" }}>👑</div>
-                  <div>
-                    <div style={{ fontWeight: "700", color: "#111827", fontSize: "14px" }}>عضوية جديدة</div>
-                    <div style={{ color: "#94a3b8", fontSize: "12px", marginTop: "2px" }}>إصدار عضوية جديدة</div>
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            {/* قسمين: تنبيهات + آخر الفواتير */}
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-              gap: "18px",
-            }}>
-              {/* تنبيهات الاشتراكات */}
-              <div style={{
-                background: "#fff",
-                borderRadius: "16px",
-                padding: "20px",
-                boxShadow: "0 2px 12px rgba(0,0,0,.05)",
-                border: "1px solid #f1f5f9",
-              }}>
-                <div style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "16px",
-                }}>
-                  <h3 style={{ margin: 0, fontSize: "15px", color: "#111827" }}>تنبيهات الاشتراكات</h3>
+                {[
+                  { label: "فاتورة جديدة", sub: "إنشاء فاتورة غسيل", page: "الفواتير", action: "invoice" },
+                  { label: "عميل جديد", sub: "إضافة عميل للنظام", page: "العملاء", action: null },
+                  { label: "المخزون", sub: "إدارة الأصناف والكميات", page: "المخزون", action: null },
+                  { label: "عضوية جديدة", sub: "إصدار عضوية جديدة", page: "الاشتراكات", action: null },
+                ].map((btn) => (
                   <button
-                    onClick={() => setActivePage("الاشتراكات")}
+                    key={btn.label}
+                    type="button"
+                    onClick={() => {
+                      setActivePage(btn.page)
+                      if (btn.action === "invoice") {
+                        setTimeout(() => {
+                          try { openAddInvoice() } catch (e) {}
+                        }, 50)
+                      }
+                    }}
                     style={{
-                      border: "none",
-                      background: "transparent",
-                      color: "#2563eb",
-                      fontSize: "12px",
-                      fontWeight: "600",
+                      textAlign: "right",
+                      background: "#fff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "14px",
+                      padding: "14px 14px",
                       cursor: "pointer",
+                      boxShadow: "0 2px 8px rgba(15,23,42,0.04)",
                       fontFamily: "Tahoma, Arial, sans-serif",
                     }}
                   >
-                    عرض الكل
+                    <div style={{ fontWeight: "800", color: "#0f172a", fontSize: "13px" }}>{btn.label}</div>
+                    <div style={{ color: "#94a3b8", fontSize: "11px", marginTop: "4px" }}>{btn.sub}</div>
                   </button>
-                </div>
-
-                {expiredMembershipsList.length === 0 && soonExpiringMemberships.length === 0 ? (
-                  <div style={{ textAlign: "center", color: "#94a3b8", padding: "30px 10px", fontSize: "13px" }}>
-                    لا توجد تنبيهات حاليًا ✓
-                  </div>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                    {expiredMembershipsList.slice(0, 4).map((m) => (
-                      <div key={"h-exp-" + m.id} style={{
-                        background: "#fef2f2",
-                        borderRadius: "12px",
-                        padding: "12px 14px",
-                        border: "1px solid #fecaca",
-                      }}>
-                        <div style={{ fontWeight: "700", color: "#991b1b", fontSize: "13px" }}>عضوية منتهية</div>
-                        <div style={{ color: "#64748b", fontSize: "12px", marginTop: "4px" }}>
-                          {m.customerName || "عميل"} — {m.planName}
-                        </div>
-                      </div>
-                    ))}
-                    {soonExpiringMemberships.slice(0, 4).map((m) => (
-                      <div key={"h-soon-" + m.id} style={{
-                        background: "#fffbeb",
-                        borderRadius: "12px",
-                        padding: "12px 14px",
-                        border: "1px solid #fde68a",
-                      }}>
-                        <div style={{ fontWeight: "700", color: "#92400e", fontSize: "13px" }}>قربت على الانتهاء</div>
-                        <div style={{ color: "#64748b", fontSize: "12px", marginTop: "4px" }}>
-                          {m.customerName || "عميل"} — {m.planName}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                ))}
               </div>
+            </div>
 
-              {/* آخر الفواتير */}
+            {/* آخر الفواتير + أعلى الخدمات */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                gap: "16px",
+              }}
+            >
               <div style={{
                 background: "#fff",
-                borderRadius: "16px",
-                padding: "20px",
-                boxShadow: "0 2px 12px rgba(0,0,0,.05)",
-                border: "1px solid #f1f5f9",
+                borderRadius: "18px",
+                padding: "18px",
+                border: "1px solid #e2e8f0",
+                boxShadow: "0 2px 10px rgba(15,23,42,0.04)",
               }}>
-                <div style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "16px",
-                }}>
-                  <h3 style={{ margin: 0, fontSize: "15px", color: "#111827" }}>آخر الفواتير</h3>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+                  <h3 style={{ margin: 0, fontSize: "15px", color: "#0f172a" }}>آخر الفواتير</h3>
                   <button
+                    type="button"
                     onClick={() => setActivePage("الفواتير")}
                     style={{
                       border: "none",
                       background: "transparent",
                       color: "#2563eb",
+                      fontWeight: "700",
                       fontSize: "12px",
-                      fontWeight: "600",
                       cursor: "pointer",
                       fontFamily: "Tahoma, Arial, sans-serif",
                     }}
                   >
-                    عرض الكل
+                    عرض جميع الفواتير
                   </button>
                 </div>
-
                 {invoices.length === 0 ? (
-                  <div style={{ textAlign: "center", color: "#94a3b8", padding: "30px 10px", fontSize: "13px" }}>
-                    لا توجد فواتير بعد
-                  </div>
+                  <p style={{ color: "#94a3b8", textAlign: "center", padding: "20px 0", fontSize: "13px" }}>لا توجد فواتير بعد</p>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    {invoices.slice(0, 5).map((inv) => (
+                    {invoices.slice(0, 6).map((inv) => (
                       <div
                         key={inv.id}
-                        onClick={() => setViewingInvoice(inv)}
                         style={{
                           display: "flex",
                           justifyContent: "space-between",
                           alignItems: "center",
                           padding: "10px 12px",
-                          borderRadius: "10px",
+                          borderRadius: "12px",
                           background: "#f8fafc",
-                          cursor: "pointer",
-                          direction: "rtl",
+                          gap: "10px",
                         }}
                       >
                         <div>
-                          <div style={{ fontWeight: "600", fontSize: "13px", color: "#111827" }}>
+                          <div style={{ fontWeight: "700", fontSize: "13px", color: "#0f172a" }}>
                             {inv.customerName || "عميل"}
                           </div>
                           <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "2px" }}>
@@ -5295,12 +5282,12 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                           </div>
                         </div>
                         <div style={{ textAlign: "left" }}>
-                          <div style={{ fontWeight: "700", fontSize: "13px", color: "#111827" }}>
-                            {inv.total} ج
+                          <div style={{ fontWeight: "800", fontSize: "13px" }}>
+                            {Number(inv.total || 0).toLocaleString("ar-EG")} ج
                           </div>
                           <div style={{
                             fontSize: "11px",
-                            fontWeight: "600",
+                            fontWeight: "700",
                             color:
                               inv.paymentStatus === "مدفوعة" ? "#16a34a" :
                               inv.paymentStatus === "مدفوعة جزئيًا" ? "#d97706" :
@@ -5314,14 +5301,77 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                   </div>
                 )}
               </div>
+
+              <div style={{
+                background: "#fff",
+                borderRadius: "18px",
+                padding: "18px",
+                border: "1px solid #e2e8f0",
+                boxShadow: "0 2px 10px rgba(15,23,42,0.04)",
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+                  <h3 style={{ margin: 0, fontSize: "15px", color: "#0f172a" }}>أعلى الخدمات اليوم</h3>
+                  <button
+                    type="button"
+                    onClick={() => setActivePage("التقارير")}
+                    style={{
+                      border: "none",
+                      background: "transparent",
+                      color: "#2563eb",
+                      fontWeight: "700",
+                      fontSize: "12px",
+                      cursor: "pointer",
+                      fontFamily: "Tahoma, Arial, sans-serif",
+                    }}
+                  >
+                    عرض التقرير
+                  </button>
+                </div>
+                {todayTopServices.length === 0 ? (
+                  <p style={{ color: "#94a3b8", textAlign: "center", padding: "20px 0", fontSize: "13px" }}>
+                    لا توجد مبيعات خدمات اليوم بعد
+                  </p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {todayTopServices.map((item) => (
+                      <div key={item.name}>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "5px", color: "#475569" }}>
+                          <span style={{ fontWeight: "700" }}>{item.name}</span>
+                          <span style={{ fontWeight: "800", color: "#0f172a" }}>
+                            {Number(item.value).toLocaleString("ar-EG")} ج
+                          </span>
+                        </div>
+                        <div style={{ height: "10px", background: "#f1f5f9", borderRadius: "99px", overflow: "hidden" }}>
+                          <div style={{
+                            height: "100%",
+                            width: `${(item.value / maxTodayService) * 100}%`,
+                            background: "linear-gradient(90deg,#34d399,#059669)",
+                            borderRadius: "99px",
+                          }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {lowStockHomeItems.length > 0 && (
+                  <div style={{ marginTop: "18px", paddingTop: "14px", borderTop: "1px solid #f1f5f9" }}>
+                    <div style={{ fontWeight: "700", fontSize: "13px", color: "#b91c1c", marginBottom: "8px" }}>
+                      مخزون منخفض
+                    </div>
+                    {lowStockHomeItems.slice(0, 4).map((item) => (
+                      <div key={item.id} style={{ fontSize: "12px", color: "#7f1d1d", marginBottom: "4px" }}>
+                        • {item.name} (الكمية: {item.quantity})
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </>
         )}
 
 
-        {/* =========================
-            العملاء
-        ========================= */}
 {activePage === "المخزون" && <Inventory />}
 
         {activePage ===
