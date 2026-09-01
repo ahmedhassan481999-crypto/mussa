@@ -4897,21 +4897,6 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
               {activePage}
             </h1>
 
-            <p
-              style={{
-                ...rtlText,
-                color:
-                  "#64748b",
-                marginTop:
-                  "8px",
-                textAlign:
-                  "right",
-              }}
-            >
-              أهلاً بك في لوحة إدارة
-              Mussa Wash &
-              Clean
-            </p>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -5042,19 +5027,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
               )}
             </div>
 
-            <div
-              style={{
-                background: "#fff",
-                padding: "10px 18px",
-                borderRadius: "12px",
-                color: "#475569",
-                boxShadow: "0 2px 10px rgba(0,0,0,.05)",
-                whiteSpace: "nowrap",
-              }}
-            >
-              <span style={{ direction: "rtl" }}>{currentUser?.role || "المدير"}: </span>
-              <span style={{ direction: "ltr", display: "inline-block" }}>{currentUser?.name || currentUser?.username || username || "admin"}</span>
-            </div>
+
           </div>
         </div>
         )}
@@ -5069,21 +5042,94 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
             {/* ===== Design 2: Hero ===== */}
             <div
               style={{
-                background: "linear-gradient(120deg, #020617 0%, #0f2744 45%, #0b1c33 100%)",
+                background: "linear-gradient(115deg, #020617 0%, #0c1e3a 40%, #123556 70%, #0a192f 100%)",
                 borderRadius: "24px",
-                padding: "26px 28px",
+                padding: "28px 28px 26px",
                 marginBottom: "18px",
                 color: "#fff",
-                boxShadow: "0 20px 50px rgba(2,6,23,0.35)",
-                border: "1px solid rgba(148,163,184,0.12)",
+                boxShadow: "0 22px 55px rgba(2,6,23,0.4)",
+                border: "1px solid rgba(96,165,250,0.18)",
+                position: "relative",
+                overflow: "hidden",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", gap: "16px", flexWrap: "wrap", alignItems: "flex-start" }}>
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  pointerEvents: "none",
+                  background:
+                    "radial-gradient(circle at 15% 20%, rgba(56,189,248,0.18), transparent 32%), radial-gradient(circle at 85% 30%, rgba(59,130,246,0.22), transparent 28%), radial-gradient(circle at 70% 85%, rgba(14,165,233,0.12), transparent 35%)",
+                }}
+              />
+              <svg
+                viewBox="0 0 800 200"
+                preserveAspectRatio="none"
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  width: "100%",
+                  height: "90px",
+                  opacity: 0.35,
+                  pointerEvents: "none",
+                }}
+              >
+                <path
+                  d="M0,120 C120,80 200,160 320,110 C440,60 520,150 640,100 C720,70 760,90 800,80 L800,200 L0,200 Z"
+                  fill="rgba(56,189,248,0.25)"
+                />
+                <path
+                  d="M0,150 C150,110 250,170 380,130 C510,90 600,160 720,130 C760,120 790,125 800,120 L800,200 L0,200 Z"
+                  fill="rgba(37,99,235,0.2)"
+                />
+              </svg>
+              <div
+                style={{
+                  position: "absolute",
+                  top: "18px",
+                  left: "24px",
+                  opacity: 0.22,
+                  fontSize: "40px",
+                  letterSpacing: "10px",
+                  pointerEvents: "none",
+                  userSelect: "none",
+                  color: "#7dd3fc",
+                }}
+              >
+                {"↗  ↗  ↗"}
+              </div>
+
+              <div
+                style={{
+                  position: "relative",
+                  zIndex: 1,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: "16px",
+                  flexWrap: "wrap",
+                  alignItems: "flex-start",
+                }}
+              >
                 <div>
-                  <h2 style={{ margin: 0, fontSize: "28px", fontWeight: "800", letterSpacing: "-0.03em" }}>
+                  <h2
+                    style={{
+                      margin: 0,
+                      fontSize: "28px",
+                      fontWeight: "800",
+                      letterSpacing: "-0.03em",
+                    }}
+                  >
                     حالة المغسلة اليوم
                   </h2>
-                  <p style={{ margin: "8px 0 0", color: "rgba(226,232,240,0.75)", fontSize: "13px" }}>
+                  <p
+                    style={{
+                      margin: "8px 0 0",
+                      color: "rgba(226,232,240,0.8)",
+                      fontSize: "13px",
+                    }}
+                  >
                     نظرة عامة على أداء المغسلة المالي اليوم
                   </p>
                 </div>
