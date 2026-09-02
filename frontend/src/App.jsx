@@ -73,6 +73,22 @@ function App() {
   const [treasuryFilterType, setTreasuryFilterType] = useState("الكل")
   const [treasuryFilterSource, setTreasuryFilterSource] = useState("الكل")
   const [treasuryFilterSearch, setTreasuryFilterSearch] = useState("")
+  const [treasuryPeriod, setTreasuryPeriod] = useState("today")
+  const [treasuryCustomFrom, setTreasuryCustomFrom] = useState("")
+  const [treasuryCustomTo, setTreasuryCustomTo] = useState("")
+  const [treasuryToday, setTreasuryToday] = useState({
+    openingBalance: 0,
+    totalIn: 0,
+    totalOut: 0,
+    expectedBalance: 0,
+  })
+  const [treasuryClosures, setTreasuryClosures] = useState([])
+  const [treasuryModal, setTreasuryModal] = useState("")
+  const [treasuryModalAmount, setTreasuryModalAmount] = useState("")
+  const [treasuryModalNotes, setTreasuryModalNotes] = useState("")
+  const [treasuryCloseDate, setTreasuryCloseDate] = useState("")
+  const [treasuryCloseActual, setTreasuryCloseActual] = useState("")
+  const [treasuryCloseNotes, setTreasuryCloseNotes] = useState("")
   const [invoiceInventoryUsage, setInvoiceInventoryUsage] = useState([])
 
   // =========================
@@ -1464,6 +1480,13 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
         setTreasuryOpening(Number(data.openingBalance) || 0)
         setTreasuryOpeningSet(data.openingSet === true)
         setTreasuryMovements(Array.isArray(data.movements) ? data.movements : [])
+        setTreasuryClosures(Array.isArray(data.closures) ? data.closures : [])
+        setTreasuryToday(data.today || {
+          openingBalance: 0,
+          totalIn: 0,
+          totalOut: 0,
+          expectedBalance: Number(data.balance) || 0,
+        })
         if (!data.openingSet) setOpeningInput(String(data.openingBalance || ""))
       }
     } catch (e) {
@@ -1484,11 +1507,13 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
       alert("تعيين رصيد الافتتاح للمالك فقط")
       return
     }
+
     const amount = Number(openingInput)
-    if (isNaN(amount) || amount < 0) {
+    if (!Number.isFinite(amount) || amount < 0) {
       alert("أدخل رصيد افتتاح صحيح")
       return
     }
+
     try {
       const response = await apiFetch(`${API_BASE_URL}/api/treasury/opening`, {
         method: "POST",
@@ -1496,58 +1521,42 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
         body: JSON.stringify({ amount }),
       })
       const data = await response.json()
+
       if (!response.ok || !data.success) {
         alert(data.message || "تعذر حفظ رصيد الافتتاح")
         return
       }
+
       setTreasuryOpening(Number(data.openingBalance) || 0)
       setTreasuryOpeningSet(true)
       setTreasuryBalance(Number(data.balance) || 0)
+      await loadTreasury()
       alert("تم حفظ رصيد الافتتاح")
     } catch (err) {
       alert("تعذر حفظ رصيد الافتتاح")
     }
   }
 
-  async function cancelTreasuryMovement(id) {
-    const confirmed = window.confirm("إلغاء هذه الحركة؟ الرصيد هيتعدل تلقائي")
-    if (!confirmed) return
-    try {
-      const response = await apiFetch(`${API_BASE_URL}/api/treasury/movement/${id}`, {
-        method: "DELETE",
-      })
-      const data = await response.json()
-      if (!response.ok || !data.success) {
-        alert(data.message || "تعذر إلغاء الحركة")
-        return
-      }
-      await loadTreasury()
-    } catch (err) {
-      alert("تعذر إلغاء الحركة")
-    }
+  function openTreasuryModal(type) {
+    setTreasuryModal(type)
+    setTreasuryModalAmount("")
+    setTreasuryModalNotes("")
   }
 
-  const filteredTreasuryMovements = (treasuryMovements || []).filter((mv) => {
-    if (treasuryFilterType === "دخول" && mv.type !== "in") return false
-    if (treasuryFilterType === "خروج" && mv.type !== "out") return false
-    if (treasuryFilterSource === "فاتورة" && !(mv.source === "invoice" || mv.source === "invoice_return")) return false
-    if (treasuryFilterSource === "مصروف" && mv.source !== "expense") return false
-    if (treasuryFilterSource === "يدوي" && mv.source !== "manual") return false
-    if (treasuryFilterSource === "مرتجع" && mv.source !== "invoice_return") return false
-    if (treasuryFilterSearch) {
-      const q = treasuryFilterSearch.trim().toLowerCase()
-      const blob = `${mv.title || ""} ${mv.notes || ""} ${mv.date || ""} ${mv.time || ""}`.toLowerCase()
-      if (!blob.includes(q)) return false
-    }
-    return true
-  })
+  function closeTreasuryModal() {
+    setTreasuryModal("")
+    setTreasuryModalAmount("")
+    setTreasuryModalNotes("")
+  }
 
-  async function addTreasuryManual(type) {
-    const amount = Number(treasuryAmount)
-    if (!amount || amount <= 0) {
+  async function submitTreasuryManual(type) {
+    const amount = Number(treasuryModalAmount)
+
+    if (!Number.isFinite(amount) || amount <= 0) {
       alert("أدخل مبلغ صحيح")
       return
     }
+
     try {
       const response = await apiFetch(`${API_BASE_URL}/api/treasury/movement`, {
         method: "POST",
@@ -1555,21 +1564,289 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
         body: JSON.stringify({
           type,
           amount,
-          title: treasuryTitle || (type === "in" ? "إيداع يدوي" : "سحب يدوي"),
-          notes: treasuryNotes,
+          title: type === "in" ? "إيداع يدوي" : "سحب يدوي",
+          notes: treasuryModalNotes,
         }),
       })
+
       const data = await response.json()
+
       if (!response.ok || !data.success) {
         alert(data.message || "تعذر تسجيل الحركة")
         return
       }
-      setTreasuryAmount("")
-      setTreasuryTitle("")
-      setTreasuryNotes("")
+
+      closeTreasuryModal()
       await loadTreasury()
     } catch (err) {
       alert("تعذر تسجيل الحركة")
+    }
+  }
+
+  async function submitTreasuryReconciliation() {
+    const actualBalance = Number(treasuryModalAmount)
+
+    if (!Number.isFinite(actualBalance) || actualBalance < 0) {
+      alert("أدخل المبلغ الفعلي الموجود في الخزينة")
+      return
+    }
+
+    try {
+      const response = await apiFetch(`${API_BASE_URL}/api/treasury/reconcile`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          actualBalance,
+          notes: treasuryModalNotes,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        alert(data.message || "تعذر تسوية الخزينة")
+        return
+      }
+
+      closeTreasuryModal()
+      await loadTreasury()
+      alert(data.message || "تمت التسوية")
+    } catch (err) {
+      alert("تعذر تسوية الخزينة")
+    }
+  }
+
+  function treasuryDateKeyFromMovement(mv) {
+    if (mv?.createdAt) {
+      const d = new Date(mv.createdAt)
+      if (!Number.isNaN(d.getTime())) {
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+      }
+    }
+
+    const raw = String(mv?.date || "").trim()
+    const parts = raw.split(/[\/\-]/).map((x) => x.trim())
+    if (parts.length === 3) {
+      const [a, b, c] = parts
+      if (c.length === 4) return `${c}-${String(b).padStart(2, "0")}-${String(a).padStart(2, "0")}`
+      if (a.length === 4) return `${a}-${String(b).padStart(2, "0")}-${String(c).padStart(2, "0")}`
+    }
+
+    return ""
+  }
+
+  function getTreasuryTodayKey() {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+  }
+
+  function getTreasuryYesterdayKey() {
+    const d = new Date()
+    d.setDate(d.getDate() - 1)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+  }
+
+  function getTreasuryWeekStartKey() {
+    const d = new Date()
+    const day = d.getDay()
+    const diff = day === 0 ? -6 : 1 - day
+    d.setDate(d.getDate() + diff)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+  }
+
+  function getTreasurySourceLabel(mv) {
+    if (mv?.source === "invoice") return "فاتورة"
+    if (mv?.source === "expense") return "مصروف"
+    if (mv?.source === "invoice_return") return "مرتجع"
+    if (mv?.source === "reconciliation") return "تسوية"
+    if (mv?.source === "manual") return mv.type === "in" ? "إيداع" : "سحب"
+    return "غير معروف"
+  }
+
+  const treasuryRunningMovements = useMemo(() => {
+    const sorted = [...(treasuryMovements || [])].sort((a, b) => {
+      const ta = a?.createdAt ? new Date(a.createdAt).getTime() : 0
+      const tb = b?.createdAt ? new Date(b.createdAt).getTime() : 0
+      if (ta !== tb) return ta - tb
+      return Number(a?.id || 0) - Number(b?.id || 0)
+    })
+
+    let balance = Number(treasuryOpening) || 0
+
+    return sorted.map((mv) => {
+      const amount = Number(mv.amount) || 0
+      if (mv.type === "in") balance += amount
+      if (mv.type === "out") balance -= amount
+
+      return {
+        ...mv,
+        runningBalance: balance,
+      }
+    })
+  }, [treasuryMovements, treasuryOpening])
+
+  const treasuryPeriodRange = useMemo(() => {
+    const today = getTreasuryTodayKey()
+
+    if (treasuryPeriod === "today") {
+      return { from: today, to: today }
+    }
+
+    if (treasuryPeriod === "yesterday") {
+      const yesterday = getTreasuryYesterdayKey()
+      return { from: yesterday, to: yesterday }
+    }
+
+    if (treasuryPeriod === "week") {
+      return { from: getTreasuryWeekStartKey(), to: today }
+    }
+
+    if (treasuryPeriod === "month") {
+      return { from: today.slice(0, 7) + "-01", to: today }
+    }
+
+    if (treasuryPeriod === "custom") {
+      return {
+        from: treasuryCustomFrom || "",
+        to: treasuryCustomTo || "",
+      }
+    }
+
+    return { from: "", to: "" }
+  }, [treasuryPeriod, treasuryCustomFrom, treasuryCustomTo])
+
+  const filteredTreasuryMovements = useMemo(() => {
+    const { from, to } = treasuryPeriodRange
+
+    return treasuryRunningMovements
+      .filter((mv) => {
+        const dateKey = treasuryDateKeyFromMovement(mv)
+
+        if (from && (!dateKey || dateKey < from)) return false
+        if (to && (!dateKey || dateKey > to)) return false
+
+        if (treasuryFilterType === "دخول" && mv.type !== "in") return false
+        if (treasuryFilterType === "خروج" && mv.type !== "out") return false
+
+        if (treasuryFilterSource === "فواتير" && mv.source !== "invoice") return false
+        if (treasuryFilterSource === "مصروفات" && mv.source !== "expense") return false
+        if (treasuryFilterSource === "إيداعات" && !(mv.source === "manual" && mv.type === "in")) return false
+        if (treasuryFilterSource === "سحوبات" && !(mv.source === "manual" && mv.type === "out")) return false
+        if (treasuryFilterSource === "مرتجعات" && mv.source !== "invoice_return") return false
+        if (treasuryFilterSource === "تسويات" && mv.source !== "reconciliation") return false
+
+        if (treasuryFilterSearch) {
+          const q = treasuryFilterSearch.trim().toLowerCase()
+          const blob = `${mv.title || ""} ${mv.notes || ""} ${mv.date || ""} ${mv.time || ""}`.toLowerCase()
+          if (!blob.includes(q)) return false
+        }
+
+        return true
+      })
+      .sort((a, b) => {
+        const ta = a?.createdAt ? new Date(a.createdAt).getTime() : 0
+        const tb = b?.createdAt ? new Date(b.createdAt).getTime() : 0
+        return tb - ta
+      })
+  }, [
+    treasuryRunningMovements,
+    treasuryPeriodRange,
+    treasuryFilterType,
+    treasuryFilterSource,
+    treasuryFilterSearch,
+  ])
+
+  function getTreasuryDaySummary(dateKey) {
+    const movements = treasuryRunningMovements
+    let opening = Number(treasuryOpening) || 0
+    let totalIn = 0
+    let totalOut = 0
+
+    for (const mv of movements) {
+      const mvDate = treasuryDateKeyFromMovement(mv)
+      const amount = Number(mv.amount) || 0
+
+      if (mvDate && mvDate < dateKey) {
+        if (mv.type === "in") opening += amount
+        if (mv.type === "out") opening -= amount
+      }
+
+      if (mvDate === dateKey) {
+        if (mv.type === "in") totalIn += amount
+        if (mv.type === "out") totalOut += amount
+      }
+    }
+
+    return {
+      openingBalance: opening,
+      totalIn,
+      totalOut,
+      expectedBalance: opening + totalIn - totalOut,
+    }
+  }
+
+  async function submitTreasuryClose() {
+    const dateKey = treasuryCloseDate || getTreasuryTodayKey()
+    const actualBalance = Number(treasuryCloseActual)
+
+    if (!Number.isFinite(actualBalance) || actualBalance < 0) {
+      alert("أدخل المبلغ الفعلي الموجود في الخزينة")
+      return
+    }
+
+    const existing = treasuryClosures.find((c) => c.date === dateKey)
+    if (existing) {
+      alert("هذا اليوم تم إقفاله بالفعل")
+      return
+    }
+
+    try {
+      const response = await apiFetch(`${API_BASE_URL}/api/treasury/close`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: dateKey,
+          actualBalance,
+          notes: treasuryCloseNotes,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        alert(data.message || "تعذر إقفال اليوم")
+        return
+      }
+
+      setTreasuryModal("")
+      setTreasuryCloseDate("")
+      setTreasuryCloseActual("")
+      setTreasuryCloseNotes("")
+      await loadTreasury()
+      alert("تم إقفال اليوم بنجاح")
+    } catch (err) {
+      alert("تعذر إقفال اليوم")
+    }
+  }
+
+  async function cancelTreasuryMovement(id) {
+    const confirmed = window.confirm("إلغاء هذه الحركة؟ الرصيد هيتعدل تلقائي")
+    if (!confirmed) return
+
+    try {
+      const response = await apiFetch(`${API_BASE_URL}/api/treasury/movement/${id}`, {
+        method: "DELETE",
+      })
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        alert(data.message || "تعذر إلغاء الحركة")
+        return
+      }
+
+      await loadTreasury()
+    } catch (err) {
+      alert("تعذر إلغاء الحركة")
     }
   }
 
@@ -9443,44 +9720,43 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
             الخزينة
         ========================= */}
         {activePage === "الخزينة" && (
-          <div style={sectionStyle}>
-            <div style={{ ...sectionHeaderStyle, marginBottom: "20px" }}>
+          <div style={{ ...sectionStyle, background: "transparent", boxShadow: "none", padding: 0 }}>
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "16px",
+              flexWrap: "wrap",
+              marginBottom: "22px",
+            }}>
               <div>
-                <h2 style={sectionTitleStyle}>الخزينة</h2>
-                <p style={sectionSubtitleStyle}>
-                  الصندوق النقدي فقط — تحصيل الفواتير والمصروفات والإيداع والسحب
+                <h2 style={{ ...sectionTitleStyle, fontSize: "28px" }}>الخزينة</h2>
+                <p style={{ ...sectionSubtitleStyle, marginTop: "6px" }}>
+                  متابعة النقدية والحركات المالية لحظة بلحظة
                 </p>
               </div>
-              <button type="button" onClick={loadTreasury} style={secondaryButtonStyle}>
-                تحديث
-              </button>
-            </div>
 
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-              gap: "14px",
-              marginBottom: "18px",
-            }}>
-              <div style={{
-                background: "linear-gradient(135deg,#0f172a,#1e3a5f)",
-                color: "#fff",
-                borderRadius: "18px",
-                padding: "18px",
-              }}>
-                <div style={{ fontSize: "13px", opacity: 0.85 }}>الرصيد الحالي</div>
-                <div style={{ fontSize: "28px", fontWeight: "800", marginTop: "8px" }}>
-                  {(Number(treasuryBalance) || 0).toLocaleString("en-US")} ج.م
-                </div>
-              </div>
-              <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "18px", padding: "18px" }}>
-                <div style={{ fontSize: "13px", color: "#64748b" }}>رصيد الافتتاح</div>
-                <div style={{ fontSize: "22px", fontWeight: "800", marginTop: "8px", color: "#0f172a" }}>
-                  {(Number(treasuryOpening) || 0).toLocaleString("en-US")} ج.م
-                </div>
-                <div style={{ fontSize: "11px", color: treasuryOpeningSet ? "#16a34a" : "#d97706", marginTop: "6px", fontWeight: "700" }}>
-                  {treasuryOpeningSet ? "تم التعيين" : "لم يُعيَّن بعد"}
-                </div>
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                <button type="button" onClick={() => openTreasuryModal("deposit")} style={{
+                  ...primaryButtonStyle,
+                  background: "#16a34a",
+                  boxShadow: "0 8px 18px rgba(22,163,74,0.18)",
+                }}>
+                  + إيداع
+                </button>
+                <button type="button" onClick={() => openTreasuryModal("withdraw")} style={{
+                  ...primaryButtonStyle,
+                  background: "#dc2626",
+                  boxShadow: "0 8px 18px rgba(220,38,38,0.16)",
+                }}>
+                  − سحب
+                </button>
+                <button type="button" onClick={() => openTreasuryModal("reconcile")} style={secondaryButtonStyle}>
+                  تسوية الخزينة
+                </button>
+                <button type="button" onClick={loadTreasury} style={secondaryButtonStyle}>
+                  تحديث
+                </button>
               </div>
             </div>
 
@@ -9488,15 +9764,15 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
               <form onSubmit={saveTreasuryOpening} style={{
                 background: "#fffbeb",
                 border: "1px solid #fde68a",
-                borderRadius: "16px",
-                padding: "16px",
+                borderRadius: "18px",
+                padding: "18px",
                 marginBottom: "18px",
               }}>
-                <div style={{ fontWeight: "800", color: "#92400e", marginBottom: "8px" }}>
-                  رصيد الافتتاح (مرة واحدة)
+                <div style={{ fontWeight: "800", color: "#92400e", marginBottom: "6px" }}>
+                  إعداد رصيد افتتاح الخزينة
                 </div>
                 <p style={{ margin: "0 0 12px", fontSize: "13px", color: "#a16207" }}>
-                  عدّ الفلوس في الصندوق واكتب المبلغ هنا
+                  اكتب المبلغ النقدي الموجود فعليًا في بداية تشغيل النظام.
                 </p>
                 <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
                   <input
@@ -9507,7 +9783,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                     onChange={(e) => setOpeningInput(e.target.value)}
                     placeholder="مثال: 800"
                     dir="ltr"
-                    style={{ ...inputStyle, marginBottom: 0, maxWidth: "200px" }}
+                    style={{ ...inputStyle, marginBottom: 0, maxWidth: "220px" }}
                   />
                   <button type="submit" style={primaryButtonStyle}>حفظ رصيد الافتتاح</button>
                 </div>
@@ -9515,131 +9791,513 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
             )}
 
             <div style={{
-              background: "#fff",
-              border: "1px solid #e2e8f0",
-              borderRadius: "18px",
-              padding: "16px",
+              display: "grid",
+              gridTemplateColumns: "1.35fr repeat(4, 1fr)",
+              gap: "14px",
               marginBottom: "18px",
             }}>
-              <h3 style={{ margin: "0 0 12px", fontSize: "15px", color: "#0f172a" }}>حركة يدوية</h3>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "10px" }}>
-                <input type="number" min="0" step="0.01" value={treasuryAmount} onChange={(e) => setTreasuryAmount(e.target.value)} placeholder="المبلغ" dir="ltr" style={{ ...inputStyle, marginBottom: 0 }} />
-                <input type="text" value={treasuryTitle} onChange={(e) => setTreasuryTitle(e.target.value)} placeholder="البيان (اختياري)" dir="rtl" style={{ ...inputStyle, marginBottom: 0 }} />
-                <input type="text" value={treasuryNotes} onChange={(e) => setTreasuryNotes(e.target.value)} placeholder="ملاحظة (اختياري)" dir="rtl" style={{ ...inputStyle, marginBottom: 0 }} />
+              <div style={{
+                background: "linear-gradient(135deg,#0f172a,#1e3a5f)",
+                color: "#fff",
+                borderRadius: "22px",
+                padding: "24px",
+                minHeight: "142px",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                boxShadow: "0 14px 35px rgba(15,23,42,0.16)",
+              }}>
+                <div style={{ fontSize: "13px", opacity: 0.75 }}>الرصيد الحالي</div>
+                <div style={{ fontSize: "34px", fontWeight: "900", marginTop: "8px" }}>
+                  {(Number(treasuryBalance) || 0).toLocaleString("en-US")} ج.م
+                </div>
+                <div style={{ fontSize: "12px", opacity: 0.72, marginTop: "7px" }}>
+                  الرصيد المحسوب من كل الحركات
+                </div>
               </div>
-              <div style={{ display: "flex", gap: "10px", marginTop: "12px", flexWrap: "wrap" }}>
-                <button type="button" onClick={() => addTreasuryManual("in")} style={{ ...primaryButtonStyle, background: "#16a34a" }}>+ إيداع</button>
-                <button type="button" onClick={() => addTreasuryManual("out")} style={{ ...primaryButtonStyle, background: "#dc2626" }}>− سحب</button>
-              </div>
+
+              {[
+                ["رصيد أول اليوم", treasuryToday.openingBalance, "#0f172a"],
+                ["إجمالي الداخل", treasuryToday.totalIn, "#16a34a"],
+                ["إجمالي الخارج", treasuryToday.totalOut, "#dc2626"],
+                ["الرصيد المتوقع", treasuryToday.expectedBalance, "#2563eb"],
+              ].map(([label, value, accent]) => (
+                <div key={label} style={{
+                  background: "#fff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "20px",
+                  padding: "20px",
+                  minHeight: "142px",
+                  boxSizing: "border-box",
+                  boxShadow: "0 3px 12px rgba(15,23,42,0.04)",
+                }}>
+                  <div style={{ fontSize: "13px", color: "#64748b" }}>{label}</div>
+                  <div style={{ fontSize: "24px", fontWeight: "900", marginTop: "12px", color: accent }}>
+                    {(Number(value) || 0).toLocaleString("en-US")} ج.م
+                  </div>
+                  <div style={{ marginTop: "9px", height: "4px", borderRadius: "999px", background: "#f1f5f9" }}>
+                    <div style={{ height: "100%", width: "45%", borderRadius: "999px", background: accent }} />
+                  </div>
+                </div>
+              ))}
             </div>
 
-            <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "18px", padding: "16px", overflow: "auto" }}>
-              <h3 style={{ margin: "0 0 12px", fontSize: "15px", color: "#0f172a" }}>سجل الحركات</h3>
+            <div style={{
+              background: "#fff",
+              border: "1px solid #e2e8f0",
+              borderRadius: "20px",
+              padding: "18px",
+              marginBottom: "18px",
+              boxShadow: "0 3px 12px rgba(15,23,42,0.04)",
+            }}>
+              <div style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "12px",
+                flexWrap: "wrap",
+                marginBottom: "14px",
+              }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "17px", color: "#0f172a" }}>سجل حركات الخزينة</h3>
+                  <p style={{ margin: "5px 0 0", color: "#94a3b8", fontSize: "12px" }}>
+                    كل حركة مرتبطة بمصدرها ولا يتم تعديل حركة الفاتورة أو المصروف من هنا.
+                  </p>
+                </div>
+                <div style={{
+                  padding: "8px 12px",
+                  borderRadius: "999px",
+                  background: "#f8fafc",
+                  color: "#475569",
+                  fontSize: "12px",
+                  fontWeight: "800",
+                }}>
+                  {filteredTreasuryMovements.length} حركة
+                </div>
+              </div>
 
               <div style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fit, minmax(145px, 1fr))",
+                gap: "9px",
+                marginBottom: "14px",
+              }}>
+                {[
+                  ["today", "اليوم"],
+                  ["yesterday", "أمس"],
+                  ["week", "هذا الأسبوع"],
+                  ["month", "هذا الشهر"],
+                  ["all", "كل الحركات"],
+                  ["custom", "فترة مخصصة"],
+                ].map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setTreasuryPeriod(key)}
+                    style={{
+                      border: treasuryPeriod === key ? "1px solid #0f172a" : "1px solid #e2e8f0",
+                      background: treasuryPeriod === key ? "#0f172a" : "#fff",
+                      color: treasuryPeriod === key ? "#fff" : "#334155",
+                      borderRadius: "11px",
+                      padding: "10px 12px",
+                      cursor: "pointer",
+                      fontWeight: "800",
+                      fontSize: "12px",
+                      fontFamily: "Tahoma, Arial, sans-serif",
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {treasuryPeriod === "custom" && (
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                  gap: "10px",
+                  marginBottom: "14px",
+                  padding: "12px",
+                  background: "#f8fafc",
+                  borderRadius: "14px",
+                }}>
+                  <div>
+                    <label style={{ ...smallLabelStyle, display: "block", marginBottom: "5px" }}>من تاريخ</label>
+                    <input
+                      type="date"
+                      value={treasuryCustomFrom}
+                      onChange={(e) => setTreasuryCustomFrom(e.target.value)}
+                      dir="ltr"
+                      style={{ ...inputStyle, marginBottom: 0 }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ ...smallLabelStyle, display: "block", marginBottom: "5px" }}>إلى تاريخ</label>
+                    <input
+                      type="date"
+                      value={treasuryCustomTo}
+                      onChange={(e) => setTreasuryCustomTo(e.target.value)}
+                      dir="ltr"
+                      style={{ ...inputStyle, marginBottom: 0 }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
                 gap: "10px",
                 marginBottom: "14px",
               }}>
-                <select
-                  value={treasuryFilterType}
-                  onChange={(e) => setTreasuryFilterType(e.target.value)}
-                  dir="rtl"
-                  style={{ ...inputStyle, marginBottom: 0 }}
-                >
+                <select value={treasuryFilterType} onChange={(e) => setTreasuryFilterType(e.target.value)} dir="rtl" style={{ ...inputStyle, marginBottom: 0 }}>
                   <option value="الكل">النوع: الكل</option>
                   <option value="دخول">دخول فقط</option>
                   <option value="خروج">خروج فقط</option>
                 </select>
-                <select
-                  value={treasuryFilterSource}
-                  onChange={(e) => setTreasuryFilterSource(e.target.value)}
-                  dir="rtl"
-                  style={{ ...inputStyle, marginBottom: 0 }}
-                >
+
+                <select value={treasuryFilterSource} onChange={(e) => setTreasuryFilterSource(e.target.value)} dir="rtl" style={{ ...inputStyle, marginBottom: 0 }}>
                   <option value="الكل">المصدر: الكل</option>
-                  <option value="فاتورة">فاتورة</option>
-                  <option value="مرتجع">مرتجع فاتورة</option>
-                  <option value="مصروف">مصروف</option>
-                  <option value="يدوي">يدوي</option>
+                  <option value="فواتير">فواتير</option>
+                  <option value="مصروفات">مصروفات</option>
+                  <option value="إيداعات">إيداعات</option>
+                  <option value="سحوبات">سحوبات</option>
+                  <option value="مرتجعات">مرتجعات</option>
+                  <option value="تسويات">تسويات</option>
                 </select>
+
                 <input
                   type="text"
                   value={treasuryFilterSearch}
                   onChange={(e) => setTreasuryFilterSearch(e.target.value)}
-                  placeholder="بحث في البيان..."
+                  placeholder="بحث في البيان أو الملاحظات..."
                   dir="rtl"
                   style={{ ...inputStyle, marginBottom: 0 }}
                 />
               </div>
 
               {treasuryLoading ? (
-                <p style={{ color: "#94a3b8" }}>جاري التحميل...</p>
+                <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>جاري تحميل الخزينة...</div>
               ) : filteredTreasuryMovements.length === 0 ? (
-                <p style={{ color: "#94a3b8", textAlign: "center", padding: "20px 0" }}>لا توجد حركات مطابقة</p>
+                <div style={{
+                  padding: "45px 20px",
+                  textAlign: "center",
+                  background: "#f8fafc",
+                  borderRadius: "15px",
+                  color: "#94a3b8",
+                }}>
+                  لا توجد حركات مطابقة للفترة أو الفلاتر الحالية
+                </div>
               ) : (
-                <table dir="rtl" style={{ width: "100%", borderCollapse: "collapse", minWidth: "640px" }}>
-                  <thead>
-                    <tr style={{ background: "#f8fafc" }}>
-                      {["التاريخ", "الوقت", "البيان", "النوع", "المبلغ", "المصدر", ""].map((h) => (
-                        <th key={h} style={{ ...tableHeaderStyle, textAlign: "right" }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredTreasuryMovements.map((mv) => (
-                      <tr key={mv.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                        <td style={tableCellStyle}>{mv.date}</td>
-                        <td style={tableCellStyle}>{mv.time || "—"}</td>
-                        <td style={{ ...tableCellStyle, fontWeight: "700" }}>{mv.title}</td>
-                        <td style={tableCellStyle}>
-                          <span style={{
-                            padding: "4px 10px",
-                            borderRadius: "999px",
-                            fontSize: "11px",
-                            fontWeight: "800",
-                            background: mv.type === "in" ? "#dcfce7" : "#fee2e2",
-                            color: mv.type === "in" ? "#166534" : "#b91c1c",
-                          }}>
-                            {mv.type === "in" ? "دخول" : "خروج"}
-                          </span>
-                        </td>
-                        <td style={{ ...tableCellStyle, fontWeight: "800", color: mv.type === "in" ? "#16a34a" : "#dc2626" }}>
-                          {mv.type === "in" ? "+" : "−"}{(Number(mv.amount) || 0).toLocaleString("en-US")} ج
-                        </td>
-                        <td style={{ ...tableCellStyle, color: "#64748b", fontSize: "12px" }}>
-                          {mv.source === "invoice" ? "فاتورة" : mv.source === "invoice_return" ? "مرتجع" : mv.source === "expense" ? "مصروف" : "يدوي"}
-                        </td>
-                        <td style={tableCellStyle}>
-                          {mv.source === "manual" ? (
-                            <button
-                              type="button"
-                              onClick={() => cancelTreasuryMovement(mv.id)}
-                              style={{
-                                border: "none",
-                                background: "#fee2e2",
-                                color: "#b91c1c",
-                                borderRadius: "8px",
-                                padding: "6px 10px",
-                                cursor: "pointer",
-                                fontWeight: "700",
-                                fontSize: "12px",
-                                fontFamily: "Tahoma, Arial, sans-serif",
-                              }}
-                            >
-                              إلغاء
-                            </button>
-                          ) : (
-                            <span style={{ color: "#94a3b8", fontSize: "11px" }}>—</span>
-                          )}
-                        </td>
+                <div style={{ overflowX: "auto" }}>
+                  <table dir="rtl" style={{ width: "100%", borderCollapse: "collapse", minWidth: "900px" }}>
+                    <thead>
+                      <tr style={{ background: "#f8fafc" }}>
+                        {["التاريخ", "الوقت", "البيان", "المصدر", "داخل", "خارج", "الرصيد بعد الحركة", ""].map((h) => (
+                          <th key={h} style={{ ...tableHeaderStyle, textAlign: "right", padding: "13px 10px" }}>{h}</th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filteredTreasuryMovements.map((mv) => (
+                        <tr key={mv.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                          <td style={tableCellStyle}>{mv.date || "—"}</td>
+                          <td style={tableCellStyle}>{mv.time || "—"}</td>
+                          <td style={{ ...tableCellStyle, fontWeight: "800", color: "#0f172a" }}>
+                            <div>{mv.title || "حركة مالية"}</div>
+                            {mv.notes && <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "4px" }}>{mv.notes}</div>}
+                          </td>
+                          <td style={tableCellStyle}>
+                            <span style={{
+                              display: "inline-block",
+                              padding: "5px 10px",
+                              borderRadius: "999px",
+                              background: mv.type === "in" ? "#ecfdf5" : "#fef2f2",
+                              color: mv.type === "in" ? "#047857" : "#b91c1c",
+                              fontSize: "11px",
+                              fontWeight: "800",
+                            }}>
+                              {getTreasurySourceLabel(mv)}
+                            </span>
+                          </td>
+                          <td style={{ ...tableCellStyle, fontWeight: "900", color: "#16a34a" }}>
+                            {mv.type === "in" ? `+${(Number(mv.amount) || 0).toLocaleString("en-US")} ج` : "—"}
+                          </td>
+                          <td style={{ ...tableCellStyle, fontWeight: "900", color: "#dc2626" }}>
+                            {mv.type === "out" ? `−${(Number(mv.amount) || 0).toLocaleString("en-US")} ج` : "—"}
+                          </td>
+                          <td style={{ ...tableCellStyle, fontWeight: "900", color: "#0f172a" }}>
+                            {(Number(mv.runningBalance) || 0).toLocaleString("en-US")} ج
+                          </td>
+                          <td style={tableCellStyle}>
+                            {mv.source === "manual" ? (
+                              <button
+                                type="button"
+                                onClick={() => cancelTreasuryMovement(mv.id)}
+                                style={{
+                                  border: "none",
+                                  background: "#fee2e2",
+                                  color: "#b91c1c",
+                                  borderRadius: "9px",
+                                  padding: "7px 10px",
+                                  cursor: "pointer",
+                                  fontWeight: "800",
+                                  fontSize: "11px",
+                                  fontFamily: "Tahoma, Arial, sans-serif",
+                                }}
+                              >
+                                إلغاء
+                              </button>
+                            ) : (
+                              <span style={{ color: "#cbd5e1", fontSize: "11px" }}>مرتبط بالمصدر</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
+
+            <div style={{
+              background: "#fff",
+              border: "1px solid #e2e8f0",
+              borderRadius: "20px",
+              padding: "18px",
+              marginBottom: "18px",
+            }}>
+              <div style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "12px",
+                flexWrap: "wrap",
+                marginBottom: "15px",
+              }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "17px", color: "#0f172a" }}>إقفال اليوم</h3>
+                  <p style={{ margin: "5px 0 0", color: "#94a3b8", fontSize: "12px" }}>
+                    قارن الرصيد المحسوب بالمبلغ الموجود فعليًا وسجل العجز أو الزيادة.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTreasuryCloseDate(getTreasuryTodayKey())
+                    setTreasuryCloseActual("")
+                    setTreasuryCloseNotes("")
+                    setTreasuryModal("close")
+                  }}
+                  style={secondaryButtonStyle}
+                >
+                  إقفال اليوم
+                </button>
+              </div>
+
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+                gap: "10px",
+              }}>
+                {[
+                  ["رصيد بداية اليوم", treasuryToday.openingBalance],
+                  ["إجمالي الداخل", treasuryToday.totalIn],
+                  ["إجمالي الخارج", treasuryToday.totalOut],
+                  ["الرصيد المتوقع", treasuryToday.expectedBalance],
+                ].map(([label, value]) => (
+                  <div key={label} style={{ background: "#f8fafc", borderRadius: "14px", padding: "14px" }}>
+                    <div style={{ fontSize: "11px", color: "#64748b" }}>{label}</div>
+                    <div style={{ marginTop: "7px", fontSize: "19px", fontWeight: "900", color: "#0f172a" }}>
+                      {(Number(value) || 0).toLocaleString("en-US")} ج.م
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {treasuryClosures.length > 0 && (
+                <div style={{ marginTop: "14px", padding: "12px 14px", background: "#f0fdf4", borderRadius: "13px", color: "#166534", fontSize: "12px", fontWeight: "700" }}>
+                  آخر إقفال: {treasuryClosures[0].date} — فعلي: {(Number(treasuryClosures[0].actualBalance) || 0).toLocaleString("en-US")} ج.م
+                  {Math.abs(Number(treasuryClosures[0].difference) || 0) > 0.005
+                    ? ` — ${Number(treasuryClosures[0].difference) > 0 ? "زيادة" : "عجز"} ${(Math.abs(Number(treasuryClosures[0].difference)) || 0).toLocaleString("en-US")} ج.م`
+                    : " — الخزينة متطابقة"}
+                </div>
+              )}
+            </div>
+
+            <div style={{
+              background: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              borderRadius: "16px",
+              padding: "14px 16px",
+              color: "#64748b",
+              fontSize: "12px",
+              lineHeight: 1.8,
+            }}>
+              <strong style={{ color: "#334155" }}>قاعدة الخزينة:</strong>{" "}
+              الرصيد الحالي = رصيد الافتتاح + إجمالي الداخل − إجمالي الخارج.
+              الفواتير والمصروفات والمرتجعات مرتبطة بمصدرها، وأي تغيير في الفاتورة أو المصروف يعيد مزامنة تأثيره على الخزينة تلقائيًا.
+            </div>
+
+            {/* Treasury modals */}
+            {(treasuryModal === "deposit" || treasuryModal === "withdraw" || treasuryModal === "reconcile") && (
+              <div style={modalOverlayStyle}>
+                <div style={{ ...modalStyle, maxWidth: "520px" }} dir="rtl">
+                  <div style={modalHeaderStyle}>
+                    <h3 style={modalTitleStyle}>
+                      {treasuryModal === "deposit" ? "إيداع في الخزينة" : treasuryModal === "withdraw" ? "سحب من الخزينة" : "تسوية الخزينة"}
+                    </h3>
+                    <button type="button" onClick={closeTreasuryModal} style={closeButtonStyle}>×</button>
+                  </div>
+
+                  <div style={{ padding: "20px" }}>
+                    <label style={labelStyle}>
+                      {treasuryModal === "reconcile" ? "المبلغ الفعلي الموجود" : "المبلغ"}
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={treasuryModalAmount}
+                      onChange={(e) => setTreasuryModalAmount(e.target.value)}
+                      placeholder="0.00"
+                      dir="ltr"
+                      autoFocus
+                      style={inputStyle}
+                    />
+
+                    {treasuryModal === "reconcile" && (
+                      <div style={{
+                        background: "#f8fafc",
+                        borderRadius: "13px",
+                        padding: "12px",
+                        marginBottom: "12px",
+                        fontSize: "12px",
+                        color: "#475569",
+                      }}>
+                        الرصيد المحسوب حاليًا: <strong>{(Number(treasuryBalance) || 0).toLocaleString("en-US")} ج.م</strong>
+                      </div>
+                    )}
+
+                    <label style={labelStyle}>ملاحظات</label>
+                    <textarea
+                      value={treasuryModalNotes}
+                      onChange={(e) => setTreasuryModalNotes(e.target.value)}
+                      placeholder="اكتب ملاحظة اختيارية..."
+                      dir="rtl"
+                      style={{ ...inputStyle, minHeight: "90px", resize: "vertical" }}
+                    />
+
+                    <div style={{ display: "flex", gap: "10px", justifyContent: "flex-start", flexWrap: "wrap" }}>
+                      <button
+                        type="button"
+                        onClick={() => treasuryModal === "reconcile"
+                          ? submitTreasuryReconciliation()
+                          : submitTreasuryManual(treasuryModal === "deposit" ? "in" : "out")}
+                        style={{
+                          ...primaryButtonStyle,
+                          background: treasuryModal === "deposit" ? "#16a34a" : treasuryModal === "withdraw" ? "#dc2626" : "#2563eb",
+                        }}
+                      >
+                        {treasuryModal === "deposit" ? "تسجيل الإيداع" : treasuryModal === "withdraw" ? "تسجيل السحب" : "تسجيل التسوية"}
+                      </button>
+                      <button type="button" onClick={closeTreasuryModal} style={secondaryButtonStyle}>إلغاء</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {treasuryModal === "close" && (
+              <div style={modalOverlayStyle}>
+                <div style={{ ...modalStyle, maxWidth: "600px" }} dir="rtl">
+                  <div style={modalHeaderStyle}>
+                    <h3 style={modalTitleStyle}>إقفال اليوم</h3>
+                    <button type="button" onClick={() => setTreasuryModal("")} style={closeButtonStyle}>×</button>
+                  </div>
+
+                  <div style={{ padding: "20px" }}>
+                    <div style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+                      gap: "10px",
+                      marginBottom: "16px",
+                    }}>
+                      {(() => {
+                        const summary = getTreasuryDaySummary(treasuryCloseDate || getTreasuryTodayKey())
+                        return [
+                          ["رصيد بداية اليوم", summary.openingBalance],
+                          ["إجمالي الداخل", summary.totalIn],
+                          ["إجمالي الخارج", summary.totalOut],
+                          ["الرصيد المتوقع", summary.expectedBalance],
+                        ].map(([label, value]) => (
+                          <div key={label} style={{ background: "#f8fafc", borderRadius: "13px", padding: "12px" }}>
+                            <div style={{ fontSize: "11px", color: "#64748b" }}>{label}</div>
+                            <div style={{ marginTop: "6px", fontSize: "18px", fontWeight: "900" }}>
+                              {(Number(value) || 0).toLocaleString("en-US")} ج.م
+                            </div>
+                          </div>
+                        ))
+                      })()}
+                    </div>
+
+                    <label style={labelStyle}>تاريخ الإقفال</label>
+                    <input
+                      type="date"
+                      value={treasuryCloseDate}
+                      onChange={(e) => setTreasuryCloseDate(e.target.value)}
+                      dir="ltr"
+                      style={inputStyle}
+                    />
+
+                    <label style={labelStyle}>المبلغ الفعلي الموجود في الخزينة</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={treasuryCloseActual}
+                      onChange={(e) => setTreasuryCloseActual(e.target.value)}
+                      placeholder="0.00"
+                      dir="ltr"
+                      style={inputStyle}
+                    />
+
+                    {treasuryCloseActual !== "" && (() => {
+                      const summary = getTreasuryDaySummary(treasuryCloseDate || getTreasuryTodayKey())
+                      const diff = Number(treasuryCloseActual) - summary.expectedBalance
+                      return (
+                        <div style={{
+                          padding: "13px",
+                          borderRadius: "13px",
+                          background: Math.abs(diff) < 0.005 ? "#f0fdf4" : diff > 0 ? "#eff6ff" : "#fef2f2",
+                          color: Math.abs(diff) < 0.005 ? "#166534" : diff > 0 ? "#1d4ed8" : "#b91c1c",
+                          marginBottom: "14px",
+                          fontWeight: "800",
+                        }}>
+                          {Math.abs(diff) < 0.005
+                            ? "الخزينة متطابقة"
+                            : `${diff > 0 ? "زيادة" : "عجز"}: ${Math.abs(diff).toLocaleString("en-US")} ج.م`}
+                        </div>
+                      )
+                    })()}
+
+                    <label style={labelStyle}>ملاحظات الإقفال</label>
+                    <textarea
+                      value={treasuryCloseNotes}
+                      onChange={(e) => setTreasuryCloseNotes(e.target.value)}
+                      placeholder="ملاحظات اختيارية..."
+                      dir="rtl"
+                      style={{ ...inputStyle, minHeight: "80px", resize: "vertical" }}
+                    />
+
+                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                      <button type="button" onClick={submitTreasuryClose} style={primaryButtonStyle}>إقفال اليوم</button>
+                      <button type="button" onClick={() => setTreasuryModal("")} style={secondaryButtonStyle}>إلغاء</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
