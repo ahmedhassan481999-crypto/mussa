@@ -61,6 +61,15 @@ function App() {
     useState("الرئيسية")
   const [message, setMessage] = useState("")
   const [inventoryItems, setInventoryItems] = useState([])
+  const [treasuryBalance, setTreasuryBalance] = useState(0)
+  const [treasuryOpening, setTreasuryOpening] = useState(0)
+  const [treasuryOpeningSet, setTreasuryOpeningSet] = useState(false)
+  const [treasuryMovements, setTreasuryMovements] = useState([])
+  const [treasuryLoading, setTreasuryLoading] = useState(false)
+  const [treasuryAmount, setTreasuryAmount] = useState("")
+  const [treasuryTitle, setTreasuryTitle] = useState("")
+  const [treasuryNotes, setTreasuryNotes] = useState("")
+  const [openingInput, setOpeningInput] = useState("")
   const [invoiceInventoryUsage, setInvoiceInventoryUsage] = useState([])
 
   // =========================
@@ -1393,6 +1402,88 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
 
   function canManageEmployees() {
     return getUserRole() === "مالك"
+  }
+
+  async function loadTreasury() {
+    try {
+      setTreasuryLoading(true)
+      const response = await apiFetch(`${API_BASE_URL}/api/treasury`)
+      const data = await response.json()
+      if (data.success) {
+        setTreasuryBalance(Number(data.balance) || 0)
+        setTreasuryOpening(Number(data.openingBalance) || 0)
+        setTreasuryOpeningSet(data.openingSet === true)
+        setTreasuryMovements(Array.isArray(data.movements) ? data.movements : [])
+        if (!data.openingSet) setOpeningInput(String(data.openingBalance || ""))
+      }
+    } catch (e) {
+      console.error("تعذر تحميل الخزينة:", e)
+    } finally {
+      setTreasuryLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!loggedIn) return
+    if (activePage === "الخزينة") loadTreasury()
+  }, [loggedIn, activePage])
+
+  async function saveTreasuryOpening(e) {
+    if (e && e.preventDefault) e.preventDefault()
+    const amount = Number(openingInput)
+    if (isNaN(amount) || amount < 0) {
+      alert("أدخل رصيد افتتاح صحيح")
+      return
+    }
+    try {
+      const response = await apiFetch(`${API_BASE_URL}/api/treasury/opening`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount }),
+      })
+      const data = await response.json()
+      if (!response.ok || !data.success) {
+        alert(data.message || "تعذر حفظ رصيد الافتتاح")
+        return
+      }
+      setTreasuryOpening(Number(data.openingBalance) || 0)
+      setTreasuryOpeningSet(true)
+      setTreasuryBalance(Number(data.balance) || 0)
+      alert("تم حفظ رصيد الافتتاح")
+    } catch (err) {
+      alert("تعذر حفظ رصيد الافتتاح")
+    }
+  }
+
+  async function addTreasuryManual(type) {
+    const amount = Number(treasuryAmount)
+    if (!amount || amount <= 0) {
+      alert("أدخل مبلغ صحيح")
+      return
+    }
+    try {
+      const response = await apiFetch(`${API_BASE_URL}/api/treasury/movement`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type,
+          amount,
+          title: treasuryTitle || (type === "in" ? "إيداع يدوي" : "سحب يدوي"),
+          notes: treasuryNotes,
+        }),
+      })
+      const data = await response.json()
+      if (!response.ok || !data.success) {
+        alert(data.message || "تعذر تسجيل الحركة")
+        return
+      }
+      setTreasuryAmount("")
+      setTreasuryTitle("")
+      setTreasuryNotes("")
+      await loadTreasury()
+    } catch (err) {
+      alert("تعذر تسجيل الحركة")
+    }
   }
 
   function canAccessPage(page) {
@@ -3133,7 +3224,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
       <div class="invoice-no">
         <div class="muted">رقم الفاتورة</div>
         <strong>${escapePrintHtml(invoice.invoiceNumber)}</strong>
-        <div class="muted">${escapePrintHtml(invoice.date)}</div>
+        <div class="muted">${escapePrintHtml(invoice.date)}${invoice.time ? " — " + escapePrintHtml(invoice.time) : ""}</div>
       </div>
     </div>
 
@@ -4761,6 +4852,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
             "الفواتير",
             "الاشتراكات",
             "المصروفات",
+            "الخزينة",
             "التقارير",
             "الإعدادات",
             "النسخ الاحتياطي",
@@ -5406,7 +5498,8 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                             </span>
                           </td>
                           <td style={{ padding: "11px 8px", fontSize: "12px", color: "#64748b" }}>
-                            {inv.date}
+                            <div>{inv.date}</div>
+                            {inv.time ? <div style={{ fontSize: "11px", marginTop: "2px" }}>{inv.time}</div> : null}
                           </td>
                         </tr>
                       ))
@@ -8109,9 +8202,12 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                             tableCellStyle
                           }
                         >
-                          {
-                            invoice.date
-                          }
+                          <div>{invoice.date}</div>
+                          {invoice.time ? (
+                            <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "2px" }}>
+                              {invoice.time}
+                            </div>
+                          ) : null}
                         </td>
 
                         <td
@@ -9156,6 +9252,149 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+
+        {/* =========================
+            الخزينة
+        ========================= */}
+        {activePage === "الخزينة" && (
+          <div style={sectionStyle}>
+            <div style={{ ...sectionHeaderStyle, marginBottom: "20px" }}>
+              <div>
+                <h2 style={sectionTitleStyle}>الخزينة</h2>
+                <p style={sectionSubtitleStyle}>
+                  الصندوق النقدي فقط — تحصيل الفواتير والمصروفات والإيداع والسحب
+                </p>
+              </div>
+              <button type="button" onClick={loadTreasury} style={secondaryButtonStyle}>
+                تحديث
+              </button>
+            </div>
+
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+              gap: "14px",
+              marginBottom: "18px",
+            }}>
+              <div style={{
+                background: "linear-gradient(135deg,#0f172a,#1e3a5f)",
+                color: "#fff",
+                borderRadius: "18px",
+                padding: "18px",
+              }}>
+                <div style={{ fontSize: "13px", opacity: 0.85 }}>الرصيد الحالي</div>
+                <div style={{ fontSize: "28px", fontWeight: "800", marginTop: "8px" }}>
+                  {(Number(treasuryBalance) || 0).toLocaleString("en-US")} ج.م
+                </div>
+              </div>
+              <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "18px", padding: "18px" }}>
+                <div style={{ fontSize: "13px", color: "#64748b" }}>رصيد الافتتاح</div>
+                <div style={{ fontSize: "22px", fontWeight: "800", marginTop: "8px", color: "#0f172a" }}>
+                  {(Number(treasuryOpening) || 0).toLocaleString("en-US")} ج.م
+                </div>
+                <div style={{ fontSize: "11px", color: treasuryOpeningSet ? "#16a34a" : "#d97706", marginTop: "6px", fontWeight: "700" }}>
+                  {treasuryOpeningSet ? "تم التعيين" : "لم يُعيَّن بعد"}
+                </div>
+              </div>
+            </div>
+
+            {!treasuryOpeningSet && (
+              <form onSubmit={saveTreasuryOpening} style={{
+                background: "#fffbeb",
+                border: "1px solid #fde68a",
+                borderRadius: "16px",
+                padding: "16px",
+                marginBottom: "18px",
+              }}>
+                <div style={{ fontWeight: "800", color: "#92400e", marginBottom: "8px" }}>
+                  رصيد الافتتاح (مرة واحدة)
+                </div>
+                <p style={{ margin: "0 0 12px", fontSize: "13px", color: "#a16207" }}>
+                  عدّ الفلوس في الصندوق واكتب المبلغ هنا
+                </p>
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={openingInput}
+                    onChange={(e) => setOpeningInput(e.target.value)}
+                    placeholder="مثال: 800"
+                    dir="ltr"
+                    style={{ ...inputStyle, marginBottom: 0, maxWidth: "200px" }}
+                  />
+                  <button type="submit" style={primaryButtonStyle}>حفظ رصيد الافتتاح</button>
+                </div>
+              </form>
+            )}
+
+            <div style={{
+              background: "#fff",
+              border: "1px solid #e2e8f0",
+              borderRadius: "18px",
+              padding: "16px",
+              marginBottom: "18px",
+            }}>
+              <h3 style={{ margin: "0 0 12px", fontSize: "15px", color: "#0f172a" }}>حركة يدوية</h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "10px" }}>
+                <input type="number" min="0" step="0.01" value={treasuryAmount} onChange={(e) => setTreasuryAmount(e.target.value)} placeholder="المبلغ" dir="ltr" style={{ ...inputStyle, marginBottom: 0 }} />
+                <input type="text" value={treasuryTitle} onChange={(e) => setTreasuryTitle(e.target.value)} placeholder="البيان (اختياري)" dir="rtl" style={{ ...inputStyle, marginBottom: 0 }} />
+                <input type="text" value={treasuryNotes} onChange={(e) => setTreasuryNotes(e.target.value)} placeholder="ملاحظة (اختياري)" dir="rtl" style={{ ...inputStyle, marginBottom: 0 }} />
+              </div>
+              <div style={{ display: "flex", gap: "10px", marginTop: "12px", flexWrap: "wrap" }}>
+                <button type="button" onClick={() => addTreasuryManual("in")} style={{ ...primaryButtonStyle, background: "#16a34a" }}>+ إيداع</button>
+                <button type="button" onClick={() => addTreasuryManual("out")} style={{ ...primaryButtonStyle, background: "#dc2626" }}>− سحب</button>
+              </div>
+            </div>
+
+            <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "18px", padding: "16px", overflow: "auto" }}>
+              <h3 style={{ margin: "0 0 12px", fontSize: "15px", color: "#0f172a" }}>سجل الحركات</h3>
+              {treasuryLoading ? (
+                <p style={{ color: "#94a3b8" }}>جاري التحميل...</p>
+              ) : treasuryMovements.length === 0 ? (
+                <p style={{ color: "#94a3b8", textAlign: "center", padding: "20px 0" }}>لا توجد حركات بعد</p>
+              ) : (
+                <table dir="rtl" style={{ width: "100%", borderCollapse: "collapse", minWidth: "640px" }}>
+                  <thead>
+                    <tr style={{ background: "#f8fafc" }}>
+                      {["التاريخ", "الوقت", "البيان", "النوع", "المبلغ", "المصدر"].map((h) => (
+                        <th key={h} style={{ ...tableHeaderStyle, textAlign: "right" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {treasuryMovements.map((mv) => (
+                      <tr key={mv.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                        <td style={tableCellStyle}>{mv.date}</td>
+                        <td style={tableCellStyle}>{mv.time || "—"}</td>
+                        <td style={{ ...tableCellStyle, fontWeight: "700" }}>{mv.title}</td>
+                        <td style={tableCellStyle}>
+                          <span style={{
+                            padding: "4px 10px",
+                            borderRadius: "999px",
+                            fontSize: "11px",
+                            fontWeight: "800",
+                            background: mv.type === "in" ? "#dcfce7" : "#fee2e2",
+                            color: mv.type === "in" ? "#166534" : "#b91c1c",
+                          }}>
+                            {mv.type === "in" ? "دخول" : "خروج"}
+                          </span>
+                        </td>
+                        <td style={{ ...tableCellStyle, fontWeight: "800", color: mv.type === "in" ? "#16a34a" : "#dc2626" }}>
+                          {mv.type === "in" ? "+" : "−"}{(Number(mv.amount) || 0).toLocaleString("en-US")} ج
+                        </td>
+                        <td style={{ ...tableCellStyle, color: "#64748b", fontSize: "12px" }}>
+                          {mv.source === "invoice" ? "فاتورة" : mv.source === "expense" ? "مصروف" : "يدوي"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
         )}
@@ -10229,6 +10468,8 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
             "الفواتير" &&
           activePage !==
             "المصروفات" &&
+          activePage !==
+            "الخزينة" &&
           activePage !==
             "التقارير" &&
           activePage !==

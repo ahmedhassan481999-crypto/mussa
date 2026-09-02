@@ -40,6 +40,7 @@ const servicesFile = path.join(dataDirectory, "services.json");
 const settingsFile = path.join(dataDirectory, "settings.json");
 const usersFile = path.join(dataDirectory, "users.json");
 const inventoryFile = path.join(dataDirectory, "inventory.json");
+const treasuryFile = path.join(dataDirectory, "treasury.json");
 
 // =========================
 // بيانات افتراضية
@@ -480,6 +481,107 @@ function extractUsageFromInvoice(invoice) {
     }))
     .filter((it) => it.inventoryId && it.quantity > 0);
 }
+
+
+// =========================
+// الخزينة + الوقت
+// =========================
+
+const initialTreasury = {
+  openingBalance: 0,
+  openingSet: false,
+  movements: [],
+};
+
+function ensureTreasuryFile() {
+  ensureJsonFile(treasuryFile, initialTreasury);
+}
+
+function readTreasury() {
+  ensureTreasuryFile();
+  try {
+    const content = fs.readFileSync(treasuryFile, "utf8");
+    const data = JSON.parse(content || "{}");
+    return {
+      openingBalance: Number(data.openingBalance) || 0,
+      openingSet: data.openingSet === true,
+      movements: Array.isArray(data.movements) ? data.movements : [],
+    };
+  } catch (e) {
+    return { openingBalance: 0, openingSet: false, movements: [] };
+  }
+}
+
+function writeTreasury(data) {
+  writeJsonFile(treasuryFile, {
+    openingBalance: Number(data.openingBalance) || 0,
+    openingSet: data.openingSet === true,
+    movements: Array.isArray(data.movements) ? data.movements : [],
+  });
+}
+
+function getNowParts() {
+  const now = new Date();
+  const date = now.toLocaleDateString("ar-EG");
+  let hours = now.getHours();
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const isPM = hours >= 12;
+  const suffix = isPM ? "م" : "ص";
+  hours = hours % 12;
+  if (hours === 0) hours = 12;
+  const time = hours + ":" + minutes + " " + suffix;
+  const createdAt = now.toISOString();
+  return { date: date, time: time, createdAt: createdAt };
+}
+
+function isCashMethod(method) {
+  const m = String(method || "نقدي").trim();
+  return m === "نقدي" || m === "كاش" || m.toLowerCase() === "cash";
+}
+
+function getTreasuryBalance(treasury) {
+  const t = treasury || readTreasury();
+  let balance = Number(t.openingBalance) || 0;
+  for (const mv of t.movements || []) {
+    const amount = Number(mv.amount) || 0;
+    if (mv.type === "in") balance += amount;
+    else if (mv.type === "out") balance -= amount;
+  }
+  return balance;
+}
+
+function addTreasuryMovement(movement) {
+  const treasury = readTreasury();
+  const parts = getNowParts();
+  const entry = {
+    id: Date.now() + Math.floor(Math.random() * 1000),
+    type: movement.type,
+    amount: Number(movement.amount) || 0,
+    title: String(movement.title || "").trim(),
+    notes: movement.notes ? String(movement.notes).trim() : "",
+    source: movement.source || "manual",
+    sourceId: movement.sourceId || null,
+    date: movement.date || parts.date,
+    time: movement.time || parts.time,
+    createdAt: movement.createdAt || parts.createdAt,
+  };
+  if (entry.amount <= 0) return null;
+  treasury.movements.unshift(entry);
+  writeTreasury(treasury);
+  return entry;
+}
+
+function removeTreasuryBySource(source, sourceId) {
+  const treasury = readTreasury();
+  const before = treasury.movements.length;
+  treasury.movements = treasury.movements.filter(function (mv) {
+    return !(mv.source === source && Number(mv.sourceId) === Number(sourceId));
+  });
+  if (treasury.movements.length !== before) {
+    writeTreasury(treasury);
+  }
+}
+
 
 app.get("/", (req, res) => {
   res.json({
@@ -2144,6 +2246,11 @@ app.post("/api/invoices", (req, res) => {
       : extractUsageFromInvoice({ items }),
   };
 
+  const nowParts = getNowParts();
+  if (!newInvoice.date) newInvoice.date = nowParts.date;
+  newInvoice.time = nowParts.time;
+  newInvoice.createdAt = nowParts.createdAt;
+
   invoices.unshift(
     newInvoice
   );
@@ -2151,6 +2258,23 @@ app.post("/api/invoices", (req, res) => {
   writeInvoices(
     invoices
   );
+
+  if (
+    isCashMethod(newInvoice.paymentMethod) &&
+    Number(newInvoice.paidAmount) > 0
+  ) {
+    addTreasuryMovement({
+      type: "in",
+      amount: Number(newInvoice.paidAmount),
+      title: "تحصيل فاتورة " + (newInvoice.invoiceNumber || ""),
+      notes: newInvoice.customerName || "",
+      source: "invoice",
+      sourceId: newInvoice.id,
+      date: newInvoice.date,
+      time: newInvoice.time,
+      createdAt: newInvoice.createdAt,
+    });
+  }
 
   return res.status(201).json({
     success: true,
@@ -2448,6 +2572,8 @@ app.delete("/api/invoices/:id", (req, res) => {
   const usage = extractUsageFromInvoice(invoice);
   restoreInventoryUsage(usage);
 
+  removeTreasuryBySource("invoice", invoiceId);
+
   const updatedInvoices = invoices.filter((inv) => inv.id !== invoiceId);
   writeInvoices(updatedInvoices);
 
@@ -2527,6 +2653,11 @@ app.post("/api/expenses", (req, res) => {
         : "",
   };
 
+  const expNow = getNowParts();
+  if (!newExpense.date) newExpense.date = expNow.date;
+  newExpense.time = expNow.time;
+  newExpense.createdAt = expNow.createdAt;
+
   expenses.unshift(
     newExpense
   );
@@ -2534,6 +2665,20 @@ app.post("/api/expenses", (req, res) => {
   writeExpenses(
     expenses
   );
+
+  if (isCashMethod(newExpense.paymentMethod) && Number(newExpense.amount) > 0) {
+    addTreasuryMovement({
+      type: "out",
+      amount: Number(newExpense.amount),
+      title: "مصروف: " + newExpense.title,
+      notes: newExpense.category || "",
+      source: "expense",
+      sourceId: newExpense.id,
+      date: newExpense.date,
+      time: newExpense.time,
+      createdAt: newExpense.createdAt,
+    });
+  }
 
   return res.status(201).json({
     success: true,
@@ -2994,6 +3139,11 @@ ensureJsonFile(
 );
 
 ensureJsonFile(
+  treasuryFile,
+  { openingBalance: 0, openingSet: false, movements: [] }
+);
+
+ensureJsonFile(
   settingsFile,
   initialSettings
 );
@@ -3001,6 +3151,80 @@ ensureJsonFile(
 
 ensureJsonFile(usersFile, initialUsers);
 ensureJsonFile(inventoryFile, initialInventory);
+
+
+// =====================================================
+// الخزينة
+// =====================================================
+
+app.get("/api/treasury", (req, res) => {
+  const treasury = readTreasury();
+  return res.json({
+    success: true,
+    openingBalance: treasury.openingBalance,
+    openingSet: treasury.openingSet,
+    balance: getTreasuryBalance(treasury),
+    movements: treasury.movements,
+  });
+});
+
+app.post("/api/treasury/opening", (req, res) => {
+  const amount = Number(req.body.amount);
+  if (isNaN(amount) || amount < 0) {
+    return res.status(400).json({
+      success: false,
+      message: "رصيد الافتتاح غير صحيح",
+    });
+  }
+  const treasury = readTreasury();
+  treasury.openingBalance = amount;
+  treasury.openingSet = true;
+  writeTreasury(treasury);
+  return res.json({
+    success: true,
+    message: "تم حفظ رصيد الافتتاح",
+    openingBalance: treasury.openingBalance,
+    openingSet: true,
+    balance: getTreasuryBalance(treasury),
+  });
+});
+
+app.post("/api/treasury/movement", (req, res) => {
+  const type = String(req.body.type || "").trim();
+  const amount = Number(req.body.amount);
+  const title = String(req.body.title || "").trim();
+  const notes = String(req.body.notes || "").trim();
+
+  if (type !== "in" && type !== "out") {
+    return res.status(400).json({
+      success: false,
+      message: "نوع الحركة غير صحيح",
+    });
+  }
+  if (!amount || amount <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: "المبلغ يجب أن يكون أكبر من صفر",
+    });
+  }
+
+  const entry = addTreasuryMovement({
+    type: type,
+    amount: amount,
+    title: title || (type === "in" ? "إيداع يدوي" : "سحب يدوي"),
+    notes: notes,
+    source: "manual",
+  });
+
+  const treasury = readTreasury();
+  return res.status(201).json({
+    success: true,
+    message: type === "in" ? "تم تسجيل الإيداع" : "تم تسجيل السحب",
+    movement: entry,
+    balance: getTreasuryBalance(treasury),
+  });
+});
+
 
 app.listen(PORT, () => {
   console.log(
