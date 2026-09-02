@@ -2556,6 +2556,74 @@ app.put("/api/invoices/:id", (req, res) => {
   });
 });
 
+
+app.post("/api/invoices/:id/return", (req, res) => {
+  const invoiceId = Number(req.params.id);
+  const invoices = readInvoices();
+  const index = invoices.findIndex((inv) => inv.id === invoiceId);
+
+  if (index === -1) {
+    return res.status(404).json({
+      success: false,
+      message: "الفاتورة غير موجودة",
+    });
+  }
+
+  const invoice = invoices[index];
+
+  if (invoice.returned === true || invoice.status === "مرتجعة") {
+    return res.status(400).json({
+      success: false,
+      message: "الفاتورة مرتجعة بالفعل",
+    });
+  }
+
+  // إرجاع المخزون
+  const usage = extractUsageFromInvoice(invoice);
+  restoreInventoryUsage(usage);
+
+  // إلغاء حركة الخزينة
+  removeTreasuryBySource("invoice", invoiceId);
+
+  // إرجاع زيارة العضوية إن وجدت
+  if (invoice.coveredByMembership && invoice.membershipId) {
+    const memberships = readMemberships();
+    const mIndex = memberships.findIndex(
+      (m) => Number(m.id) === Number(invoice.membershipId)
+    );
+    if (mIndex !== -1) {
+      memberships[mIndex] = {
+        ...memberships[mIndex],
+        remainingVisits:
+          Number(memberships[mIndex].remainingVisits || 0) + 1,
+        status: "سارية",
+      };
+      writeMemberships(memberships);
+    }
+  }
+
+  const nowParts = getNowParts();
+  const updated = {
+    ...invoice,
+    returned: true,
+    status: "مرتجعة",
+    paymentStatus: "مرتجعة",
+    returnedAt: nowParts.createdAt,
+    returnedDate: nowParts.date,
+    returnedTime: nowParts.time,
+  };
+
+  invoices[index] = updated;
+  writeInvoices(invoices);
+
+  return res.json({
+    success: true,
+    message: "تم مرتجع الفاتورة — ما زالت ظاهرة في القائمة",
+    invoice: updated,
+    restoredInventory: usage,
+  });
+});
+
 app.delete("/api/invoices/:id", (req, res) => {
   const invoiceId = Number(req.params.id);
   const invoices = readInvoices();

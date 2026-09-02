@@ -2283,6 +2283,11 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
   function openEditInvoice(
     invoice
   ) {
+    if (invoice && (invoice.returned || invoice.status === "مرتجعة" || invoice.paymentStatus === "مرتجعة")) {
+      alert("لا يمكن تعديل فاتورة مرتجعة")
+      return
+    }
+
     setEditingInvoice(invoice)
 
     setInvoiceCustomerId(
@@ -3317,12 +3322,79 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
     printWindow.document.close()
   }
 
+  async function returnInvoice(id) {
+    const inv = invoices.find((x) => x.id === id)
+    if (inv && (inv.returned || inv.status === "مرتجعة" || inv.paymentStatus === "مرتجعة")) {
+      alert("الفاتورة مرتجعة بالفعل")
+      return
+    }
+
+    const confirmed = window.confirm(
+      "تأكيد مرتجع الفاتورة؟\nهترجع المخزون والخزينة لو كان فيه، والفاتورة هتفضل ظاهرة في القائمة."
+    )
+    if (!confirmed) return
+
+    try {
+      const response = await apiFetch(`${API_BASE_URL}/api/invoices/${id}/return`, {
+        method: "POST",
+      })
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        alert(data.message || "تعذر عمل مرتجع للفاتورة")
+        return
+      }
+
+      setInvoices((current) =>
+        current.map((invoice) =>
+          invoice.id === id ? { ...invoice, ...data.invoice } : invoice
+        )
+      )
+
+      if (data.invoice?.coveredByMembership && data.invoice.membershipId) {
+        const membershipId = Number(data.invoice.membershipId)
+        setMemberships((current) =>
+          current.map((membership) =>
+            membership.id === membershipId
+              ? {
+                  ...membership,
+                  remainingVisits: Number(membership.remainingVisits || 0) + 1,
+                  status: "سارية",
+                }
+              : membership
+          )
+        )
+      }
+
+      if (data.restoredInventory && data.restoredInventory.length > 0) {
+        window.dispatchEvent(new Event("mussa-inventory-updated"))
+        try {
+          const invRes = await apiFetch(`${API_BASE_URL}/api/inventory`)
+          const invData = await invRes.json()
+          if (invData.success) setInventoryItems(invData.items || [])
+        } catch (e) {}
+      }
+
+      try { await loadTreasury() } catch (e) {}
+
+      alert(data.message || "تم المرتجع بنجاح")
+    } catch (error) {
+      console.error(error)
+      alert("تعذر الاتصال بالسيرفر")
+    }
+  }
+
   async function deleteInvoice(
     id
   ) {
+    if (getUserRole() !== "مالك") {
+      alert("حذف الفواتير متاح للمالك فقط. استخدم مرتجع بدل الحذف.")
+      return
+    }
+
     const confirmed =
       window.confirm(
-        "هل أنت متأكد من حذف هذه الفاتورة؟"
+        "حذف نهائي؟ الأفضل استخدام مرتجع عشان الفاتورة تفضل ظاهرة.\nمتأكد من الحذف؟"
       )
 
     if (!confirmed) return
@@ -4226,11 +4298,12 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
           (
             sum,
             invoice
-          ) =>
-            sum +
-            Number(
-              invoice.total || 0
-            ),
+          ) => {
+            if (invoice.returned || invoice.status === "مرتجعة" || invoice.paymentStatus === "مرتجعة") {
+              return sum
+            }
+            return sum + Number(invoice.total || 0)
+          },
           0
         ),
       [todayInvoices]
@@ -4243,12 +4316,12 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
           (
             sum,
             invoice
-          ) =>
-            sum +
-            Number(
-              invoice.paidAmount ||
-                0
-            ),
+          ) => {
+            if (invoice.returned || invoice.status === "مرتجعة" || invoice.paymentStatus === "مرتجعة") {
+              return sum
+            }
+            return sum + Number(invoice.paidAmount || 0)
+          },
           0
         ),
       [todayInvoices]
@@ -8469,31 +8542,49 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
   onClick={() => sendWhatsAppInvoice(invoice)}
 >
   واتساب
-</button>                            <button
-                              onClick={() =>
-                                openEditInvoice(
-                                  invoice
-                                )
-                              }
-                              style={
-                                secondaryButtonSmallStyle
-                              }
-                            >
-                              تعديل
-                            </button>
+</button>                            {!(invoice.returned || invoice.status === "مرتجعة" || invoice.paymentStatus === "مرتجعة") && (
+                              <button
+                                onClick={() =>
+                                  openEditInvoice(
+                                    invoice
+                                  )
+                                }
+                                style={
+                                  secondaryButtonSmallStyle
+                                }
+                              >
+                                تعديل
+                              </button>
+                            )}
 
-                            <button
-                              onClick={() =>
-                                deleteInvoice(
-                                  invoice.id
-                                )
-                              }
-                              style={
-                                dangerButtonStyle
-                              }
-                            >
-                              حذف
-                            </button>
+                            {!(invoice.returned || invoice.status === "مرتجعة" || invoice.paymentStatus === "مرتجعة") && (
+                              <button
+                                onClick={() => returnInvoice(invoice.id)}
+                                style={{
+                                  ...secondaryButtonSmallStyle,
+                                  background: "#fff7ed",
+                                  color: "#c2410c",
+                                  border: "1px solid #fdba74",
+                                }}
+                              >
+                                مرتجع
+                              </button>
+                            )}
+
+                            {getUserRole() === "مالك" && (
+                              <button
+                                onClick={() =>
+                                  deleteInvoice(
+                                    invoice.id
+                                  )
+                                }
+                                style={
+                                  dangerButtonStyle
+                                }
+                              >
+                                حذف
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
