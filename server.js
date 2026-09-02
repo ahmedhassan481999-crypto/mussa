@@ -2582,8 +2582,24 @@ app.post("/api/invoices/:id/return", (req, res) => {
   const usage = extractUsageFromInvoice(invoice);
   restoreInventoryUsage(usage);
 
-  // إلغاء حركة الخزينة
-  removeTreasuryBySource("invoice", invoiceId);
+  // مرتجع الخزينة: حركة خروج جديدة (السجل القديم يفضل)
+  if (
+    isCashMethod(invoice.paymentMethod) &&
+    Number(invoice.paidAmount) > 0
+  ) {
+    const parts = getNowParts();
+    addTreasuryMovement({
+      type: "out",
+      amount: Number(invoice.paidAmount),
+      title: "مرتجع فاتورة " + (invoice.invoiceNumber || ""),
+      notes: (invoice.customerName || "") + " — خصم من الصندوق بسبب المرتجع",
+      source: "invoice_return",
+      sourceId: invoiceId,
+      date: parts.date,
+      time: parts.time,
+      createdAt: parts.createdAt,
+    });
+  }
 
   // إرجاع زيارة العضوية إن وجدت
   if (invoice.coveredByMembership && invoice.membershipId) {
@@ -2641,6 +2657,7 @@ app.delete("/api/invoices/:id", (req, res) => {
   restoreInventoryUsage(usage);
 
   removeTreasuryBySource("invoice", invoiceId);
+  removeTreasuryBySource("invoice_return", invoiceId);
 
   const updatedInvoices = invoices.filter((inv) => inv.id !== invoiceId);
   writeInvoices(updatedInvoices);

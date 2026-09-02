@@ -70,6 +70,9 @@ function App() {
   const [treasuryTitle, setTreasuryTitle] = useState("")
   const [treasuryNotes, setTreasuryNotes] = useState("")
   const [openingInput, setOpeningInput] = useState("")
+  const [treasuryFilterType, setTreasuryFilterType] = useState("الكل")
+  const [treasuryFilterSource, setTreasuryFilterSource] = useState("الكل")
+  const [treasuryFilterSearch, setTreasuryFilterSearch] = useState("")
   const [invoiceInventoryUsage, setInvoiceInventoryUsage] = useState([])
 
   // =========================
@@ -1472,6 +1475,21 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
       alert("تعذر إلغاء الحركة")
     }
   }
+
+  const filteredTreasuryMovements = (treasuryMovements || []).filter((mv) => {
+    if (treasuryFilterType === "دخول" && mv.type !== "in") return false
+    if (treasuryFilterType === "خروج" && mv.type !== "out") return false
+    if (treasuryFilterSource === "فاتورة" && !(mv.source === "invoice" || mv.source === "invoice_return")) return false
+    if (treasuryFilterSource === "مصروف" && mv.source !== "expense") return false
+    if (treasuryFilterSource === "يدوي" && mv.source !== "manual") return false
+    if (treasuryFilterSource === "مرتجع" && mv.source !== "invoice_return") return false
+    if (treasuryFilterSearch) {
+      const q = treasuryFilterSearch.trim().toLowerCase()
+      const blob = `${mv.title || ""} ${mv.notes || ""} ${mv.date || ""} ${mv.time || ""}`.toLowerCase()
+      if (!blob.includes(q)) return false
+    }
+    return true
+  })
 
   async function addTreasuryManual(type) {
     const amount = Number(treasuryAmount)
@@ -9462,10 +9480,49 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
 
             <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "18px", padding: "16px", overflow: "auto" }}>
               <h3 style={{ margin: "0 0 12px", fontSize: "15px", color: "#0f172a" }}>سجل الحركات</h3>
+
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                gap: "10px",
+                marginBottom: "14px",
+              }}>
+                <select
+                  value={treasuryFilterType}
+                  onChange={(e) => setTreasuryFilterType(e.target.value)}
+                  dir="rtl"
+                  style={{ ...inputStyle, marginBottom: 0 }}
+                >
+                  <option value="الكل">النوع: الكل</option>
+                  <option value="دخول">دخول فقط</option>
+                  <option value="خروج">خروج فقط</option>
+                </select>
+                <select
+                  value={treasuryFilterSource}
+                  onChange={(e) => setTreasuryFilterSource(e.target.value)}
+                  dir="rtl"
+                  style={{ ...inputStyle, marginBottom: 0 }}
+                >
+                  <option value="الكل">المصدر: الكل</option>
+                  <option value="فاتورة">فاتورة</option>
+                  <option value="مرتجع">مرتجع فاتورة</option>
+                  <option value="مصروف">مصروف</option>
+                  <option value="يدوي">يدوي</option>
+                </select>
+                <input
+                  type="text"
+                  value={treasuryFilterSearch}
+                  onChange={(e) => setTreasuryFilterSearch(e.target.value)}
+                  placeholder="بحث في البيان..."
+                  dir="rtl"
+                  style={{ ...inputStyle, marginBottom: 0 }}
+                />
+              </div>
+
               {treasuryLoading ? (
                 <p style={{ color: "#94a3b8" }}>جاري التحميل...</p>
-              ) : treasuryMovements.length === 0 ? (
-                <p style={{ color: "#94a3b8", textAlign: "center", padding: "20px 0" }}>لا توجد حركات بعد</p>
+              ) : filteredTreasuryMovements.length === 0 ? (
+                <p style={{ color: "#94a3b8", textAlign: "center", padding: "20px 0" }}>لا توجد حركات مطابقة</p>
               ) : (
                 <table dir="rtl" style={{ width: "100%", borderCollapse: "collapse", minWidth: "640px" }}>
                   <thead>
@@ -9476,7 +9533,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                     </tr>
                   </thead>
                   <tbody>
-                    {treasuryMovements.map((mv) => (
+                    {filteredTreasuryMovements.map((mv) => (
                       <tr key={mv.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                         <td style={tableCellStyle}>{mv.date}</td>
                         <td style={tableCellStyle}>{mv.time || "—"}</td>
@@ -9497,7 +9554,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                           {mv.type === "in" ? "+" : "−"}{(Number(mv.amount) || 0).toLocaleString("en-US")} ج
                         </td>
                         <td style={{ ...tableCellStyle, color: "#64748b", fontSize: "12px" }}>
-                          {mv.source === "invoice" ? "فاتورة" : mv.source === "expense" ? "مصروف" : "يدوي"}
+                          {mv.source === "invoice" ? "فاتورة" : mv.source === "invoice_return" ? "مرتجع" : mv.source === "expense" ? "مصروف" : "يدوي"}
                         </td>
                         <td style={tableCellStyle}>
                           {mv.source === "manual" ? (
