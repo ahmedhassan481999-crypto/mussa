@@ -1455,6 +1455,24 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
     }
   }
 
+  async function cancelTreasuryMovement(id) {
+    const confirmed = window.confirm("إلغاء هذه الحركة؟ الرصيد هيتعدل تلقائي")
+    if (!confirmed) return
+    try {
+      const response = await apiFetch(`${API_BASE_URL}/api/treasury/movement/${id}`, {
+        method: "DELETE",
+      })
+      const data = await response.json()
+      if (!response.ok || !data.success) {
+        alert(data.message || "تعذر إلغاء الحركة")
+        return
+      }
+      await loadTreasury()
+    } catch (err) {
+      alert("تعذر إلغاء الحركة")
+    }
+  }
+
   async function addTreasuryManual(type) {
     const amount = Number(treasuryAmount)
     if (!amount || amount <= 0) {
@@ -9361,7 +9379,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                 <table dir="rtl" style={{ width: "100%", borderCollapse: "collapse", minWidth: "640px" }}>
                   <thead>
                     <tr style={{ background: "#f8fafc" }}>
-                      {["التاريخ", "الوقت", "البيان", "النوع", "المبلغ", "المصدر"].map((h) => (
+                      {["التاريخ", "الوقت", "البيان", "النوع", "المبلغ", "المصدر", ""].map((h) => (
                         <th key={h} style={{ ...tableHeaderStyle, textAlign: "right" }}>{h}</th>
                       ))}
                     </tr>
@@ -9389,6 +9407,29 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                         </td>
                         <td style={{ ...tableCellStyle, color: "#64748b", fontSize: "12px" }}>
                           {mv.source === "invoice" ? "فاتورة" : mv.source === "expense" ? "مصروف" : "يدوي"}
+                        </td>
+                        <td style={tableCellStyle}>
+                          {mv.source === "manual" ? (
+                            <button
+                              type="button"
+                              onClick={() => cancelTreasuryMovement(mv.id)}
+                              style={{
+                                border: "none",
+                                background: "#fee2e2",
+                                color: "#b91c1c",
+                                borderRadius: "8px",
+                                padding: "6px 10px",
+                                cursor: "pointer",
+                                fontWeight: "700",
+                                fontSize: "12px",
+                                fontFamily: "Tahoma, Arial, sans-serif",
+                              }}
+                            >
+                              إلغاء
+                            </button>
+                          ) : (
+                            <span style={{ color: "#94a3b8", fontSize: "11px" }}>—</span>
+                          )}
                         </td>
                       </tr>
                     ))}

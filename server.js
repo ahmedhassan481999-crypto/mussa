@@ -3189,6 +3189,39 @@ app.post("/api/treasury/opening", (req, res) => {
   });
 });
 
+
+app.delete("/api/treasury/movement/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const treasury = readTreasury();
+  const movement = treasury.movements.find((mv) => Number(mv.id) === id);
+
+  if (!movement) {
+    return res.status(404).json({
+      success: false,
+      message: "الحركة غير موجودة",
+    });
+  }
+
+  if (movement.source !== "manual") {
+    return res.status(400).json({
+      success: false,
+      message:
+        movement.source === "invoice"
+          ? "حركة الفاتورة تتلغى بحذف الفاتورة نفسها"
+          : "حركة المصروف تتلغى بحذف المصروف نفسه",
+    });
+  }
+
+  treasury.movements = treasury.movements.filter((mv) => Number(mv.id) !== id);
+  writeTreasury(treasury);
+
+  return res.json({
+    success: true,
+    message: "تم إلغاء الحركة وإرجاع تأثيرها على الرصيد",
+    balance: getTreasuryBalance(treasury),
+  });
+});
+
 app.post("/api/treasury/movement", (req, res) => {
   const type = String(req.body.type || "").trim();
   const amount = Number(req.body.amount);
