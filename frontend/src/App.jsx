@@ -4056,6 +4056,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
         ])
       }
 
+      try { await loadTreasury() } catch (e) {}
       closeExpenseModal()
     } catch (error) {
       console.error(error)

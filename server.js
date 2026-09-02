@@ -538,8 +538,32 @@ function getNowParts() {
 }
 
 function isCashMethod(method) {
-  const m = String(method || "نقدي").trim();
-  return m === "نقدي" || m === "كاش" || m.toLowerCase() === "cash";
+  const m = String(method || "نقدي").trim().toLowerCase();
+  if (!m) return true;
+  // أي طريقة غير بطاقة/تحويل تُحسب نقدي للصندوق
+  if (
+    m === "نقدي" ||
+    m === "كاش" ||
+    m === "cash" ||
+    m === "نقدا" ||
+    m === "نقداً" ||
+    m === "نقد"
+  ) {
+    return true;
+  }
+  if (
+    m.includes("بطاقة") ||
+    m.includes("فيزا") ||
+    m.includes("تحويل") ||
+    m.includes("card") ||
+    m.includes("visa") ||
+    m.includes("instapay") ||
+    m.includes("انستا")
+  ) {
+    return false;
+  }
+  // افتراضي: نقدي
+  return true;
 }
 
 
@@ -2912,10 +2936,27 @@ app.put("/api/expenses/:id", (req, res) => {
     expenses
   );
 
+  // مزامنة الخزينة بعد تعديل المصروف
+  removeTreasuryBySource("expense", expenseId);
+  if (isCashMethod(updatedExpense.paymentMethod) && Number(updatedExpense.amount) > 0) {
+    const expNow = getNowParts();
+    addTreasuryMovement({
+      type: "out",
+      amount: Number(updatedExpense.amount),
+      title: "مصروف: " + updatedExpense.title,
+      notes: updatedExpense.category || "",
+      source: "expense",
+      sourceId: updatedExpense.id,
+      date: updatedExpense.date,
+      time: updatedExpense.time || expNow.time,
+      createdAt: updatedExpense.createdAt || expNow.createdAt,
+    });
+  }
+
   return res.json({
     success: true,
     message:
-      "تم تعديل المصروف بنجاح",
+      "تم تعديل المصروف بنجاح وتحديث الخزينة",
     expense:
       updatedExpense,
   });
@@ -2943,6 +2984,8 @@ app.delete("/api/expenses/:id", (req, res) => {
     });
   }
 
+  removeTreasuryBySource("expense", expenseId);
+
   const updatedExpenses =
     expenses.filter(
       (expense) =>
@@ -2957,7 +3000,7 @@ app.delete("/api/expenses/:id", (req, res) => {
   return res.json({
     success: true,
     message:
-      "تم حذف المصروف بنجاح",
+      "تم حذف المصروف وإرجاع تأثيره على الخزينة",
   });
 });
 
