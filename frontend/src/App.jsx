@@ -1407,6 +1407,53 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
     return getUserRole() === "مالك"
   }
 
+  function canDeleteInvoices() {
+    return getUserRole() === "مالك"
+  }
+
+  function canReturnInvoices() {
+    const role = getUserRole()
+    return role === "مالك" || role === "مدير" || role === "موظف"
+  }
+
+  function canAccessTreasury() {
+    const role = getUserRole()
+    return role === "مالك" || role === "مدير"
+  }
+
+  function canSetTreasuryOpening() {
+    return getUserRole() === "مالك"
+  }
+
+  function canAccessReports() {
+    const role = getUserRole()
+    return role === "مالك" || role === "مدير"
+  }
+
+  function canAccessExpenses() {
+    const role = getUserRole()
+    return role === "مالك" || role === "مدير"
+  }
+
+  function canAccessInventory() {
+    const role = getUserRole()
+    return role === "مالك" || role === "مدير"
+  }
+
+  function canManageServices() {
+    const role = getUserRole()
+    return role === "مالك" || role === "مدير"
+  }
+
+  function canManageMemberships() {
+    const role = getUserRole()
+    return role === "مالك" || role === "مدير"
+  }
+
+  function canAccessBackup() {
+    return getUserRole() === "مالك"
+  }
+
   async function loadTreasury() {
     try {
       setTreasuryLoading(true)
@@ -1433,6 +1480,10 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
 
   async function saveTreasuryOpening(e) {
     if (e && e.preventDefault) e.preventDefault()
+    if (!canSetTreasuryOpening()) {
+      alert("تعيين رصيد الافتتاح للمالك فقط")
+      return
+    }
     const amount = Number(openingInput)
     if (isNaN(amount) || amount < 0) {
       alert("أدخل رصيد افتتاح صحيح")
@@ -1528,11 +1579,11 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
     if (role === "مالك") return true
 
     if (role === "مدير") {
-      // المدير: كل شيء ما عدا الإعدادات (الموظفين داخل الإعدادات)
-      return page !== "الإعدادات"
+      // المدير: تشغيل كامل بدون إعدادات / موظفين / نسخ احتياطي
+      return page !== "الإعدادات" && page !== "النسخ الاحتياطي"
     }
 
-    // موظف: صفحات التشغيل اليومية فقط
+    // موظف: تشغيل يومي فقط (من غير فلوس حساسة)
     const allowed = [
       "الرئيسية",
       "العملاء",
@@ -3341,6 +3392,10 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
   }
 
   async function returnInvoice(id) {
+    if (!canReturnInvoices()) {
+      alert("ليس لديك صلاحية عمل مرتجع")
+      return
+    }
     const inv = invoices.find((x) => x.id === id)
     if (inv && (inv.returned || inv.status === "مرتجعة" || inv.paymentStatus === "مرتجعة")) {
       alert("الفاتورة مرتجعة بالفعل")
@@ -3405,7 +3460,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
   async function deleteInvoice(
     id
   ) {
-    if (getUserRole() !== "مالك") {
+    if (!canDeleteInvoices()) {
       alert("حذف الفواتير متاح للمالك فقط. استخدم مرتجع بدل الحذف.")
       return
     }
@@ -7924,13 +7979,13 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                   color: "#64748b",
                   lineHeight: 1.7,
                 }}>
-                  <strong style={{ color: "#334155" }}>الصلاحيات:</strong>
+                  <strong style={{ color: "#334155" }}>الصلاحيات الحالية:</strong>
                   <br />
-                  • <strong>مالك</strong>: صلاحيات كاملة (إعدادات · موظفين · حذف)
+                  • <strong>مالك</strong>: كل الصفحات · حذف فواتير · رصيد افتتاح الخزينة · إعدادات · موظفين · نسخ احتياطي
                   <br />
-                  • <strong>مدير</strong>: فواتير · عملاء · تقارير · مخزون (بدون إعدادات النظام)
+                  • <strong>مدير</strong>: تشغيل كامل (فواتير · مخزون · مصروفات · خزينة · تقارير · اشتراكات) بدون إعدادات ولا حذف فواتير ولا نسخ احتياطي
                   <br />
-                  • <strong>موظف</strong>: إنشاء فواتير ومتابعة العملاء فقط
+                  • <strong>موظف</strong>: الرئيسية · عملاء · سيارات · سجاد · فواتير (إنشاء · تعديل · مرتجع) — بدون مصروفات/خزينة/تقارير/مخزون/إعدادات
                 </div>
               </div>
               )}
@@ -8575,7 +8630,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                               </button>
                             )}
 
-                            {!(invoice.returned || invoice.status === "مرتجعة" || invoice.paymentStatus === "مرتجعة") && (
+                            {canReturnInvoices() && !(invoice.returned || invoice.status === "مرتجعة" || invoice.paymentStatus === "مرتجعة") && (
                               <button
                                 onClick={() => returnInvoice(invoice.id)}
                                 style={{
@@ -9429,7 +9484,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
               </div>
             </div>
 
-            {!treasuryOpeningSet && (
+            {!treasuryOpeningSet && canSetTreasuryOpening() && (
               <form onSubmit={saveTreasuryOpening} style={{
                 background: "#fffbeb",
                 border: "1px solid #fde68a",
