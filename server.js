@@ -414,8 +414,25 @@ function createInventoryExpense(title, amount, notes) {
     paymentMethod: "نقدي",
     notes: notes ? String(notes).trim() : "تلقائي من المخزون",
   };
+  const expNow = getNowParts();
+  expense.time = expNow.time;
+  expense.createdAt = expNow.createdAt;
+
   expenses.unshift(expense);
   writeExpenses(expenses);
+
+  addTreasuryMovement({
+    type: "out",
+    amount: Number(expense.amount),
+    title: "مصروف: " + expense.title,
+    notes: expense.category || "",
+    source: "expense",
+    sourceId: expense.id,
+    date: expense.date,
+    time: expense.time,
+    createdAt: expense.createdAt,
+  });
+
   return expense;
 }
 
@@ -510,7 +527,12 @@ function readTreasury() {
       closures: Array.isArray(data.closures) ? data.closures : [],
     };
   } catch (e) {
-    return { openingBalance: 0, openingSet: false, movements: [], closures: [] };
+    return {
+      openingBalance: 0,
+      openingSet: false,
+      movements: [],
+      closures: [],
+    };
   }
 }
 
@@ -525,47 +547,39 @@ function writeTreasury(data) {
 
 function getNowParts() {
   const now = new Date();
-  const date = now.toLocaleDateString("ar-EG");
-  let hours = now.getHours();
-  const minutes = String(now.getMinutes()).padStart(2, "0");
-  const isPM = hours >= 12;
-  const suffix = isPM ? "م" : "ص";
-  hours = hours % 12;
-  if (hours === 0) hours = 12;
-  const time = hours + ":" + minutes + " " + suffix;
+  const cairoDate = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Cairo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+
+  const getPart = (type) =>
+    cairoDate.find((part) => part.type === type)?.value || "";
+
+  const dateKey = `${getPart("year")}-${getPart("month")}-${getPart("day")}`;
+  const date = new Intl.DateTimeFormat("ar-EG", {
+    timeZone: "Africa/Cairo",
+  }).format(now);
+
+  const time = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Africa/Cairo",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  })
+    .format(now)
+    .replace("AM", "ص")
+    .replace("PM", "م");
+
   const createdAt = now.toISOString();
-  return { date: date, time: time, createdAt: createdAt };
+  return { date, dateKey, time, createdAt };
 }
 
 function isCashMethod(method) {
-  const m = String(method || "نقدي").trim().toLowerCase();
-  if (!m) return true;
-  // أي طريقة غير بطاقة/تحويل تُحسب نقدي للصندوق
-  if (
-    m === "نقدي" ||
-    m === "كاش" ||
-    m === "cash" ||
-    m === "نقدا" ||
-    m === "نقداً" ||
-    m === "نقد"
-  ) {
-    return true;
-  }
-  if (
-    m.includes("بطاقة") ||
-    m.includes("فيزا") ||
-    m.includes("تحويل") ||
-    m.includes("card") ||
-    m.includes("visa") ||
-    m.includes("instapay") ||
-    m.includes("انستا")
-  ) {
-    return false;
-  }
-  // افتراضي: نقدي
-  return true;
+  const m = String(method || "نقدي").trim();
+  return m === "نقدي" || m === "كاش" || m.toLowerCase() === "cash";
 }
-
 
 function getMovementTimestamp(mv) {
   const parsed = Date.parse(mv && mv.createdAt ? mv.createdAt : "");
@@ -576,18 +590,22 @@ function getDateKeyFromCreatedAt(createdAt) {
   if (!createdAt) return "";
   const d = new Date(createdAt);
   if (Number.isNaN(d.getTime())) return "";
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return y + "-" + m + "-" + day;
+
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Cairo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(d);
+
+  const getPart = (type) =>
+    parts.find((part) => part.type === type)?.value || "";
+
+  return `${getPart("year")}-${getPart("month")}-${getPart("day")}`;
 }
 
 function getTodayKey() {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
-  return y + "-" + m + "-" + d;
+  return getNowParts().dateKey;
 }
 
 function getTreasuryBalance(treasury) {
@@ -596,40 +614,48 @@ function getTreasuryBalance(treasury) {
   const movements = [...(t.movements || [])].sort(
     (a, b) => getMovementTimestamp(a) - getMovementTimestamp(b)
   );
+
   for (const mv of movements) {
     const amount = Number(mv.amount) || 0;
     if (mv.type === "in") balance += amount;
     else if (mv.type === "out") balance -= amount;
   }
+
   return balance;
 }
 
 function getTreasurySummary(treasury, dateKey) {
   const t = treasury || readTreasury();
   const key = dateKey || getTodayKey();
+
   const movements = [...(t.movements || [])].sort(
     (a, b) => getMovementTimestamp(a) - getMovementTimestamp(b)
   );
+
   let opening = Number(t.openingBalance) || 0;
   let totalIn = 0;
   let totalOut = 0;
+
   for (const mv of movements) {
     const mvDate = getDateKeyFromCreatedAt(mv.createdAt);
     const amount = Number(mv.amount) || 0;
+
     if (mvDate && mvDate < key) {
       if (mv.type === "in") opening += amount;
       else if (mv.type === "out") opening -= amount;
     }
+
     if (mvDate === key) {
       if (mv.type === "in") totalIn += amount;
       else if (mv.type === "out") totalOut += amount;
     }
   }
+
   return {
     date: key,
     openingBalance: opening,
-    totalIn: totalIn,
-    totalOut: totalOut,
+    totalIn,
+    totalOut,
     expectedBalance: opening + totalIn - totalOut,
     currentBalance: getTreasuryBalance(t),
   };
@@ -638,6 +664,7 @@ function getTreasurySummary(treasury, dateKey) {
 function addTreasuryMovement(movement) {
   const treasury = readTreasury();
   const parts = getNowParts();
+
   const entry = {
     id: Date.now() + Math.floor(Math.random() * 1000),
     type: movement.type,
@@ -650,7 +677,9 @@ function addTreasuryMovement(movement) {
     time: movement.time || parts.time,
     createdAt: movement.createdAt || parts.createdAt,
   };
+
   if (entry.amount <= 0) return null;
+
   treasury.movements.unshift(entry);
   writeTreasury(treasury);
   return entry;
@@ -659,12 +688,27 @@ function addTreasuryMovement(movement) {
 function removeTreasuryBySource(source, sourceId) {
   const treasury = readTreasury();
   const before = treasury.movements.length;
+
   treasury.movements = treasury.movements.filter(function (mv) {
     return !(mv.source === source && Number(mv.sourceId) === Number(sourceId));
   });
+
   if (treasury.movements.length !== before) {
     writeTreasury(treasury);
   }
+}
+
+function getTreasurySourceLabel(mv) {
+  if (!mv) return "غير معروف";
+  if (mv.source === "invoice") return "فاتورة";
+  if (mv.source === "expense") return "مصروف";
+  if (mv.source === "invoice_return") return "مرتجع";
+  if (mv.source === "reconciliation") return "تسوية";
+  if (mv.source === "manual") {
+    return mv.type === "in" ? "إيداع" : "سحب";
+  }
+  if (mv.source === "opening") return "رصيد افتتاح";
+  return "غير معروف";
 }
 
 
@@ -2632,10 +2676,31 @@ app.put("/api/invoices/:id", (req, res) => {
     invoices
   );
 
+  // مزامنة الخزينة مع الفاتورة بعد التعديل:
+  // نحذف التأثير النقدي القديم ثم نعيد بناءه حسب وسيلة الدفع والمبلغ الجديد.
+  removeTreasuryBySource("invoice", invoiceId);
+
+  if (
+    isCashMethod(updatedInvoice.paymentMethod) &&
+    Number(updatedInvoice.paidAmount) > 0
+  ) {
+    addTreasuryMovement({
+      type: "in",
+      amount: Number(updatedInvoice.paidAmount),
+      title: "تحصيل فاتورة " + (updatedInvoice.invoiceNumber || ""),
+      notes: updatedInvoice.customerName || "",
+      source: "invoice",
+      sourceId: updatedInvoice.id,
+      date: updatedInvoice.date,
+      time: updatedInvoice.time,
+      createdAt: updatedInvoice.createdAt,
+    });
+  }
+
   return res.json({
     success: true,
     message:
-      "تم تعديل الفاتورة بنجاح",
+      "تم تعديل الفاتورة بنجاح وتحديث تأثيرها على الخزينة",
     invoice:
       updatedInvoice,
   });
@@ -2936,9 +3001,13 @@ app.put("/api/expenses/:id", (req, res) => {
     expenses
   );
 
-  // مزامنة الخزينة بعد تعديل المصروف
+  // مزامنة الخزينة مع المصروف بعد التعديل.
   removeTreasuryBySource("expense", expenseId);
-  if (isCashMethod(updatedExpense.paymentMethod) && Number(updatedExpense.amount) > 0) {
+
+  if (
+    isCashMethod(updatedExpense.paymentMethod) &&
+    Number(updatedExpense.amount) > 0
+  ) {
     const expNow = getNowParts();
     addTreasuryMovement({
       type: "out",
@@ -2956,7 +3025,7 @@ app.put("/api/expenses/:id", (req, res) => {
   return res.json({
     success: true,
     message:
-      "تم تعديل المصروف بنجاح وتحديث الخزينة",
+      "تم تعديل المصروف بنجاح وتحديث تأثيره على الخزينة",
     expense:
       updatedExpense,
   });
@@ -3350,29 +3419,33 @@ app.get("/api/treasury", (req, res) => {
   const treasury = readTreasury();
   const today = getTodayKey();
   const summaryToday = getTreasurySummary(treasury, today);
+
   return res.json({
     success: true,
     openingBalance: treasury.openingBalance,
     openingSet: treasury.openingSet,
     balance: getTreasuryBalance(treasury),
     movements: treasury.movements,
-    closures: treasury.closures || [],
+    closures: treasury.closures,
     today: summaryToday,
   });
 });
 
 app.post("/api/treasury/opening", (req, res) => {
   const amount = Number(req.body.amount);
+
   if (isNaN(amount) || amount < 0) {
     return res.status(400).json({
       success: false,
       message: "رصيد الافتتاح غير صحيح",
     });
   }
+
   const treasury = readTreasury();
   treasury.openingBalance = amount;
   treasury.openingSet = true;
   writeTreasury(treasury);
+
   return res.json({
     success: true,
     message: "تم حفظ رصيد الافتتاح",
@@ -3381,7 +3454,6 @@ app.post("/api/treasury/opening", (req, res) => {
     balance: getTreasuryBalance(treasury),
   });
 });
-
 
 app.delete("/api/treasury/movement/:id", (req, res) => {
   const id = Number(req.params.id);
@@ -3395,7 +3467,7 @@ app.delete("/api/treasury/movement/:id", (req, res) => {
     });
   }
 
-  if (movement.source !== "manual" && movement.source !== "reconciliation") {
+  if (movement.source !== "manual") {
     return res.status(400).json({
       success: false,
       message:
@@ -3404,12 +3476,14 @@ app.delete("/api/treasury/movement/:id", (req, res) => {
           : movement.source === "expense"
             ? "حركة المصروف تتعدل من المصروف نفسه"
             : movement.source === "invoice_return"
-              ? "حركة المرتجع مرتبطة بالفاتورة"
-              : "لا يمكن إلغاء هذه الحركة مباشرة",
+              ? "حركة المرتجع مرتبطة بالفاتورة المرتجعة"
+              : "لا يمكن إلغاء هذه الحركة من الخزينة مباشرة",
     });
   }
 
-  treasury.movements = treasury.movements.filter((mv) => Number(mv.id) !== id);
+  treasury.movements = treasury.movements.filter(
+    (mv) => Number(mv.id) !== id
+  );
   writeTreasury(treasury);
 
   return res.json({
@@ -3431,6 +3505,7 @@ app.post("/api/treasury/movement", (req, res) => {
       message: "نوع الحركة غير صحيح",
     });
   }
+
   if (!amount || amount <= 0) {
     return res.status(400).json({
       success: false,
@@ -3439,14 +3514,15 @@ app.post("/api/treasury/movement", (req, res) => {
   }
 
   const entry = addTreasuryMovement({
-    type: type,
-    amount: amount,
+    type,
+    amount,
     title: title || (type === "in" ? "إيداع يدوي" : "سحب يدوي"),
-    notes: notes,
+    notes,
     source: "manual",
   });
 
   const treasury = readTreasury();
+
   return res.status(201).json({
     success: true,
     message: type === "in" ? "تم تسجيل الإيداع" : "تم تسجيل السحب",
@@ -3455,26 +3531,31 @@ app.post("/api/treasury/movement", (req, res) => {
   });
 });
 
-
-
 app.post("/api/treasury/reconcile", (req, res) => {
   const actualBalance = Number(req.body.actualBalance);
   const notes = String(req.body.notes || "").trim();
+
   if (!Number.isFinite(actualBalance) || actualBalance < 0) {
-    return res.status(400).json({ success: false, message: "المبلغ الفعلي غير صحيح" });
+    return res.status(400).json({
+      success: false,
+      message: "المبلغ الفعلي غير صحيح",
+    });
   }
+
   const treasury = readTreasury();
   const expectedBalance = getTreasuryBalance(treasury);
   const difference = actualBalance - expectedBalance;
+
   if (Math.abs(difference) < 0.005) {
     return res.json({
       success: true,
-      message: "الخزينة متطابقة ولا تحتاج تسوية",
+      message: "الخزينة متطابقة بالفعل ولا تحتاج تسوية",
       balance: expectedBalance,
       difference: 0,
       movement: null,
     });
   }
+
   const movement = addTreasuryMovement({
     type: difference > 0 ? "in" : "out",
     amount: Math.abs(difference),
@@ -3482,10 +3563,13 @@ app.post("/api/treasury/reconcile", (req, res) => {
     notes: notes || "تسوية رصيد الخزينة",
     source: "reconciliation",
   });
+
+  const updatedTreasury = readTreasury();
+
   return res.status(201).json({
     success: true,
     message: "تم تسجيل تسوية الخزينة",
-    balance: getTreasuryBalance(readTreasury()),
+    balance: getTreasuryBalance(updatedTreasury),
     difference,
     movement,
   });
@@ -3495,19 +3579,35 @@ app.post("/api/treasury/close", (req, res) => {
   const dateKey = String(req.body.date || getTodayKey()).trim();
   const actualBalance = Number(req.body.actualBalance);
   const notes = String(req.body.notes || "").trim();
+
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
-    return res.status(400).json({ success: false, message: "تاريخ الإقفال غير صحيح" });
+    return res.status(400).json({
+      success: false,
+      message: "تاريخ الإقفال غير صحيح",
+    });
   }
+
   if (!Number.isFinite(actualBalance) || actualBalance < 0) {
-    return res.status(400).json({ success: false, message: "المبلغ الفعلي غير صحيح" });
+    return res.status(400).json({
+      success: false,
+      message: "المبلغ الفعلي غير صحيح",
+    });
   }
+
   const treasury = readTreasury();
-  if ((treasury.closures || []).some((c) => c.date === dateKey)) {
-    return res.status(400).json({ success: false, message: "هذا اليوم تم إقفاله بالفعل" });
+  const existing = treasury.closures.find((c) => c.date === dateKey);
+
+  if (existing) {
+    return res.status(400).json({
+      success: false,
+      message: "هذا اليوم تم إقفاله بالفعل",
+    });
   }
+
   const summary = getTreasurySummary(treasury, dateKey);
   const difference = actualBalance - summary.expectedBalance;
   const parts = getNowParts();
+
   const closure = {
     id: Date.now() + Math.floor(Math.random() * 1000),
     date: dateKey,
@@ -3521,25 +3621,14 @@ app.post("/api/treasury/close", (req, res) => {
     closedAt: parts.createdAt,
     closedTime: parts.time,
   };
-  treasury.closures = treasury.closures || [];
+
   treasury.closures.unshift(closure);
   writeTreasury(treasury);
-  return res.status(201).json({ success: true, message: "تم إقفال اليوم بنجاح", closure });
-});
 
-app.delete("/api/treasury/close/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const treasury = readTreasury();
-  const closure = (treasury.closures || []).find((c) => Number(c.id) === id);
-  if (!closure) {
-    return res.status(404).json({ success: false, message: "الإقفال غير موجود" });
-  }
-  treasury.closures = (treasury.closures || []).filter((c) => Number(c.id) !== id);
-  writeTreasury(treasury);
-  return res.json({
+  return res.status(201).json({
     success: true,
-    message: "تم التراجع عن إقفال اليوم",
-    closures: treasury.closures,
+    message: "تم إقفال اليوم بنجاح",
+    closure,
   });
 });
 
