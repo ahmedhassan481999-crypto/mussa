@@ -1216,6 +1216,7 @@ ${footer}`
   // فلترة التقارير بالتاريخ
   // =========================
 
+  const [reportChartMetric, setReportChartMetric] = useState("sales")
   const [reportFromDate, setReportFromDate] =
     useState("")
   const [reportToDate, setReportToDate] =
@@ -4455,6 +4456,85 @@ ${footer}`
     if (!reportTotalSales) return 0
     return Math.round((reportNetProfit / reportTotalSales) * 1000) / 10
   }, [reportNetProfit, reportTotalSales])
+
+  const monthlyReportSeries = useMemo(() => {
+    const months = []
+    const now = new Date()
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")
+      const label = d.toLocaleDateString("ar-EG", { month: "short", year: "2-digit" })
+      months.push({ key, label, sales: 0, expenses: 0, profit: 0, invoices: 0 })
+    }
+    const map = Object.fromEntries(months.map((m) => [m.key, m]))
+
+    for (const inv of invoices || []) {
+      if (inv.returned || inv.status === "مرتجعة" || inv.paymentStatus === "مرتجعة") continue
+      const raw = normalizeDateForReport(inv.date)
+      if (!raw || raw.length < 7) continue
+      const key = raw.slice(0, 7)
+      if (!map[key]) continue
+      map[key].sales += Number(inv.total || 0)
+      map[key].invoices += 1
+    }
+    for (const exp of expenses || []) {
+      const raw = normalizeDateForReport(exp.date)
+      if (!raw || raw.length < 7) continue
+      const key = raw.slice(0, 7)
+      if (!map[key]) continue
+      map[key].expenses += Number(exp.amount || 0)
+    }
+    months.forEach((m) => {
+      m.profit = m.sales - m.expenses
+    })
+    return months
+  }, [invoices, expenses])
+
+  const monthComparison = useMemo(() => {
+    const series = monthlyReportSeries
+    if (!series.length) {
+      return {
+        current: null,
+        previous: null,
+        salesPct: 0,
+        expensesPct: 0,
+        profitPct: 0,
+        invoicesPct: 0,
+      }
+    }
+    const current = series[series.length - 1]
+    const previous = series[series.length - 2] || {
+      sales: 0,
+      expenses: 0,
+      profit: 0,
+      invoices: 0,
+      label: "—",
+    }
+    const pct = (cur, prev) => {
+      if (!prev) return cur ? 100 : 0
+      return Math.round(((cur - prev) / Math.abs(prev)) * 1000) / 10
+    }
+    return {
+      current,
+      previous,
+      salesPct: pct(current.sales, previous.sales),
+      expensesPct: pct(current.expenses, previous.expenses),
+      profitPct: pct(current.profit, previous.profit),
+      invoicesPct: pct(current.invoices, previous.invoices),
+    }
+  }, [monthlyReportSeries])
+
+  const monthlyChartMax = useMemo(() => {
+    const key =
+      reportChartMetric === "expenses"
+        ? "expenses"
+        : reportChartMetric === "profit"
+          ? "profit"
+          : "sales"
+    const vals = monthlyReportSeries.map((m) => Math.abs(Number(m[key]) || 0))
+    return Math.max(1, ...vals)
+  }, [monthlyReportSeries, reportChartMetric])
+
 
   const totalServicesSold =
     useMemo(
@@ -10466,6 +10546,230 @@ ${footer}`
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* ===== أداء 12 شهر + مقارنة ===== */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+                gap: "16px",
+                marginBottom: "20px",
+              }}
+            >
+              {/* رسم الأشهر */}
+              <div
+                style={{
+                  background: darkMode ? "#1e293b" : "#fff",
+                  border: "1px solid " + (darkMode ? "#334155" : "#e2e8f0"),
+                  borderRadius: "18px",
+                  padding: "18px",
+                  boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "12px" }}>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: "16px", color: darkMode ? "#f8fafc" : "#0f172a" }}>
+                      الأداء الشهري (12 شهر)
+                    </h3>
+                    <p style={{ margin: "4px 0 0", color: "#94a3b8", fontSize: "12px" }}>
+                      مقارنة بصرية عبر الأشهر
+                    </p>
+                  </div>
+                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                    {[
+                      { key: "sales", label: "مبيعات" },
+                      { key: "expenses", label: "مصروفات" },
+                      { key: "profit", label: "صافي ربح" },
+                    ].map((m) => (
+                      <button
+                        key={m.key}
+                        type="button"
+                        onClick={() => setReportChartMetric(m.key)}
+                        style={{
+                          border: "1px solid " + (reportChartMetric === m.key ? "#2563eb" : (darkMode ? "#334155" : "#e2e8f0")),
+                          background: reportChartMetric === m.key ? "#2563eb" : (darkMode ? "#0f172a" : "#fff"),
+                          color: reportChartMetric === m.key ? "#fff" : (darkMode ? "#e2e8f0" : "#334155"),
+                          borderRadius: "999px",
+                          padding: "6px 12px",
+                          cursor: "pointer",
+                          fontWeight: "700",
+                          fontSize: "12px",
+                          fontFamily: "Tahoma, Arial, sans-serif",
+                        }}
+                      >
+                        {m.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-end",
+                    gap: "6px",
+                    height: "180px",
+                    padding: "8px 0 0",
+                    borderBottom: "1px solid " + (darkMode ? "#334155" : "#e2e8f0"),
+                  }}
+                >
+                  {monthlyReportSeries.map((m) => {
+                    const raw =
+                      reportChartMetric === "expenses"
+                        ? m.expenses
+                        : reportChartMetric === "profit"
+                          ? m.profit
+                          : m.sales
+                    const h = Math.max(4, (Math.abs(Number(raw) || 0) / monthlyChartMax) * 150)
+                    const barColor =
+                      reportChartMetric === "expenses"
+                        ? "#ef4444"
+                        : reportChartMetric === "profit"
+                          ? (raw >= 0 ? "#14b8a6" : "#ef4444")
+                          : "#3b82f6"
+                    return (
+                      <div
+                        key={m.key}
+                        title={m.label + ": " + Number(raw || 0).toLocaleString("en-US") + " ج"}
+                        style={{
+                          flex: 1,
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "flex-end",
+                          height: "100%",
+                          minWidth: 0,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: "100%",
+                            maxWidth: "28px",
+                            height: h + "px",
+                            borderRadius: "8px 8px 4px 4px",
+                            background: barColor,
+                            opacity: 0.9,
+                          }}
+                        />
+                      </div>
+                    )
+                  })}
+                </div>
+                <div style={{ display: "flex", gap: "6px", marginTop: "8px" }}>
+                  {monthlyReportSeries.map((m) => (
+                    <div
+                      key={m.key + "-l"}
+                      style={{
+                        flex: 1,
+                        textAlign: "center",
+                        fontSize: "10px",
+                        color: "#94a3b8",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {m.label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* مقارنة الشهر الحالي vs السابق */}
+              <div
+                style={{
+                  background: darkMode ? "#1e293b" : "#fff",
+                  border: "1px solid " + (darkMode ? "#334155" : "#e2e8f0"),
+                  borderRadius: "18px",
+                  padding: "18px",
+                  boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
+                }}
+              >
+                <h3 style={{ margin: "0 0 4px", fontSize: "16px", color: darkMode ? "#f8fafc" : "#0f172a" }}>
+                  مقارنة الشهر
+                </h3>
+                <p style={{ margin: "0 0 16px", color: "#94a3b8", fontSize: "12px" }}>
+                  {(monthComparison.current && monthComparison.current.label) || "الحالي"}
+                  {" × "}
+                  {(monthComparison.previous && monthComparison.previous.label) || "السابق"}
+                </p>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {[
+                    {
+                      label: "المبيعات",
+                      cur: monthComparison.current ? monthComparison.current.sales : 0,
+                      prev: monthComparison.previous ? monthComparison.previous.sales : 0,
+                      pct: monthComparison.salesPct,
+                    },
+                    {
+                      label: "المصروفات",
+                      cur: monthComparison.current ? monthComparison.current.expenses : 0,
+                      prev: monthComparison.previous ? monthComparison.previous.expenses : 0,
+                      pct: monthComparison.expensesPct,
+                    },
+                    {
+                      label: "صافي الربح",
+                      cur: monthComparison.current ? monthComparison.current.profit : 0,
+                      prev: monthComparison.previous ? monthComparison.previous.profit : 0,
+                      pct: monthComparison.profitPct,
+                    },
+                    {
+                      label: "عدد الفواتير",
+                      cur: monthComparison.current ? monthComparison.current.invoices : 0,
+                      prev: monthComparison.previous ? monthComparison.previous.invoices : 0,
+                      pct: monthComparison.invoicesPct,
+                      unit: "",
+                    },
+                  ].map((row) => (
+                    <div
+                      key={row.label}
+                      style={{
+                        background: darkMode ? "#0f172a" : "#f8fafc",
+                        borderRadius: "14px",
+                        padding: "12px 14px",
+                        border: "1px solid " + (darkMode ? "#334155" : "#e2e8f0"),
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                        <span style={{ fontWeight: "700", fontSize: "13px", color: darkMode ? "#e2e8f0" : "#334155" }}>
+                          {row.label}
+                        </span>
+                        <span
+                          style={{
+                            fontWeight: "800",
+                            fontSize: "12px",
+                            color: row.pct > 0 ? "#16a34a" : row.pct < 0 ? "#dc2626" : "#64748b",
+                            background: row.pct > 0 ? "#dcfce7" : row.pct < 0 ? "#fee2e2" : "#f1f5f9",
+                            borderRadius: "999px",
+                            padding: "3px 8px",
+                          }}
+                        >
+                          {row.pct > 0 ? "+" : ""}
+                          {row.pct}%
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#94a3b8" }}>
+                        <span>
+                          الحالي:{" "}
+                          <b style={{ color: darkMode ? "#f8fafc" : "#0f172a" }}>
+                            {Number(row.cur || 0).toLocaleString("en-US")}
+                            {row.unit === "" ? "" : " ج"}
+                          </b>
+                        </span>
+                        <span>
+                          السابق:{" "}
+                          <b style={{ color: darkMode ? "#cbd5e1" : "#475569" }}>
+                            {Number(row.prev || 0).toLocaleString("en-US")}
+                            {row.unit === "" ? "" : " ج"}
+                          </b>
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Today strip */}
