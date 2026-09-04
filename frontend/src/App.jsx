@@ -393,6 +393,7 @@ function App() {
 
     const businessName = settings?.businessName || "Mussa Wash & Clean"
     const customerName = invoice.customerName || "العميل"
+    const customerCode = invoice.customerCode || getCustomerCode(invoice.customerId) || ""
     const invoiceNum = invoice.invoiceNumber || invoice.id || ""
     const total = Number(invoice.total || 0).toLocaleString("en-US")
     const paid = Number(invoice.paidAmount !== undefined ? invoice.paidAmount : invoice.total || 0).toLocaleString("en-US")
@@ -407,6 +408,7 @@ function App() {
 
 *تفاصيل الفاتورة*
 📄 الرقم: ${invoiceNum}
+👤 كود العميل: ${customerCode || "—"}
 📅 التاريخ: ${dateLine || "—"}
 🚘 البيانات: ${asset}
 💰 الإجمالي: ${total} جنيه
@@ -619,13 +621,20 @@ ${footer}`
   }
 
   function addMonthsToDate(dateValue, months) {
-    const date = new Date(`${dateValue}T00:00:00`)
+    const parts = String(dateValue || getCairoDateKey()).split("-")
+    const y = Number(parts[0]) || new Date().getFullYear()
+    const m = Number(parts[1]) || 1
+    const d = Number(parts[2]) || 1
+    const date = new Date(y, m - 1, d)
     date.setMonth(date.getMonth() + Number(months || 0))
-    return date.toISOString().slice(0, 10)
+    const yy = date.getFullYear()
+    const mm = String(date.getMonth() + 1).padStart(2, "0")
+    const dd = String(date.getDate()).padStart(2, "0")
+    return yy + "-" + mm + "-" + dd
   }
 
   function openAddMembership() {
-    const today = new Date().toISOString().slice(0, 10)
+    const today = getCairoDateKey()
 
     setEditingMembership(null)
     setMembershipCustomerId("")
@@ -836,7 +845,7 @@ ${footer}`
   }
 
   function renewMembership(membership) {
-    const today = new Date().toISOString().slice(0, 10)
+    const today = getCairoDateKey()
 
     setEditingMembership(membership)
     setMembershipCustomerId(String(membership.customerId))
@@ -868,6 +877,9 @@ ${footer}`
         String(membership.customerName || "")
           .toLowerCase()
           .includes(search) ||
+        String(membership.customerCode || getCustomerCode(membership.customerId) || "")
+          .toLowerCase()
+          .includes(search) ||
         String(membership.planName || "")
           .toLowerCase()
           .includes(search) ||
@@ -897,7 +909,7 @@ ${footer}`
       0
     )
 
-  const todayForMembership = new Date().toISOString().slice(0, 10)
+  const todayForMembership = getCairoDateKey()
 
   const expiredMembershipsList = memberships.filter(
     (m) =>
@@ -1576,21 +1588,20 @@ ${footer}`
     if (mv && mv.createdAt) {
       const d = new Date(mv.createdAt)
       if (!Number.isNaN(d.getTime())) {
-        return d.toISOString().slice(0, 10)
+        return getCairoDateKey(d)
       }
     }
     return ""
   }
 
   const filteredTreasuryMovements = useMemo(() => {
-    const now = new Date()
-    const todayKey = now.toISOString().slice(0, 10)
-    const yest = new Date(now)
+    const todayKey = getCairoDateKey()
+    const yest = new Date()
     yest.setDate(yest.getDate() - 1)
-    const yestKey = yest.toISOString().slice(0, 10)
-    const weekStart = new Date(now)
+    const yestKey = getCairoDateKey(yest)
+    const weekStart = new Date()
     weekStart.setDate(weekStart.getDate() - 6)
-    const weekKey = weekStart.toISOString().slice(0, 10)
+    const weekKey = getCairoDateKey(weekStart)
     const monthKey = todayKey.slice(0, 7)
 
     return (treasuryMovements || []).filter((mv) => {
@@ -1680,7 +1691,7 @@ ${footer}`
       alert("أدخل المبلغ الفعلي في الصندوق")
       return
     }
-    const dateKey = new Date().toISOString().slice(0, 10)
+    const dateKey = getCairoDateKey()
     try {
       const response = await apiFetch(`${API_BASE_URL}/api/treasury/close`, {
         method: "POST",
@@ -2536,10 +2547,27 @@ ${footer}`
     return n.toLocaleString("en-US")
   }
 
+  function getCairoDateKey(value) {
+    const d = value ? new Date(value) : new Date()
+    if (Number.isNaN(d.getTime())) return ""
+    return d.toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" })
+  }
+
   function getTodayDate() {
-    return new Date().toLocaleDateString(
-      "ar-EG"
-    )
+    // تاريخ عرض عربي بتوقيت القاهرة (مش UTC)
+    return new Date().toLocaleDateString("ar-EG", {
+      timeZone: "Africa/Cairo",
+    })
+  }
+
+  function getCustomerCode(customerId) {
+    const c = (customers || []).find((x) => Number(x.id) === Number(customerId))
+    return c?.code || ""
+  }
+
+  function resolveInvoiceCustomerCode(invoice) {
+    if (!invoice) return ""
+    return invoice.customerCode || getCustomerCode(invoice.customerId) || ""
   }
 
   function openAddInvoice() {
@@ -3050,6 +3078,9 @@ ${footer}`
       customerPhone:
         selectedCustomer?.phone ||
         "",
+      customerCode:
+        selectedCustomer?.code ||
+        "",
 
       assetType:
         invoiceTargetType,
@@ -3539,7 +3570,7 @@ ${footer}`
       <div class="card">
         <div class="label">العميل</div>
         <strong>${escapePrintHtml(invoice.customerName)}</strong>
-        <div class="muted">${escapePrintHtml(invoice.customerPhone)}</div>
+        <div class="muted">${escapePrintHtml(invoice.customerCode || "")}${invoice.customerCode ? " · " : ""}${escapePrintHtml(invoice.customerPhone)}</div>
       </div>
       <div class="card">
         <div class="label">${assetLabel}</div>
@@ -4192,10 +4223,13 @@ ${footer}`
         }
 
         return (
-          invoice.invoiceNumber
+          String(invoice.invoiceNumber || "")
             .toLowerCase()
             .includes(search) ||
-          invoice.customerName
+          String(invoice.customerName || "")
+            .toLowerCase()
+            .includes(search) ||
+          String(invoice.customerCode || getCustomerCode(invoice.customerId) || "")
             .toLowerCase()
             .includes(search) ||
           String(
@@ -4205,7 +4239,7 @@ ${footer}`
           )
             .toLowerCase()
             .includes(search) ||
-          invoice.paymentMethod
+          String(invoice.paymentMethod || "")
             .toLowerCase()
             .includes(search)
         )
@@ -8756,7 +8790,7 @@ ${footer}`
                     e.target.value
                   )
                 }
-                placeholder="ابحث برقم الفاتورة أو اسم العميل أو السيارة..."
+                placeholder="ابحث برقم الفاتورة أو كود/اسم العميل أو السيارة..."
                 dir="rtl"
                 style={
                   inputStyle
@@ -8914,6 +8948,20 @@ ${footer}`
                               invoice.customerName
                             }
                           </div>
+
+                          {resolveInvoiceCustomerCode(invoice) ? (
+                            <div
+                              style={{
+                                fontSize: "12px",
+                                color: "#1d4ed8",
+                                fontWeight: "800",
+                                direction: "ltr",
+                                marginTop: "2px",
+                              }}
+                            >
+                              {resolveInvoiceCustomerCode(invoice)}
+                            </div>
+                          ) : null}
 
                           <div
                             style={{
@@ -11766,7 +11814,7 @@ ${footer}`
                         customer.id
                       }
                     >
-                      {customer.name} -{" "}
+                      {(customer.code ? customer.code + " — " : "") + customer.name} -{" "}
                       {customer.phone}
                     </option>
                   )
@@ -12512,7 +12560,7 @@ ${footer}`
                     key={customer.id}
                     value={customer.id}
                   >
-                    {customer.name} -{" "}
+                    {(customer.code ? customer.code + " — " : "") + customer.name} -{" "}
                     {customer.phone}
                   </option>
                 ))}
@@ -13483,9 +13531,7 @@ ${footer}`
                         customer.id
                       }
                     >
-                      {
-                        customer.name
-                      }{" "}
+                      {(customer.code ? customer.code + " — " : "") + customer.name}{" "}
                       -{" "}
                       {
                         customer.phone
@@ -15196,6 +15242,20 @@ ${footer}`
                     viewingInvoice.customerName
                   }
                 </strong>
+
+                {resolveInvoiceCustomerCode(viewingInvoice) ? (
+                  <div
+                    style={{
+                      direction: "ltr",
+                      marginTop: "4px",
+                      color: "#1d4ed8",
+                      fontWeight: "800",
+                      fontSize: "13px",
+                    }}
+                  >
+                    {resolveInvoiceCustomerCode(viewingInvoice)}
+                  </div>
+                ) : null}
 
                 <div
                   style={{

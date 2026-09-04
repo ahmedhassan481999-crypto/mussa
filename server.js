@@ -454,7 +454,7 @@ function createInventoryExpense(title, amount, notes) {
   const expenses = readExpenses();
   const expense = {
     id: Date.now(),
-    date: new Date().toLocaleDateString("ar-EG"),
+    date: getNowParts().date,
     category: "مشتريات مخزون",
     title: String(title).trim(),
     amount: Number(amount),
@@ -1588,6 +1588,7 @@ app.post("/api/memberships", (req, res) => {
     id: Date.now(),
     customerId: Number(customerId),
     customerName: customer.name,
+    customerCode: customer.code || "",
     customerPhone: customer.phone,
     planName: String(planName).trim(),
     durationMonths: Number(durationMonths),
@@ -2366,10 +2367,7 @@ app.post("/api/invoices", (req, res) => {
       ).padStart(4, "0")}`,
 
     date:
-      date ||
-      new Date().toLocaleDateString(
-        "ar-EG"
-      ),
+      date || getNowParts().date,
 
     customerId:
       Number(customerId),
@@ -2381,6 +2379,13 @@ app.post("/api/invoices", (req, res) => {
     customerPhone:
       customerPhone ||
       customer.phone,
+
+    customerCode:
+      (req.body.customerCode
+        ? String(req.body.customerCode).trim()
+        : "") ||
+      customer.code ||
+      "",
 
     assetType,
 
@@ -2496,6 +2501,7 @@ app.put("/api/invoices/:id", (req, res) => {
     customerId,
     customerName,
     customerPhone,
+    customerCode,
     assetType,
     carId,
     carpetId,
@@ -2899,10 +2905,7 @@ app.post("/api/expenses", (req, res) => {
     id: Date.now(),
 
     date:
-      date ||
-      new Date().toLocaleDateString(
-        "ar-EG"
-      ),
+      date || getNowParts().date,
 
     category:
       String(category).trim(),
