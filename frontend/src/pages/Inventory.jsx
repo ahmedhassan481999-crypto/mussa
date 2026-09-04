@@ -1,5 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { API_BASE_URL, apiFetch } from "../api/client";
+import { API_BASE_URL, apiFetch as apiFetchRaw } from "../api/client";
+
+async function apiFetch(url, options = {}) {
+  const headers = { ...(options.headers || {}) };
+  try {
+    const raw = localStorage.getItem("mussa_current_user");
+    const u = raw ? JSON.parse(raw) : null;
+    if (u) {
+      if (u.id != null) headers["X-User-Id"] = String(u.id);
+      headers["X-User-Name"] = String(u.name || u.username || "");
+      headers["X-User-Role"] = String(u.role || "");
+      headers["X-User-Username"] = String(u.username || "");
+    }
+  } catch (e) {}
+  return apiFetchRaw(url, { ...options, headers });
+}
+
 
 const categories = ["كيماويات", "أدوات", "معطرات", "مستهلكات", "أخرى"];
 

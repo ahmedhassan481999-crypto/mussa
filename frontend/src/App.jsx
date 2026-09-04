@@ -1,6 +1,66 @@
 import { useState, useEffect, useMemo } from "react"
 import Inventory from "./pages/Inventory";
-import { API_BASE_URL, apiFetch } from "./api/client"
+import { API_BASE_URL, apiFetch as apiFetchRaw } from "./api/client"
+
+// إرسال المستخدم الحالي مع كل طلب عشان السيرفر يعرف مين عمل العملية
+async function apiFetch(url, options = {}) {
+  const headers = {
+    ...(options.headers || {}),
+  }
+  try {
+    const raw = localStorage.getItem("mussa_current_user")
+    const u = raw ? JSON.parse(raw) : null
+    if (u) {
+      if (u.id != null) headers["X-User-Id"] = String(u.id)
+      headers["X-User-Name"] = String(u.name || u.username || "")
+      headers["X-User-Role"] = String(u.role || "")
+      headers["X-User-Username"] = String(u.username || "")
+    }
+  } catch (e) {}
+  return apiFetchRaw(url, { ...options, headers })
+}
+
+function actorLabel(record, preferredKeys) {
+  if (!record) return ""
+  const keys = preferredKeys || [
+    "createdByName",
+    "updatedByName",
+    "returnedByName",
+    "closedByName",
+  ]
+  for (const k of keys) {
+    if (record[k]) return String(record[k])
+  }
+  return ""
+}
+
+function ActorHint({ record, mode }) {
+  let text = ""
+  if (mode === "return" && record?.returnedByName) {
+    text = "مرتجع بواسطة: " + record.returnedByName
+  } else if (mode === "update" && record?.updatedByName) {
+    text = "آخر تعديل: " + record.updatedByName
+  } else if (mode === "close" && record?.closedByName) {
+    text = "أقفل بواسطة: " + record.closedByName
+  } else if (record?.createdByName) {
+    text = "بواسطة: " + record.createdByName
+  } else if (record?.updatedByName) {
+    text = "آخر تعديل: " + record.updatedByName
+  }
+  if (!text) return null
+  return (
+    <div
+      style={{
+        fontSize: "11px",
+        color: "#64748b",
+        marginTop: "3px",
+        fontWeight: "600",
+      }}
+    >
+      {text}
+    </div>
+  )
+}
 import useDebouncedValue from "./hooks/useDebouncedValue"
 import {
   initialServices,
@@ -6567,6 +6627,7 @@ ${footer}`
                               customer.name
                             }
                           </div>
+                          <ActorHint record={customer} />
 
                           {customer.notes && (
                             <div
@@ -8931,6 +8992,11 @@ ${footer}`
                               {invoice.time}
                             </div>
                           ) : null}
+                          {invoice.returned || invoice.status === "مرتجعة" || invoice.paymentStatus === "مرتجعة" ? (
+                            <ActorHint record={invoice} mode="return" />
+                          ) : (
+                            <ActorHint record={invoice} />
+                          )}
                         </td>
 
                         <td
@@ -9571,6 +9637,7 @@ ${footer}`
                           {
                             expense.title
                           }
+                          <ActorHint record={expense} />
                         </td>
 
                         <td
@@ -10171,7 +10238,10 @@ ${footer}`
                       <tr key={mv.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                         <td style={tableCellStyle}>{mv.date}</td>
                         <td style={tableCellStyle}>{mv.time || "—"}</td>
-                        <td style={{ ...tableCellStyle, fontWeight: "700" }}>{mv.title}</td>
+                        <td style={{ ...tableCellStyle, fontWeight: "700" }}>
+                          {mv.title}
+                          <ActorHint record={mv} />
+                        </td>
                         <td style={{ ...tableCellStyle, fontSize: "12px", color: "#64748b" }}>
                           {mv.source === "invoice" ? "فاتورة" :
                            mv.source === "invoice_return" ? "مرتجع" :
@@ -10233,7 +10303,10 @@ ${footer}`
                         }}>
                           {(Number(c.difference) || 0).toLocaleString("en-US")} ج
                         </td>
-                        <td style={tableCellStyle}>{c.closedTime || "—"}</td>
+                        <td style={tableCellStyle}>
+                          {c.closedTime || "—"}
+                          <ActorHint record={c} mode="close" />
+                        </td>
                         <td style={tableCellStyle}>
                           <button type="button" onClick={() => undoTreasuryClose(c.id)} style={{
                             border: "none", background: "#fee2e2", color: "#b91c1c", borderRadius: "8px",
@@ -15256,6 +15329,8 @@ ${footer}`
                     {resolveInvoiceCustomerCode(viewingInvoice)}
                   </div>
                 ) : null}
+                <ActorHint record={viewingInvoice} mode={viewingInvoice.returned || viewingInvoice.status === "مرتجعة" ? "return" : "update"} />
+
 
                 <div
                   style={{

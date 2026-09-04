@@ -13,7 +13,7 @@ app.use((req, res, next) => {
     "Access-Control-Allow-Methods",
     "GET,POST,PUT,DELETE,OPTIONS"
   );
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-User-Id, X-User-Name, X-User-Role, X-User-Username");
   if (req.method === "OPTIONS") {
     return res.sendStatus(204);
   }
@@ -23,6 +23,49 @@ app.use((req, res, next) => {
 // =========================
 // تسجيل الدخول
 // =========================
+
+
+// =========================
+// المستخدم الحالي (من الهيدر)
+// =========================
+
+function getRequestActor(req) {
+  const id = req.headers["x-user-id"];
+  const name = req.headers["x-user-name"];
+  const role = req.headers["x-user-role"];
+  const username = req.headers["x-user-username"];
+
+  const actorName =
+    (name && String(name).trim()) ||
+    (username && String(username).trim()) ||
+    "نظام";
+
+  return {
+    id: id ? Number(id) || id : null,
+    name: actorName,
+    role: role ? String(role).trim() : "",
+    username: username ? String(username).trim() : "",
+  };
+}
+
+function stampCreated(obj, actor) {
+  if (!obj || !actor) return obj;
+  obj.createdBy = actor.id;
+  obj.createdByName = actor.name;
+  obj.createdByRole = actor.role || "";
+  obj.createdByUsername = actor.username || "";
+  return obj;
+}
+
+function stampUpdated(obj, actor) {
+  if (!obj || !actor) return obj;
+  obj.updatedBy = actor.id;
+  obj.updatedByName = actor.name;
+  obj.updatedByRole = actor.role || "";
+  obj.updatedAt = new Date().toISOString();
+  return obj;
+}
+
 
 const OWNER_USERNAME = "admin";
 const OWNER_PASSWORD = "123456";
@@ -708,6 +751,9 @@ function addTreasuryMovement(movement) {
     date: movement.date || parts.date,
     time: movement.time || parts.time,
     createdAt: movement.createdAt || parts.createdAt,
+    createdBy: movement.createdBy != null ? movement.createdBy : null,
+    createdByName: movement.createdByName || "",
+    createdByRole: movement.createdByRole || "",
   };
   if (entry.amount <= 0) return null;
   treasury.movements.unshift(entry);
@@ -853,6 +899,7 @@ app.post("/api/customers", (req, res) => {
     carpets: Number(carpets) || 0,
   };
 
+  stampCreated(newCustomer, getRequestActor(req));
   customers.push(newCustomer);
   writeCustomers(customers);
 
@@ -941,6 +988,7 @@ app.put("/api/customers/:id", (req, res) => {
     carpets: Number(carpets) || 0,
   };
 
+  stampUpdated(updatedCustomer, getRequestActor(req));
   customers[index] = updatedCustomer;
   writeCustomers(customers);
 
@@ -1968,6 +2016,7 @@ app.post("/api/inventory", (req, res) => {
     minLimit: Number(minLimit) || 0,
     price: unitPrice,
   };
+  stampCreated(newItem, getRequestActor(req));
   items.unshift(newItem);
   writeInventory(items);
   let expense = null;
@@ -2440,6 +2489,7 @@ app.post("/api/invoices", (req, res) => {
   if (!newInvoice.date) newInvoice.date = nowParts.date;
   newInvoice.time = nowParts.time;
   newInvoice.createdAt = nowParts.createdAt;
+  stampCreated(newInvoice, getRequestActor(req));
 
   invoices.unshift(
     newInvoice
@@ -2463,6 +2513,9 @@ app.post("/api/invoices", (req, res) => {
       date: newInvoice.date,
       time: newInvoice.time,
       createdAt: newInvoice.createdAt,
+      createdBy: newInvoice.createdBy,
+      createdByName: newInvoice.createdByName,
+      createdByRole: newInvoice.createdByRole,
     });
   }
 
@@ -2734,6 +2787,7 @@ app.put("/api/invoices/:id", (req, res) => {
   invoices[index] =
     updatedInvoice;
 
+  stampUpdated(invoices[index], getRequestActor(req));
   writeInvoices(
     invoices
   );
@@ -2779,6 +2833,7 @@ app.post("/api/invoices/:id/return", (req, res) => {
     Number(invoice.paidAmount) > 0
   ) {
     const parts = getNowParts();
+    const retActor = getRequestActor(req);
     addTreasuryMovement({
       type: "out",
       amount: Number(invoice.paidAmount),
@@ -2789,6 +2844,9 @@ app.post("/api/invoices/:id/return", (req, res) => {
       date: parts.date,
       time: parts.time,
       createdAt: parts.createdAt,
+      createdBy: retActor.id,
+      createdByName: retActor.name,
+      createdByRole: retActor.role,
     });
   }
 
@@ -2810,6 +2868,7 @@ app.post("/api/invoices/:id/return", (req, res) => {
   }
 
   const nowParts = getNowParts();
+  const actor = getRequestActor(req);
   const updated = {
     ...invoice,
     returned: true,
@@ -2818,6 +2877,9 @@ app.post("/api/invoices/:id/return", (req, res) => {
     returnedAt: nowParts.createdAt,
     returnedDate: nowParts.date,
     returnedTime: nowParts.time,
+    returnedBy: actor.id,
+    returnedByName: actor.name,
+    returnedByRole: actor.role || "",
   };
 
   invoices[index] = updated;
@@ -2930,6 +2992,7 @@ app.post("/api/expenses", (req, res) => {
   if (!newExpense.date) newExpense.date = expNow.date;
   newExpense.time = expNow.time;
   newExpense.createdAt = expNow.createdAt;
+  stampCreated(newExpense, getRequestActor(req));
 
   expenses.unshift(
     newExpense
@@ -2950,6 +3013,9 @@ app.post("/api/expenses", (req, res) => {
       date: newExpense.date,
       time: newExpense.time,
       createdAt: newExpense.createdAt,
+      createdBy: newExpense.createdBy,
+      createdByName: newExpense.createdByName,
+      createdByRole: newExpense.createdByRole,
     });
   }
 
@@ -3032,6 +3098,7 @@ app.put("/api/expenses/:id", (req, res) => {
         : "",
   };
 
+  stampUpdated(updatedExpense, getRequestActor(req));
   expenses[index] =
     updatedExpense;
 
@@ -3611,6 +3678,7 @@ app.post("/api/treasury/close", (req, res) => {
   const summary = getTreasurySummary(treasury, dateKey);
   const difference = actualBalance - summary.expectedBalance;
   const parts = getNowParts();
+  const closeActor = getRequestActor(req);
   const closure = {
     id: Date.now() + Math.floor(Math.random() * 1000),
     date: dateKey,
@@ -3623,6 +3691,9 @@ app.post("/api/treasury/close", (req, res) => {
     notes,
     closedAt: parts.createdAt,
     closedTime: parts.time,
+    closedBy: closeActor.id,
+    closedByName: closeActor.name,
+    closedByRole: closeActor.role,
   };
   treasury.closures = treasury.closures || [];
   treasury.closures.unshift(closure);
