@@ -173,6 +173,20 @@ function App() {
   const [settings, setSettings] = useState(defaultSettings)
   const [settingsMessage, setSettingsMessage] = useState("")
   const [showNotifications, setShowNotifications] = useState(false)
+  const [darkMode, setDarkMode] = useState(() => {
+    try {
+      return localStorage.getItem("mussa_dark_mode") === "true"
+    } catch (e) {
+      return false
+    }
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("mussa_dark_mode", darkMode ? "true" : "false")
+    } catch (e) {}
+    document.body.style.background = darkMode ? "#0b1220" : "#f1f5f9"
+  }, [darkMode])
 
   // الموظفين والصلاحيات
   const [employees, setEmployees] = useState([])
@@ -362,42 +376,47 @@ function App() {
   // دالة طباعة الفاتورة الحرارية (80mm)
   // =========================
   function sendWhatsAppInvoice(invoice) {
-    if (!invoice) return;
+    if (!invoice) return
 
-    const rawPhone = invoice.customerPhone || invoice.phone || "";
-
+    const rawPhone = invoice.customerPhone || invoice.phone || ""
     if (!rawPhone) {
-      alert("رقم هاتف العميل غير متوفر في هذه الفاتورة!");
-      return;
+      alert("رقم هاتف العميل غير متوفر في هذه الفاتورة!")
+      return
     }
 
-    let phone = String(rawPhone).trim().replace(/[^0-9]/g, "");
-    if (phone.startsWith("0")) {
-      phone = "20" + phone.slice(1);
+    let phone = String(rawPhone).trim().replace(/[^0-9]/g, "")
+    if (phone.startsWith("0")) phone = "20" + phone.slice(1)
+    if (phone.startsWith("20") === false && phone.length >= 10) {
+      // لو الرقم من غير كود الدولة نضيف مصر
+      if (phone.length === 10 || phone.length === 11) phone = "20" + phone.replace(/^0/, "")
     }
 
-    const businessName = settings?.businessName || "Mussa Wash & Clean";
-    const customerName = invoice.customerName || "العميل";
-    const invoiceNum = invoice.invoiceNumber || invoice.id || "";
-    const total = invoice.total || 0;
-    const paid = invoice.paidAmount !== undefined ? invoice.paidAmount : total;
-    const remaining = invoice.remainingAmount || 0;
-    const asset = invoice.assetInfo || "خدمات المغسلة";
+    const businessName = settings?.businessName || "Mussa Wash & Clean"
+    const customerName = invoice.customerName || "العميل"
+    const invoiceNum = invoice.invoiceNumber || invoice.id || ""
+    const total = Number(invoice.total || 0).toLocaleString("en-US")
+    const paid = Number(invoice.paidAmount !== undefined ? invoice.paidAmount : invoice.total || 0).toLocaleString("en-US")
+    const remaining = Number(invoice.remainingAmount || 0)
+    const asset = invoice.assetInfo || invoice.carInfo || "خدمات المغسلة"
+    const dateLine = [invoice.date, invoice.time].filter(Boolean).join(" — ")
+    const status = invoice.returned || invoice.paymentStatus === "مرتجعة" ? "مرتجعة" : (invoice.paymentStatus || "")
+    const footer = (settings?.whatsappTemplate || "").trim() || "تعد زيارتكم شرفاً لنا، وننتظر رؤيتكم قريباً!"
 
     const message = `أهلاً بك أ/ *${customerName}* 🌹
 شكرًا لزيارتك *${businessName}* 🚗✨
 
-تفاصيل الفاتورة:
-📄 رقم الفاتورة: ${invoiceNum}
+*تفاصيل الفاتورة*
+📄 الرقم: ${invoiceNum}
+📅 التاريخ: ${dateLine || "—"}
 🚘 البيانات: ${asset}
 💰 الإجمالي: ${total} جنيه
 ✅ المدفوع: ${paid} جنيه
-${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
+${remaining > 0 ? `⚠️ المتبقي: ${remaining.toLocaleString("en-US")} جنيه
+` : ""}${status ? `📌 الحالة: ${status}
+` : ""}
+${footer}`
 
-تعد زيارتكم شرفاً لنا، وننتظر رؤيتكم قريباً! 👋`;
-
-    const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/${phone}?text=${encodedMessage}`, "_blank");
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank")
   }
   useEffect(() => {    if (!loggedIn) return
 
@@ -4389,6 +4408,20 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
     [reportTotalSales, reportTotalExpenses]
   )
 
+  const reportAvgInvoice = useMemo(() => {
+    const active = reportInvoices.filter(
+      (inv) => !(inv.returned || inv.status === "مرتجعة" || inv.paymentStatus === "مرتجعة")
+    )
+    if (!active.length) return 0
+    const sum = active.reduce((s, inv) => s + Number(inv.total || 0), 0)
+    return sum / active.length
+  }, [reportInvoices])
+
+  const reportMarginPct = useMemo(() => {
+    if (!reportTotalSales) return 0
+    return Math.round((reportNetProfit / reportTotalSales) * 1000) / 10
+  }, [reportNetProfit, reportTotalSales])
+
   const totalServicesSold =
     useMemo(
       () =>
@@ -5146,20 +5179,56 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
   return (
     <div
       dir="rtl"
+      className={darkMode ? "mussa-app dark-mode" : "mussa-app"}
       style={{
         ...rtlText,
         minHeight:
           "100vh",
         background:
-          "#f1f5f9",
+          darkMode ? "#0b1220" : "#f1f5f9",
+        color: darkMode ? "#e2e8f0" : "#0f172a",
         fontFamily:
           "Tahoma, Arial, sans-serif",
         display:
           "flex",
         width:
           "100%",
+        transition: "background 0.2s ease, color 0.2s ease",
       }}
     >
+      <style>{`
+        .mussa-app button {
+          transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease, background 0.15s ease;
+        }
+        .mussa-app button:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 22px rgba(15, 23, 42, 0.16);
+          filter: brightness(1.06);
+        }
+        .mussa-app button:active:not(:disabled) {
+          transform: translateY(0);
+          box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+          filter: brightness(0.98);
+        }
+        .mussa-app a:hover {
+          filter: brightness(1.05);
+        }
+        .dark-mode h1, .dark-mode h2, .dark-mode h3 {
+          color: #f8fafc !important;
+        }
+        .dark-mode p, .dark-mode span, .dark-mode label, .dark-mode td, .dark-mode th {
+          color: inherit;
+        }
+        .dark-mode input, .dark-mode select, .dark-mode textarea {
+          background: #1e293b !important;
+          color: #e2e8f0 !important;
+          border-color: #334155 !important;
+        }
+        .dark-mode table {
+          color: #e2e8f0;
+        }
+      `}</style>
+
       {/* =========================
           القائمة الجانبية
       ========================= */}
@@ -5415,6 +5484,30 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            {/* وضع ليلي */}
+            <button
+              type="button"
+              onClick={() => setDarkMode((v) => !v)}
+              title={darkMode ? "الوضع النهاري" : "الوضع الليلي"}
+              style={{
+                width: "44px",
+                height: "44px",
+                borderRadius: "12px",
+                border: darkMode ? "1px solid #334155" : "none",
+                background: darkMode ? "#1e293b" : "#fff",
+                color: darkMode ? "#fbbf24" : "#0f172a",
+                boxShadow: "0 2px 10px rgba(0,0,0,.05)",
+                cursor: "pointer",
+                fontSize: "18px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: "Tahoma, Arial, sans-serif",
+              }}
+            >
+              {darkMode ? "☀️" : "🌙"}
+            </button>
+
             {/* جرس الإشعارات */}
             <div style={{ position: "relative" }}>
               <button
@@ -10093,8 +10186,8 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                 >
                   لوحة التقارير
                 </h2>
-                <p style={{ margin: "8px 0 0", color: "#64748b", fontSize: "14px" }}>
-                  نظرة مالية وتشغيلية واضحة حسب الفترة التي تختارها
+                <p style={{ margin: "8px 0 0", color: darkMode ? "#94a3b8" : "#64748b", fontSize: "14px" }}>
+                  تحليل احترافي للمبيعات · المصروفات · صافي الربح · وأداء الخدمات
                 </p>
               </div>
               <button
@@ -10242,6 +10335,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                 {
                   label: "إجمالي المبيعات",
                   value: reportTotalSales,
+                  suffix: "ج.م",
                   color: "#047857",
                   bg: "linear-gradient(180deg, #ecfdf5 0%, #ffffff 100%)",
                   border: "#a7f3d0",
@@ -10249,6 +10343,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                 {
                   label: "المدفوع فعليًا",
                   value: reportTotalPaid,
+                  suffix: "ج.م",
                   color: "#1d4ed8",
                   bg: "linear-gradient(180deg, #eff6ff 0%, #ffffff 100%)",
                   border: "#bfdbfe",
@@ -10256,6 +10351,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                 {
                   label: "المتبقي على العملاء",
                   value: totalRemaining,
+                  suffix: "ج.م",
                   color: "#c2410c",
                   bg: "linear-gradient(180deg, #fff7ed 0%, #ffffff 100%)",
                   border: "#fed7aa",
@@ -10263,6 +10359,7 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                 {
                   label: "صافي الربح",
                   value: reportNetProfit,
+                  suffix: "ج.م",
                   color: reportNetProfit >= 0 ? "#047857" : "#b91c1c",
                   bg:
                     reportNetProfit >= 0
@@ -10270,18 +10367,34 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                       : "linear-gradient(180deg, #fef2f2 0%, #ffffff 100%)",
                   border: reportNetProfit >= 0 ? "#a7f3d0" : "#fecaca",
                 },
+                {
+                  label: "متوسط الفاتورة",
+                  value: reportAvgInvoice,
+                  suffix: "ج.م",
+                  color: "#7c3aed",
+                  bg: "linear-gradient(180deg, #f5f3ff 0%, #ffffff 100%)",
+                  border: "#ddd6fe",
+                },
+                {
+                  label: "هامش الربح",
+                  value: reportMarginPct,
+                  suffix: "%",
+                  color: reportMarginPct >= 0 ? "#0f766e" : "#b91c1c",
+                  bg: "linear-gradient(180deg, #f0fdfa 0%, #ffffff 100%)",
+                  border: "#99f6e4",
+                },
               ].map((card) => (
                 <div
                   key={card.label}
                   style={{
-                    background: card.bg,
-                    border: `1px solid ${card.border}`,
+                    background: darkMode ? "#1e293b" : card.bg,
+                    border: `1px solid ${darkMode ? "#334155" : card.border}`,
                     borderRadius: "18px",
                     padding: "18px 18px 16px",
                     boxShadow: "0 8px 24px rgba(15,23,42,0.04)",
                   }}
                 >
-                  <div style={{ color: "#64748b", fontSize: "13px", fontWeight: "600" }}>
+                  <div style={{ color: darkMode ? "#94a3b8" : "#64748b", fontSize: "13px", fontWeight: "600" }}>
                     {card.label}
                   </div>
                   <div
@@ -10293,9 +10406,9 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                       letterSpacing: "-0.02em",
                     }}
                   >
-                    {Number(card.value || 0).toLocaleString("ar-EG")}
+                    {Number(card.value || 0).toLocaleString("en-US", { maximumFractionDigits: 1 })}
                     <span style={{ fontSize: "14px", fontWeight: "700", marginRight: "6px" }}>
-                      ج.م
+                      {card.suffix}
                     </span>
                   </div>
                 </div>
@@ -15137,6 +15250,18 @@ ${remaining > 0 ? `⚠️ المتبقي: ${remaining} جنيه` : ""}
                 }
               >
                 طباعة الفاتورة
+              </button>
+
+              <button
+                onClick={() => sendWhatsAppInvoice(viewingInvoice)}
+                style={{
+                  ...secondaryButtonStyle,
+                  background: "#25D366",
+                  color: "#fff",
+                  border: "none",
+                }}
+              >
+                إرسال واتساب
               </button>
 
               <button
