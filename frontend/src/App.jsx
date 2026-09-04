@@ -1708,17 +1708,42 @@ ${footer}`
     const confirmed = window.confirm("التراجع عن إقفال هذا اليوم؟")
     if (!confirmed) return
     try {
-      const response = await apiFetch(`${API_BASE_URL}/api/treasury/close/${id}`, {
-        method: "DELETE",
-      })
-      const data = await response.json()
-      if (!response.ok || !data.success) {
-        alert(data.message || "تعذر التراجع")
+      // POST أوثق عبر الاستضافة من DELETE
+      let response = await apiFetch(
+        `${API_BASE_URL}/api/treasury/close/${id}/undo`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        }
+      )
+
+      // احتياطي: DELETE لو السيرفر القديم
+      if (response.status === 404) {
+        response = await apiFetch(`${API_BASE_URL}/api/treasury/close/${id}`, {
+          method: "DELETE",
+        })
+      }
+
+      const contentType = response.headers.get("content-type") || ""
+      if (!contentType.includes("application/json")) {
+        alert("السيرفر لم يرجع ردًا صحيحًا. تأكد من رفع آخر server.js")
         return
       }
+
+      const data = await response.json()
+      if (!response.ok || !data.success) {
+        alert(data.message || "تعذر التراجع عن الإقفال")
+        return
+      }
+      if (Array.isArray(data.closures)) {
+        setTreasuryClosures(data.closures)
+      }
       await loadTreasury()
+      alert("تم التراجع عن إقفال اليوم")
     } catch (e) {
-      alert("تعذر الاتصال بالسيرفر")
+      console.error(e)
+      alert("تعذر الاتصال بالسيرفر — تأكد أن الباك إند محدّث وشغال")
     }
   }
 
