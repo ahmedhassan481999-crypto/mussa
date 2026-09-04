@@ -52,6 +52,7 @@ const treasuryFile = path.join(dataDirectory, "treasury.json");
 const initialCustomers = [
   {
     id: 1,
+    code: "C-0001",
     name: "أحمد حسن",
     phone: "01000000000",
     address: "القاهرة",
@@ -61,6 +62,7 @@ const initialCustomers = [
   },
   {
     id: 2,
+    code: "C-0002",
     name: "محمد علي",
     phone: "01111111111",
     address: "الجيزة",
@@ -70,6 +72,7 @@ const initialCustomers = [
   },
   {
     id: 3,
+    code: "C-0003",
     name: "محمود إبراهيم",
     phone: "01222222222",
     address: "مدينة نصر",
@@ -270,6 +273,47 @@ function readCustomers() {
 function writeCustomers(customers) {
   writeJsonFile(customersFile, customers);
 }
+
+function extractCustomerCodeNumber(code) {
+  const m = String(code || "").trim().toUpperCase().match(/^C-?(\d+)$/);
+  if (!m) return 0;
+  return Number(m[1]) || 0;
+}
+
+function formatCustomerCode(num) {
+  const n = Math.max(1, Number(num) || 1);
+  return "C-" + String(n).padStart(4, "0");
+}
+
+function nextCustomerCode(customers) {
+  let max = 0;
+  for (const c of customers || []) {
+    const n = extractCustomerCodeNumber(c.code);
+    if (n > max) max = n;
+  }
+  return formatCustomerCode(max + 1);
+}
+
+function ensureCustomerCodes() {
+  const customers = readCustomers();
+  let changed = false;
+  let max = 0;
+  for (const c of customers) {
+    const n = extractCustomerCodeNumber(c.code);
+    if (n > max) max = n;
+  }
+  for (const c of customers) {
+    if (!c.code || !String(c.code).trim()) {
+      max += 1;
+      c.code = formatCustomerCode(max);
+      changed = true;
+    }
+  }
+  if (changed) writeCustomers(customers);
+  return customers;
+}
+
+
 
 // =========================
 // السيارات
@@ -743,7 +787,7 @@ app.post("/api/login", (req, res) => {
 app.get("/api/customers", (req, res) => {
   res.json({
     success: true,
-    customers: readCustomers(),
+    customers: ensureCustomerCodes(),
   });
 });
 
@@ -780,8 +824,27 @@ app.post("/api/customers", (req, res) => {
     });
   }
 
+  let code = req.body.code ? String(req.body.code).trim().toUpperCase() : "";
+  if (code && !code.startsWith("C-") && /^\d+$/.test(code)) {
+    code = formatCustomerCode(Number(code));
+  }
+  if (!code) {
+    code = nextCustomerCode(customers);
+  } else {
+    const existsCode = customers.some(
+      (c) => String(c.code || "").trim().toUpperCase() === code
+    );
+    if (existsCode) {
+      return res.status(400).json({
+        success: false,
+        message: "كود العميل مستخدم بالفعل",
+      });
+    }
+  }
+
   const newCustomer = {
     id: Date.now(),
+    code: code,
     name: String(name).trim(),
     phone: cleanPhone,
     address: address ? String(address).trim() : "",
@@ -846,8 +909,30 @@ app.put("/api/customers/:id", (req, res) => {
     });
   }
 
+  let code = req.body.code !== undefined
+    ? String(req.body.code || "").trim().toUpperCase()
+    : String(customers[index].code || "").trim().toUpperCase();
+  if (code && !code.startsWith("C-") && /^\d+$/.test(code)) {
+    code = formatCustomerCode(Number(code));
+  }
+  if (!code) {
+    code = customers[index].code || nextCustomerCode(customers);
+  }
+  const codeTaken = customers.some(
+    (c) =>
+      c.id !== customerId &&
+      String(c.code || "").trim().toUpperCase() === code
+  );
+  if (codeTaken) {
+    return res.status(400).json({
+      success: false,
+      message: "كود العميل مستخدم لدى عميل آخر",
+    });
+  }
+
   const updatedCustomer = {
     ...customers[index],
+    code: code,
     name: String(name).trim(),
     phone: cleanPhone,
     address: address ? String(address).trim() : "",

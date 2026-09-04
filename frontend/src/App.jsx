@@ -998,6 +998,7 @@ ${footer}`
 
   const [customerName, setCustomerName] =
     useState("")
+  const [customerCode, setCustomerCode] = useState("")
   const [customerPhone, setCustomerPhone] =
     useState("")
   const [customerAddress, setCustomerAddress] =
@@ -1993,6 +1994,7 @@ ${footer}`
 
   function openAddCustomer() {
     setEditingCustomer(null)
+    setCustomerCode("")
     setCustomerName("")
     setCustomerPhone("")
     setCustomerAddress("")
@@ -2009,6 +2011,9 @@ ${footer}`
       customer
     )
 
+    setCustomerCode(
+      customer.code || ""
+    )
     setCustomerName(
       customer.name
     )
@@ -2049,6 +2054,7 @@ ${footer}`
     }
 
     const customerData = {
+      code: customerCode.trim(),
       name:
         customerName.trim(),
       phone:
@@ -2202,13 +2208,16 @@ ${footer}`
         }
 
         return (
-          customer.name
+          String(customer.code || "")
             .toLowerCase()
             .includes(search) ||
-          customer.phone
+          String(customer.name || "")
             .toLowerCase()
             .includes(search) ||
-          customer.address
+          String(customer.phone || "")
+            .toLowerCase()
+            .includes(search) ||
+          String(customer.address || "")
             .toLowerCase()
             .includes(search)
         )
@@ -6316,7 +6325,7 @@ ${footer}`
                     e.target.value
                   )
                 }
-                placeholder="ابحث باسم العميل أو رقم الهاتف أو العنوان..."
+                placeholder="ابحث بالكود أو الاسم أو الهاتف أو العنوان..."
                 dir="rtl"
                 style={
                   inputStyle
@@ -6348,6 +6357,14 @@ ${footer}`
                         "#f8fafc",
                     }}
                   >
+                    <th
+                      style={
+                        tableHeaderStyle
+                      }
+                    >
+                      الكود
+                    </th>
+
                     <th
                       style={
                         tableHeaderStyle
@@ -6408,6 +6425,17 @@ ${footer}`
                           customer.id
                         }
                       >
+                        <td
+                          style={{
+                            ...tableCellStyle,
+                            fontWeight: "800",
+                            color: "#1d4ed8",
+                            direction: "ltr",
+                            textAlign: "right",
+                          }}
+                        >
+                          {customer.code || "—"}
+                        </td>
                         <td
                           style={
                             tableCellStyle
@@ -12803,6 +12831,24 @@ ${footer}`
                 saveCustomer
               }
             >
+              <label
+                style={
+                  labelStyle
+                }
+              >
+                كود العميل
+              </label>
+              <input
+                value={customerCode}
+                onChange={(e) => setCustomerCode(e.target.value)}
+                placeholder={editingCustomer ? "C-0001" : "تلقائي عند الحفظ إن تركته فاضي"}
+                dir="ltr"
+                style={inputStyle}
+              />
+              <p style={{ margin: "-6px 0 12px", color: "#94a3b8", fontSize: "12px" }}>
+                مثال: C-0001 — لو فاضي النظام هيولّد رقم لوحده
+              </p>
+
               <label
                 style={
                   labelStyle
