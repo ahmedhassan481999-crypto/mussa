@@ -11,10 +11,15 @@ async function apiFetch(url, options = {}) {
     const raw = localStorage.getItem("mussa_current_user")
     const u = raw ? JSON.parse(raw) : null
     if (u) {
+      // الهيدر مينفعش فيه عربي مباشر — نشفّر الاسم
       if (u.id != null) headers["X-User-Id"] = String(u.id)
-      headers["X-User-Name"] = String(u.name || u.username || "")
-      headers["X-User-Role"] = String(u.role || "")
-      headers["X-User-Username"] = String(u.username || "")
+      headers["X-User-Name"] = encodeURIComponent(
+        String(u.name || u.username || "")
+      )
+      headers["X-User-Role"] = encodeURIComponent(String(u.role || ""))
+      headers["X-User-Username"] = encodeURIComponent(
+        String(u.username || "")
+      )
     }
   } catch (e) {}
   return apiFetchRaw(url, { ...options, headers })

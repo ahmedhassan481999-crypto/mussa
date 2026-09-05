@@ -29,22 +29,32 @@ app.use((req, res, next) => {
 // المستخدم الحالي (من الهيدر)
 // =========================
 
+function decodeHeaderValue(value) {
+  if (value == null || value === "") return "";
+  const raw = String(value).trim();
+  try {
+    return decodeURIComponent(raw);
+  } catch (e) {
+    return raw;
+  }
+}
+
 function getRequestActor(req) {
   const id = req.headers["x-user-id"];
-  const name = req.headers["x-user-name"];
-  const role = req.headers["x-user-role"];
-  const username = req.headers["x-user-username"];
+  const name = decodeHeaderValue(req.headers["x-user-name"]);
+  const role = decodeHeaderValue(req.headers["x-user-role"]);
+  const username = decodeHeaderValue(req.headers["x-user-username"]);
 
   const actorName =
-    (name && String(name).trim()) ||
-    (username && String(username).trim()) ||
+    (name && name.trim()) ||
+    (username && username.trim()) ||
     "نظام";
 
   return {
     id: id ? Number(id) || id : null,
     name: actorName,
-    role: role ? String(role).trim() : "",
-    username: username ? String(username).trim() : "",
+    role: role || "",
+    username: username || "",
   };
 }
 
