@@ -540,9 +540,12 @@ function logInventoryMovement(entry) {
 function createInventoryExpense(title, amount, notes) {
   if (!amount || Number(amount) <= 0) return null;
   const expenses = readExpenses();
+  const parts = getNowParts();
   const expense = {
     id: Date.now(),
-    date: getNowParts().date,
+    date: parts.date,
+    time: parts.time,
+    createdAt: parts.createdAt,
     category: "مشتريات مخزون",
     title: String(title).trim(),
     amount: Number(amount),
@@ -551,6 +554,24 @@ function createInventoryExpense(title, amount, notes) {
   };
   expenses.unshift(expense);
   writeExpenses(expenses);
+
+  // خصم تلقائي من الخزينة (مشتريات نقدي)
+  try {
+    addTreasuryMovement({
+      type: "out",
+      amount: Number(expense.amount),
+      title: "مصروف: " + expense.title,
+      notes: expense.category || "",
+      source: "expense",
+      sourceId: expense.id,
+      date: expense.date,
+      time: expense.time,
+      createdAt: expense.createdAt,
+    });
+  } catch (e) {
+    console.error("treasury link for inventory expense failed:", e);
+  }
+
   return expense;
 }
 
