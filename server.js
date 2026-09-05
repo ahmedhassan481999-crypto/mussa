@@ -96,6 +96,7 @@ const servicesFile = path.join(dataDirectory, "services.json");
 const settingsFile = path.join(dataDirectory, "settings.json");
 const usersFile = path.join(dataDirectory, "users.json");
 const inventoryFile = path.join(dataDirectory, "inventory.json");
+const inventoryMovementsFile = path.join(dataDirectory, "inventory_movements.json");
 const treasuryFile = path.join(dataDirectory, "treasury.json");
 
 // =========================
@@ -501,6 +502,40 @@ function readInventory() {
 function writeInventory(items) {
   writeJsonFile(inventoryFile, items);
 }
+
+function readInventoryMovements() {
+  return readJsonFile(inventoryMovementsFile, []);
+}
+
+function writeInventoryMovements(list) {
+  writeJsonFile(inventoryMovementsFile, Array.isArray(list) ? list : []);
+}
+
+function logInventoryMovement(entry) {
+  const list = readInventoryMovements();
+  const parts = getNowParts();
+  const row = {
+    id: Date.now() + Math.floor(Math.random() * 1000),
+    inventoryId: Number(entry.inventoryId) || null,
+    itemName: String(entry.itemName || "").trim(),
+    type: String(entry.type || "adjust").trim(),
+    quantity: Number(entry.quantity) || 0,
+    before: Number(entry.before) || 0,
+    after: Number(entry.after) || 0,
+    reason: entry.reason ? String(entry.reason).trim() : "",
+    source: entry.source || "manual",
+    sourceId: entry.sourceId != null ? entry.sourceId : null,
+    createdAt: parts.createdAt,
+    date: parts.date,
+    time: parts.time,
+    createdByName: entry.createdByName || "",
+    createdByRole: entry.createdByRole || "",
+  };
+  list.unshift(row);
+  writeInventoryMovements(list.slice(0, 2000));
+  return row;
+}
+
 
 function createInventoryExpense(title, amount, notes) {
   if (!amount || Number(amount) <= 0) return null;
@@ -3685,6 +3720,7 @@ ensureJsonFile(
 
 ensureJsonFile(usersFile, initialUsers);
 ensureJsonFile(inventoryFile, initialInventory);
+ensureJsonFile(inventoryMovementsFile, []);
 
 
 // =====================================================
