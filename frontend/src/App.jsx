@@ -251,6 +251,7 @@ function App() {
       localStorage.setItem("mussa_dark_mode", darkMode ? "true" : "false")
     } catch (e) {}
     document.body.style.background = darkMode ? "#0b1220" : "#f1f5f9"
+    document.body.style.color = darkMode ? "#e5eefb" : "#0f172a"
   }, [darkMode])
 
   // الموظفين والصلاحيات
@@ -5410,6 +5411,22 @@ ${footer}`
       }}
     >
       <style>{`
+        .mussa-app {
+          --mussa-bg: #f1f5f9;
+          --mussa-card: #ffffff;
+          --mussa-text: #0f172a;
+          --mussa-muted: #64748b;
+          --mussa-border: #e2e8f0;
+          --mussa-soft: #f8fafc;
+        }
+        .mussa-app.dark-mode {
+          --mussa-bg: #0b1220;
+          --mussa-card: #152033;
+          --mussa-text: #e5eefb;
+          --mussa-muted: #9aa8bc;
+          --mussa-border: #2a3a52;
+          --mussa-soft: #111a2b;
+        }
         .mussa-app button {
           transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease, background 0.15s ease;
         }
@@ -5423,22 +5440,61 @@ ${footer}`
           box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
           filter: brightness(0.98);
         }
-        .mussa-app a:hover {
-          filter: brightness(1.05);
-        }
         .dark-mode h1, .dark-mode h2, .dark-mode h3 {
-          color: #f8fafc !important;
+          color: #eaf2ff !important;
         }
-        .dark-mode p, .dark-mode span, .dark-mode label, .dark-mode td, .dark-mode th {
-          color: inherit;
+        .dark-mode p {
+          color: #9aa8bc;
+        }
+        /* كروت بيضاء تتحول لرمادي مزرق هادي */
+        .dark-mode [style*="background: #fff"],
+        .dark-mode [style*="background:#fff"],
+        .dark-mode [style*="background: #ffffff"],
+        .dark-mode [style*="background:#ffffff"],
+        .dark-mode [style*="background: rgb(255, 255, 255)"] {
+          background: #152033 !important;
+          color: #e5eefb !important;
+          border-color: #2a3a52 !important;
+        }
+        .dark-mode [style*="background: #f8fafc"],
+        .dark-mode [style*="background:#f8fafc"],
+        .dark-mode [style*="background: #f1f5f9"],
+        .dark-mode [style*="background:#f1f5f9"] {
+          background: #111a2b !important;
+          color: #e5eefb !important;
         }
         .dark-mode input, .dark-mode select, .dark-mode textarea {
-          background: #1e293b !important;
-          color: #e2e8f0 !important;
-          border-color: #334155 !important;
+          background: #0f1a2b !important;
+          color: #e5eefb !important;
+          border-color: #2a3a52 !important;
         }
         .dark-mode table {
-          color: #e2e8f0;
+          color: #e5eefb;
+        }
+        .dark-mode th {
+          color: #9aa8bc !important;
+        }
+        .dark-mode td {
+          border-color: #2a3a52 !important;
+        }
+        /* تقليل وهج التدرجات الفاتحة */
+        .dark-mode [style*="linear-gradient(180deg, #ecfdf5"],
+        .dark-mode [style*="linear-gradient(180deg, #eff6ff"],
+        .dark-mode [style*="linear-gradient(180deg, #fff7ed"],
+        .dark-mode [style*="linear-gradient(180deg, #fef2f2"],
+        .dark-mode [style*="linear-gradient(180deg, #f5f3ff"],
+        .dark-mode [style*="linear-gradient(180deg, #f0fdfa"] {
+          background: #152033 !important;
+        }
+        .dark-mode [style*="color: #0f172a"],
+        .dark-mode [style*="color:#0f172a"],
+        .dark-mode [style*="color: #111827"],
+        .dark-mode [style*="color:#111827"] {
+          color: #e5eefb !important;
+        }
+        .dark-mode [style*="color: #64748b"],
+        .dark-mode [style*="color:#64748b"] {
+          color: #9aa8bc !important;
         }
       `}</style>
 

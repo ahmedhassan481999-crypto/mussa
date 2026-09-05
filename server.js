@@ -519,10 +519,11 @@ function createInventoryExpense(title, amount, notes) {
   return expense;
 }
 
-function deductInventoryUsage(usageList) {
+function deductInventoryUsage(usageList, meta) {
   if (!Array.isArray(usageList) || usageList.length === 0) {
     return { ok: true };
   }
+  meta = meta || {};
   const items = readInventory();
   for (const row of usageList) {
     const id = Number(row.inventoryId || row.id);
@@ -544,16 +545,32 @@ function deductInventoryUsage(usageList) {
     const qty = Number(row.quantity) || 0;
     if (!id || qty <= 0) continue;
     const index = items.findIndex((x) => x.id === id);
-    items[index].quantity = Number(items[index].quantity) - qty;
+    const before = Number(items[index].quantity) || 0;
+    const after = before - qty;
+    items[index].quantity = after;
+    logInventoryMovement({
+      inventoryId: id,
+      itemName: items[index].name,
+      type: meta.type || "invoice",
+      quantity: -qty,
+      before: before,
+      after: after,
+      reason: meta.reason || "صرف من فاتورة",
+      source: meta.source || "invoice",
+      sourceId: meta.sourceId != null ? meta.sourceId : null,
+      createdByName: meta.createdByName || "",
+      createdByRole: meta.createdByRole || "",
+    });
   }
   writeInventory(items);
   return { ok: true };
 }
 
-function restoreInventoryUsage(usageList) {
+function restoreInventoryUsage(usageList, meta) {
   if (!Array.isArray(usageList) || usageList.length === 0) {
     return { ok: true };
   }
+  meta = meta || {};
   const items = readInventory();
   for (const row of usageList) {
     const id = Number(row.inventoryId || row.id);
@@ -561,7 +578,22 @@ function restoreInventoryUsage(usageList) {
     if (!id || qty <= 0) continue;
     const index = items.findIndex((x) => x.id === id);
     if (index === -1) continue;
-    items[index].quantity = Number(items[index].quantity || 0) + qty;
+    const before = Number(items[index].quantity || 0);
+    const after = before + qty;
+    items[index].quantity = after;
+    logInventoryMovement({
+      inventoryId: id,
+      itemName: items[index].name,
+      type: meta.type || "return",
+      quantity: qty,
+      before: before,
+      after: after,
+      reason: meta.reason || "إرجاع من مرتجع/حذف فاتورة",
+      source: meta.source || "invoice_return",
+      sourceId: meta.sourceId != null ? meta.sourceId : null,
+      createdByName: meta.createdByName || "",
+      createdByRole: meta.createdByRole || "",
+    });
   }
   writeInventory(items);
   return { ok: true };
@@ -2026,9 +2058,25 @@ app.post("/api/inventory", (req, res) => {
     minLimit: Number(minLimit) || 0,
     price: unitPrice,
   };
-  stampCreated(newItem, getRequestActor(req));
+  const actor = getRequestActor(req);
+  stampCreated(newItem, actor);
   items.unshift(newItem);
   writeInventory(items);
+  if (qty > 0) {
+    logInventoryMovement({
+      inventoryId: newItem.id,
+      itemName: newItem.name,
+      type: "purchase",
+      quantity: qty,
+      before: 0,
+      after: qty,
+      reason: "إضافة صنف جديد",
+      source: "inventory_create",
+      sourceId: newItem.id,
+      createdByName: actor.name,
+      createdByRole: actor.role,
+    });
+  }
   let expense = null;
   if (createExpense !== false && qty > 0 && unitPrice > 0) {
     expense = createInventoryExpense(
@@ -2073,43 +2121,158 @@ app.delete("/api/inventory/:id", (req, res) => {
   return res.json({ success: true, message: "تم حذف الصنف بنجاح" });
 });
 
+app.get("/api/inventory/movements", (req, res) => {
+  let list = readInventoryMovements();
+  const itemId = req.query.itemId ? Number(req.query.itemId) : null;
+  if (itemId) {
+    list = list.filter((m) => Number(m.inventoryId) === itemId);
+  }
+  return res.json({ success: true, movements: list.slice(0, 300) });
+});
+
 app.post("/api/inventory/:id/adjust", (req, res) => {
   const itemId = Number(req.params.id);
-  const { mode, quantity, createExpense } = req.body;
-  const qty = Number(quantity) || 0;
-  if (!qty || qty <= 0) {
-    return res.status(400).json({ success: false, message: "أدخل كمية صحيحة" });
-  }
-  if (mode !== "add" && mode !== "subtract") {
-    return res.status(400).json({ success: false, message: "نوع العملية غير صحيح" });
-  }
   const items = readInventory();
   const index = items.findIndex((x) => x.id === itemId);
   if (index === -1) {
     return res.status(404).json({ success: false, message: "الصنف غير موجود" });
   }
-  const current = Number(items[index].quantity) || 0;
-  if (mode === "subtract" && current < qty) {
-    return res.status(400).json({ success: false, message: "الكمية المتاحة غير كافية" });
+
+  const mode = String(req.body.mode || "add").trim();
+  const qty = Number(req.body.quantity);
+  const reason = String(req.body.reason || "").trim();
+  const createExpense = req.body.createExpense === true;
+  const actor = getRequestActor(req);
+
+  if (!Number.isFinite(qty) || qty < 0) {
+    return res.status(400).json({ success: false, message: "كمية غير صحيحة" });
   }
-  items[index].quantity = mode === "add" ? current + qty : current - qty;
+  if (mode !== "set" && qty <= 0) {
+    return res.status(400).json({ success: false, message: "أدخل كمية أكبر من صفر" });
+  }
+  if (!reason) {
+    return res.status(400).json({
+      success: false,
+      message: "اكتب سبب الحركة (شراء / تلف / جرد / استخدام...)",
+    });
+  }
+
+  const before = Number(items[index].quantity) || 0;
+  let after = before;
+  let delta = 0;
+  let type = "adjust";
+
+  if (mode === "add") {
+    after = before + qty;
+    delta = qty;
+    type = "purchase";
+  } else if (mode === "subtract") {
+    if (qty > before) {
+      return res.status(400).json({ success: false, message: "الكمية غير كافية" });
+    }
+    after = before - qty;
+    delta = -qty;
+    type = "subtract";
+  } else if (mode === "damage") {
+    if (qty > before) {
+      return res.status(400).json({ success: false, message: "الكمية غير كافية" });
+    }
+    after = before - qty;
+    delta = -qty;
+    type = "damage";
+  } else if (mode === "set") {
+    after = qty;
+    delta = after - before;
+    type = "count_adjust";
+  } else {
+    return res.status(400).json({ success: false, message: "نوع الحركة غير معروف" });
+  }
+
+  items[index].quantity = after;
   writeInventory(items);
+
+  logInventoryMovement({
+    inventoryId: itemId,
+    itemName: items[index].name,
+    type: type,
+    quantity: delta,
+    before: before,
+    after: after,
+    reason: reason,
+    source: "manual_adjust",
+    sourceId: itemId,
+    createdByName: actor.name,
+    createdByRole: actor.role,
+  });
+
   let expense = null;
-  if (mode === "add" && createExpense !== false) {
-    const unitPrice = Number(items[index].price) || 0;
-    if (unitPrice > 0) {
+  if (createExpense && mode === "add" && qty > 0) {
+    const unit = Number(items[index].price) || 0;
+    if (unit > 0) {
       expense = createInventoryExpense(
         "شراء مخزون: " + items[index].name,
-        qty * unitPrice,
-        "زيادة كمية " + qty + " × " + unitPrice + " جنيه"
+        qty * unit,
+        reason
       );
     }
   }
+
   return res.json({
     success: true,
-    message: mode === "add" ? "تمت إضافة الكمية" : "تم خصم الكمية",
+    message: "تم تحديث الكمية وتسجيل الحركة",
     item: items[index],
-    expense,
+    expense: expense,
+  });
+});
+
+app.post("/api/inventory/count", (req, res) => {
+  const counts = Array.isArray(req.body.counts) ? req.body.counts : [];
+  if (!counts.length) {
+    return res.status(400).json({ success: false, message: "لا توجد أصناف للجرد" });
+  }
+  const actor = getRequestActor(req);
+  const items = readInventory();
+  const changes = [];
+
+  for (const row of counts) {
+    const id = Number(row.inventoryId || row.id);
+    const actual = Number(row.actualQty);
+    if (!id || !Number.isFinite(actual) || actual < 0) continue;
+    const index = items.findIndex((x) => x.id === id);
+    if (index === -1) continue;
+    const before = Number(items[index].quantity) || 0;
+    if (before === actual) continue;
+    items[index].quantity = actual;
+    logInventoryMovement({
+      inventoryId: id,
+      itemName: items[index].name,
+      type: "count_adjust",
+      quantity: actual - before,
+      before: before,
+      after: actual,
+      reason: row.reason || "جرد مخزون",
+      source: "inventory_count",
+      sourceId: null,
+      createdByName: actor.name,
+      createdByRole: actor.role,
+    });
+    changes.push({
+      id: id,
+      name: items[index].name,
+      before: before,
+      after: actual,
+      diff: actual - before,
+    });
+  }
+
+  writeInventory(items);
+  return res.json({
+    success: true,
+    message: changes.length
+      ? "تم حفظ الجرد وتسجيل الفروقات"
+      : "لا يوجد فرق بين الفعلي والنظام",
+    changes: changes,
+    items: items,
   });
 });
 
@@ -2128,6 +2291,8 @@ app.get("/api/backup", (req, res) => {
         services: readServices(),
         settings: readSettings(),
         memberships: readMemberships(),
+        inventory: readInventory(),
+        inventoryMovements: readInventoryMovements(),
       },
     };
 
