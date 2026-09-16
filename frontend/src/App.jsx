@@ -1176,6 +1176,8 @@ ${footer}`
 
   const [showInvoiceModal, setShowInvoiceModal] =
     useState(false)
+  const [isSavingInvoice, setIsSavingInvoice] = useState(false)
+  const [isSavingExpense, setIsSavingExpense] = useState(false)
   const [editingInvoice, setEditingInvoice] =
     useState(null)
   const [viewingInvoice, setViewingInvoice] =
@@ -2894,6 +2896,7 @@ ${footer}`
 
   async function saveInvoice(e) {
     e.preventDefault()
+    if (isSavingInvoice) return
 
     if (!invoiceCustomerId) {
       alert(
@@ -3216,6 +3219,7 @@ ${footer}`
     }
 
     try {
+      setIsSavingInvoice(true)
       const response =
         await apiFetch(
           editingInvoice
@@ -3388,6 +3392,8 @@ ${footer}`
       alert(
         "تعذر الاتصال بالسيرفر"
       )
+    } finally {
+      setIsSavingInvoice(false)
     }
   }
 
@@ -4168,7 +4174,10 @@ ${footer}`
       notes: expenseNotes.trim(),
     }
 
+    if (isSavingExpense) return
+
     try {
+      setIsSavingExpense(true)
       const response = await apiFetch(
         editingExpense
           ? `/api/expenses/${editingExpense.id}`
@@ -4212,6 +4221,8 @@ ${footer}`
     } catch (error) {
       console.error(error)
       alert("تعذر الاتصال بالسيرفر")
+    } finally {
+      setIsSavingExpense(false)
     }
   }
 
@@ -5428,7 +5439,7 @@ ${footer}`
           --mussa-soft: #111a2b;
         }
         .mussa-app button {
-          transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease, background 0.15s ease;
+          transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease, background 0.18s ease, opacity 0.18s ease;
         }
         .mussa-app button:hover:not(:disabled) {
           transform: translateY(-2px);
@@ -5439,6 +5450,92 @@ ${footer}`
           transform: translateY(0);
           box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
           filter: brightness(0.98);
+        }
+        .mussa-app button:disabled {
+          opacity: 0.65;
+          cursor: not-allowed;
+          transform: none !important;
+          box-shadow: none !important;
+        }
+
+        @keyframes mussaFadeUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes mussaFadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes mussaScaleIn {
+          from { opacity: 0; transform: scale(0.96) translateY(8px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes mussaBellShake {
+          0%, 100% { transform: rotate(0deg); }
+          20% { transform: rotate(-12deg); }
+          40% { transform: rotate(10deg); }
+          60% { transform: rotate(-8deg); }
+          80% { transform: rotate(6deg); }
+        }
+        @keyframes mussaBadgePulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.18); }
+        }
+        @keyframes mussaSpin {
+          to { transform: rotate(360deg); }
+        }
+
+        .mussa-page-enter {
+          animation: mussaFadeUp 0.4s ease both;
+        }
+        .mussa-fade-card {
+          animation: mussaFadeUp 0.45s ease both;
+        }
+        .mussa-stagger > * {
+          animation: mussaFadeUp 0.4s ease both;
+        }
+        .mussa-stagger > *:nth-child(1) { animation-delay: 0.03s; }
+        .mussa-stagger > *:nth-child(2) { animation-delay: 0.08s; }
+        .mussa-stagger > *:nth-child(3) { animation-delay: 0.13s; }
+        .mussa-stagger > *:nth-child(4) { animation-delay: 0.18s; }
+        .mussa-stagger > *:nth-child(5) { animation-delay: 0.23s; }
+        .mussa-stagger > *:nth-child(6) { animation-delay: 0.28s; }
+        .mussa-stagger > *:nth-child(7) { animation-delay: 0.33s; }
+        .mussa-stagger > *:nth-child(8) { animation-delay: 0.38s; }
+
+        .mussa-card-hover {
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .mussa-card-hover:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+        }
+
+        .mussa-bell-active {
+          animation: mussaBellShake 0.7s ease 1;
+        }
+        .mussa-bell-badge {
+          animation: mussaBadgePulse 1.4s ease-in-out infinite;
+        }
+
+        .mussa-spinner {
+          display: inline-block;
+          width: 14px;
+          height: 14px;
+          border: 2px solid rgba(255,255,255,0.35);
+          border-top-color: #fff;
+          border-radius: 50%;
+          animation: mussaSpin 0.7s linear infinite;
+          vertical-align: middle;
+          margin-left: 8px;
+        }
+
+        /* مودال: ظهور ناعم */
+        .mussa-modal-overlay {
+          animation: mussaFadeIn 0.22s ease both;
+        }
+        .mussa-modal-panel {
+          animation: mussaScaleIn 0.28s ease both;
         }
         .dark-mode h1, .dark-mode h2, .dark-mode h3 {
           color: #eaf2ff !important;
@@ -5796,10 +5893,11 @@ ${footer}`
                   position: "relative",
                 }}
                 title="الإشعارات"
+                className={managerNotifications.length > 0 ? "mussa-bell-active" : ""}
               >
                 🔔
                 {managerNotifications.length > 0 && (
-                  <span style={{
+                  <span className="mussa-bell-badge" style={{
                     position: "absolute",
                     top: "-4px",
                     left: "-4px",
@@ -5948,6 +6046,8 @@ ${footer}`
           </div>
         </div>
         )}
+
+        <div key={activePage} className="mussa-page-enter">
 
         {/* =========================
             الرئيسية
@@ -8674,7 +8774,7 @@ ${footer}`
 
             {/* نافذة إضافة/تعديل موظف */}
             {showEmployeeModal && (
-              <div style={modalOverlayStyle} onClick={() => setShowEmployeeModal(false)}>
+              <div className="mussa-modal-overlay" style={modalOverlayStyle} onClick={() => setShowEmployeeModal(false)}>
                 <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
                   <div style={modalHeaderStyle}>
                     <h2 style={modalTitleStyle}>
@@ -10384,7 +10484,7 @@ ${footer}`
 
             {/* مودال إيداع/سحب/تسوية/إقفال */}
             {treasuryModal && (
-              <div style={modalOverlayStyle} onClick={() => setTreasuryModal("")}>
+              <div className="mussa-modal-overlay" style={modalOverlayStyle} onClick={() => setTreasuryModal("")}>
                 <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
                   <div style={modalHeaderStyle}>
                     <h3 style={modalTitleStyle}>
@@ -11848,6 +11948,7 @@ ${footer}`
           onClick={
             closeCarpetModal
           }
+          className="mussa-modal-overlay"
           style={
             modalOverlayStyle
           }
@@ -12330,11 +12431,13 @@ ${footer}`
           onClick={
             closeExpenseModal
           }
+          className="mussa-modal-overlay"
           style={
             modalOverlayStyle
           }
         >
           <div
+            className="mussa-modal-panel"
             onClick={(e) =>
               e.stopPropagation()
             }
@@ -12612,10 +12715,18 @@ ${footer}`
                   style={
                     primaryButtonStyle
                   }
+                  disabled={isSavingExpense}
                 >
-                  {editingExpense
-                    ? "حفظ التعديل"
-                    : "حفظ المصروف"}
+                  {isSavingExpense ? (
+                    <>
+                      <span className="mussa-spinner" />
+                      جاري الحفظ...
+                    </>
+                  ) : editingExpense ? (
+                    "حفظ التعديل"
+                  ) : (
+                    "حفظ المصروف"
+                  )}
                 </button>
               </div>
             </form>
@@ -12631,7 +12742,7 @@ ${footer}`
         <div
           dir="rtl"
           onClick={closeMembershipModal}
-          style={modalOverlayStyle}
+          className="mussa-modal-overlay" style={modalOverlayStyle}
         >
           <div
             onClick={(e) =>
@@ -12986,6 +13097,7 @@ ${footer}`
           onClick={
             closeServiceModal
           }
+          className="mussa-modal-overlay"
           style={
             modalOverlayStyle
           }
@@ -13271,6 +13383,7 @@ ${footer}`
           onClick={
             closeCustomerModal
           }
+          className="mussa-modal-overlay"
           style={
             modalOverlayStyle
           }
@@ -13565,6 +13678,7 @@ ${footer}`
           onClick={
             closeCarModal
           }
+          className="mussa-modal-overlay"
           style={
             modalOverlayStyle
           }
@@ -13952,6 +14066,8 @@ ${footer}`
         </div>
       )}
 
+        </div>{/* end page enter */}
+
       {/* =========================
           نافذة الفاتورة
       ========================= */}
@@ -13959,14 +14075,17 @@ ${footer}`
       {showInvoiceModal && (
         <div
           dir="rtl"
+          className="mussa-modal-overlay"
           onClick={
             closeInvoiceModal
           }
+          className="mussa-modal-overlay"
           style={
             modalOverlayStyle
           }
         >
           <div
+            className="mussa-modal-panel"
             onClick={(e) =>
               e.stopPropagation()
             }
@@ -15230,10 +15349,18 @@ ${footer}`
                   style={
                     primaryButtonStyle
                   }
+                  disabled={isSavingInvoice}
                 >
-                  {editingInvoice
-                    ? "حفظ تعديلات الفاتورة"
-                    : "حفظ الفاتورة"}
+                  {isSavingInvoice ? (
+                    <>
+                      <span className="mussa-spinner" />
+                      جاري الحفظ...
+                    </>
+                  ) : editingInvoice ? (
+                    "حفظ تعديلات الفاتورة"
+                  ) : (
+                    "حفظ الفاتورة"
+                  )}
                 </button>
 
                 <button
@@ -15265,6 +15392,7 @@ ${footer}`
               null
             )
           }
+          className="mussa-modal-overlay"
           style={
             modalOverlayStyle
           }
