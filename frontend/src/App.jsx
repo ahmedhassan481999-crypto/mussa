@@ -11936,6 +11936,7 @@ ${footer}`
           </div>
         )}
         
+        </div>{/* end page enter */}
       </main>
 
       {/* =========================
@@ -14066,7 +14067,6 @@ ${footer}`
         </div>
       )}
 
-        </div>{/* end page enter */}
 
       {/* =========================
           نافذة الفاتورة
@@ -14079,7 +14079,6 @@ ${footer}`
           onClick={
             closeInvoiceModal
           }
-          className="mussa-modal-overlay"
           style={
             modalOverlayStyle
           }
